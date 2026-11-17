@@ -22,4 +22,4 @@ None yet. With the first code: `Build Ganjaria.bat` publishes a Release copy to 
 - At wrap up: add a row to `claude/session-log.md` and to the root `../claude/session-log.md`, tagged dustys-ganjaria.
 
 ## Git
-Not a git repo yet. Ask the owner before running `git init` or creating a remote.
+Git repo on `main`, remote github.com/dontdoubtdusty/dustys-ganjaria. Commit and push only when the owner asks.

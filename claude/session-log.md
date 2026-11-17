@@ -1,7 +1,7 @@
 # Session log
 
 ## Open reminders
-- No code, git repo or Build .bat yet.
+- No code or Build .bat yet.
 - Settle how the weigh station plays (see `vision.md`, Open questions) before writing it.
 
 ## Sessions
