@@ -1,0 +1,463 @@
+<title>Mechanic Intersectionality Tool</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="mechanics-kit" content="1.0.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+
+<!-- MECHANICS DATA START: everything between the START and END lines belongs to the project. The rest of the file is the shared kit page (claude/kit/mechanics in the GitHub root); replace it to upgrade, keep this block. -->
+<script type="application/json" id="mechanics-data">
+{
+  "project": "Dusty's Ganjaria",
+  "eyebrow": "Dusty's Ganjaria design tool",
+  "accent": { "light": "#3f8a36", "dark": "#7fd672" },
+  "about": "A link means the player can SEE mechanic 'from' change mechanic 'to'; code links with no visible effect do not count. Direct effects only. Levels: 1 flavor (a cosmetic touch), 2 nudge (changes odds or choices), 3 drives (B depends on A). Ideas are proposed links, not built. Checked against Shop.cs, Customer.cs, WeighStation.cs, Physics.cs, Bag.cs and Scoring.cs at 0.4.0: the counter and the weigh station exist so far.",
+  "updated": "2026-11-17",
+  "version": "0.4.0",
+  "levels": [
+    { "level": 0, "name": "None", "percent": 0 },
+    { "level": 1, "name": "Flavor", "percent": 33 },
+    { "level": 2, "name": "Nudge", "percent": 66 },
+    { "level": 3, "name": "Drives", "percent": 100 }
+  ],
+  "groups": [
+    { "id": "order", "name": "Counter and orders" },
+    { "id": "station", "name": "Weigh station" },
+    { "id": "score", "name": "Score" }
+  ],
+  "mechanics": [
+    { "id": "line", "name": "Line and arrivals", "group": "order", "summary": "Customers walk in every 14-24 s and queue at the counter, up to 4; the front one says their order." },
+    { "id": "waiting", "name": "Waiting area", "group": "order", "summary": "Taking an order moves the customer here (up to 4); their tickets go to the weigh station oldest first." },
+    { "id": "patience", "name": "Patience and walkouts", "group": "order", "summary": "Drains in line (45 s) and again while waiting (30 s + 4 s per gram); the face sours as it falls; at zero they walk out." },
+    { "id": "tabs", "name": "Screen tabs", "group": "order", "summary": "Counter and Weigh screens on tabs (keys 1, 2); a tab lights orange when someone there needs you. Switching drops what you hold." },
+    { "id": "order", "name": "Order ticket", "group": "order", "summary": "Each order asks for 1 g, 3.5 g or 7 g of flower, with the customer's name and patience bar." },
+    { "id": "jar", "name": "Jar of buds", "group": "station", "summary": "A settled pile of buds in three sizes plus small shake; a bud's size matches its weight." },
+    { "id": "physics", "name": "Toss physics", "group": "station", "summary": "Grabbed buds and the sealed bag fly with the mouse's speed when let go, then fall, roll and push each other." },
+    { "id": "bag", "name": "Bag", "group": "station", "summary": "Drag an empty bag from the stack onto the scale; only buds inside it count." },
+    { "id": "scale", "name": "Scale dial", "group": "station", "summary": "A needle that eases toward the bag's weight, with a green band around the target. No number readout." },
+    { "id": "zip", "name": "Zip seal", "group": "station", "summary": "Drag the zip tab across the bag; too fast or off the line and it slips open. Sealing presses the bag to 60 percent size." },
+    { "id": "bin", "name": "OUT bin", "group": "station", "summary": "Throw the sealed bag into the bin; it ships once it sits still inside." },
+    { "id": "timer", "name": "Timer", "group": "score", "summary": "Counts from the first grab until the bag ships." },
+    { "id": "score", "name": "Score and grade", "group": "score", "summary": "Weigh station: accuracy 50, speed 30, handling 20 (zip slips, buds left outside the jar). Order: weigh 75, wait 25. Graded Perfect to Poor." },
+    { "id": "tips", "name": "Tips and totals", "group": "score", "summary": "A served order tips $2 at score 50 up to $7 at 100; the bottom bar counts served, walkouts and tips. Tips buy nothing yet." }
+  ],
+  "links": [
+    { "from": "order", "to": "scale", "level": 3, "why": "The order sets where the green band sits and how wide it is." },
+    { "from": "order", "to": "bag", "level": 2, "why": "Bigger orders get a bigger bag." },
+    { "from": "order", "to": "jar", "level": 1, "why": "The jar holds more for bigger orders." },
+    { "from": "jar", "to": "scale", "level": 3, "why": "Each bud's weight, shown by its size, moves the needle when it lands in the bag." },
+    { "from": "physics", "to": "bag", "level": 3, "why": "A tossed bud only counts if it actually lands and stays in the bag." },
+    { "from": "physics", "to": "score", "level": 2, "why": "Missed tosses leave buds on the table, costing handling." },
+    { "from": "physics", "to": "bin", "level": 3, "why": "The sealed bag has to be thrown and land in the bin." },
+    { "from": "bag", "to": "scale", "level": 3, "why": "The scale reads only what is inside the bag on the plate." },
+    { "from": "bag", "to": "zip", "level": 3, "why": "The zip runs along the top of the bag and can't start on an empty one." },
+    { "from": "zip", "to": "bin", "level": 3, "why": "Only a sealed bag can be thrown to the bin." },
+    { "from": "zip", "to": "score", "level": 2, "why": "Each slip costs handling." },
+    { "from": "zip", "to": "timer", "level": 2, "why": "A slip sends you back to zip again, costing time." },
+    { "from": "scale", "to": "score", "level": 3, "why": "Where the needle stops at sealing sets accuracy." },
+    { "from": "timer", "to": "score", "level": 3, "why": "Time against par sets the speed score." },
+    { "from": "bin", "to": "score", "level": 3, "why": "Landing the bag in the bin ends the order and shows the score." },
+    { "from": "line", "to": "order", "level": 3, "why": "The customer at the counter says the order; taking it makes the ticket." },
+    { "from": "line", "to": "waiting", "level": 3, "why": "Taking an order moves the customer from the line to the waiting area." },
+    { "from": "waiting", "to": "line", "level": 2, "why": "A full waiting area blocks taking the next order, so the line backs up." },
+    { "from": "waiting", "to": "order", "level": 3, "why": "The oldest waiting customer's order is the ticket on the weigh station." },
+    { "from": "patience", "to": "line", "level": 3, "why": "A customer who runs out of patience in line walks out and the line closes up." },
+    { "from": "patience", "to": "bin", "level": 3, "why": "If the customer walks out while their bag is on the bench, the bag is dropped and the bench cleared." },
+    { "from": "patience", "to": "score", "level": 3, "why": "The wait score is full while half their wait patience is left, then falls to zero." },
+    { "from": "patience", "to": "tips", "level": 2, "why": "Each walkout counts on the bottom bar." },
+    { "from": "patience", "to": "tabs", "level": 1, "why": "A tab lights orange when someone on that screen is close to walking out." },
+    { "from": "tabs", "to": "zip", "level": 2, "why": "Switching screens mid-zip makes the zip slip open." },
+    { "from": "order", "to": "patience", "level": 2, "why": "Bigger orders get more wait patience." },
+    { "from": "score", "to": "tips", "level": 3, "why": "The order score sets the tip." }
+  ],
+  "ideas": [
+    { "from": "tips", "to": "order", "level": 2, "fits": "Next step", "idea": "A shop day with an end, and tips that unlock bigger or trickier orders." },
+    { "from": "timer", "to": "physics", "level": 2, "fits": "Later", "idea": "A waiting customer's impatience shakes the bench a little, making tosses harder the longer you take." },
+    { "from": "bin", "to": "timer", "level": 1, "fits": "Later", "idea": "A clean first-throw landing gives a small time bonus; a bounce-out costs a moment." }
+  ],
+  "onPurpose": []
+}
+</script>
+<!-- MECHANICS DATA END -->
+
+<style>
+/* Layout: a control-deck page. Ranked list and matrix on the left, a sticky readout panel on the right; stacks on phones.
+   The accent comes from the data block (accent.light / accent.dark); the link-level shades are mixed from it. */
+:root {
+  --bg: #eef2f1;
+  --panel: #ffffff;
+  --ink: #17221f;
+  --muted: #5b6a66;
+  --line: #d3dcd9;
+  --brass: #94712c;
+  --holo: var(--accent-light, #1f8f86);
+  --l1: color-mix(in srgb, var(--holo) 25%, var(--panel));
+  --l2: color-mix(in srgb, var(--holo) 62%, var(--panel));
+  --l3: var(--holo);
+  --idea: #b8862f;
+  --err: #b23b2e;
+  --font-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1617; --panel: #152022; --ink: #e2ece9; --muted: #8fa29d; --line: #26383a;
+    --brass: #d2a95a; --holo: var(--accent-dark, #5fe0d2); --idea: #d9a64a; --err: #f08a7c;
+    --l1: color-mix(in srgb, var(--holo) 28%, var(--panel)); --l2: color-mix(in srgb, var(--holo) 58%, var(--panel));
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1617; --panel: #152022; --ink: #e2ece9; --muted: #8fa29d; --line: #26383a;
+  --brass: #d2a95a; --holo: var(--accent-dark, #5fe0d2); --idea: #d9a64a; --err: #f08a7c;
+  --l1: color-mix(in srgb, var(--holo) 28%, var(--panel)); --l2: color-mix(in srgb, var(--holo) 58%, var(--panel));
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 28px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
+h1 { font-size: 28px; font-weight: 700; }
+h2 { font-size: 17px; font-weight: 600; }
+h3 { font-size: 15px; font-weight: 600; }
+.eyebrow { font-family: var(--font-display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brass); }
+.sub { color: var(--muted); max-width: 70ch; margin: 6px 0 0; }
+header { display: grid; gap: 4px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 10px; font-variant-numeric: tabular-nums; }
+.stats div { display: grid; }
+.stats b { font-family: var(--font-display); font-size: 20px; font-weight: 600; }
+.stats span { font-size: 12px; color: var(--muted); }
+.controls { display: grid; gap: 10px; }
+.crow { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+.crow label { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+.clabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.gchips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.gchip { font: inherit; font-size: 12.5px; padding: 3px 10px 3px 8px; border-radius: 99px; border: 1px solid var(--holo); background: color-mix(in srgb, var(--holo) 14%, transparent); color: var(--ink); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.gchip svg { width: 12px; height: 12px; }
+.gchip[aria-pressed="false"] { border-color: var(--line); background: none; color: var(--muted); text-decoration: line-through; }
+.gchip[aria-pressed="false"] svg { visibility: hidden; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 12px; align-items: center; }
+.sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; border: 1px solid var(--line); }
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.col { display: grid; gap: 20px; min-width: 0; }
+section.box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 0; }
+
+/* ranked list */
+.rank { display: grid; gap: 2px; }
+.rrow { display: grid; grid-template-columns: 26px minmax(110px, 190px) minmax(0, 1fr) minmax(0, 1fr) 62px; gap: 10px; align-items: center; padding: 5px 6px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; background: none; color: inherit; font: inherit; text-align: left; width: 100%; }
+.rrow:hover { background: color-mix(in srgb, var(--holo) 8%, transparent); }
+.rrow.sel { border-color: var(--holo); background: color-mix(in srgb, var(--holo) 12%, transparent); }
+.rrow.head { cursor: default; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.rrow.head:hover { background: none; }
+.rrow.dim { opacity: 0.45; }
+.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; text-align: right; }
+.nm { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar { position: relative; height: 10px; background: color-mix(in srgb, var(--line) 60%, transparent); border-radius: 5px; overflow: hidden; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: var(--holo); border-radius: 5px; }
+.bar i.plus { background: var(--idea); opacity: 0.75; }
+.pct { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--muted); }
+.barcell { display: grid; grid-template-columns: minmax(0, 1fr) 34px; gap: 6px; align-items: center; }
+@media (max-width: 560px) { .rrow { grid-template-columns: 22px minmax(0, 1fr) 70px 70px; } .rrow .tc { display: none; } }
+
+/* matrix */
+.mscroll { overflow-x: auto; }
+table.mx { border-collapse: separate; border-spacing: 2px; font-size: 12px; }
+table.mx th { font-weight: 500; color: var(--muted); }
+table.mx thead th { vertical-align: bottom; height: 150px; padding: 0; }
+table.mx thead th div { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; padding: 4px 0; margin: 0 auto; }
+table.mx tbody th { text-align: right; padding-right: 8px; white-space: nowrap; position: sticky; left: 0; background: var(--panel); z-index: 1; }
+table.mx th.hl { color: var(--ink); font-weight: 600; }
+table.mx th.grp { border-top: 2px solid var(--brass); }
+td.c { width: 20px; height: 20px; min-width: 20px; border-radius: 3px; cursor: pointer; background: color-mix(in srgb, var(--line) 35%, transparent); position: relative; }
+td.c.self { background: repeating-linear-gradient(45deg, var(--line) 0 2px, transparent 2px 5px); cursor: default; }
+td.c.v1 { background: var(--l1); } td.c.v2 { background: var(--l2); } td.c.v3 { background: var(--l3); }
+td.c.idea { box-shadow: inset 0 0 0 2px var(--idea); }
+td.c.idea.only { background: color-mix(in srgb, var(--idea) 18%, transparent); }
+td.c.cross { outline: 1px solid color-mix(in srgb, var(--holo) 45%, transparent); }
+td.c.pick { outline: 2px solid var(--ink); }
+td.c:focus-visible, .rrow:focus-visible, button:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+td.c.off, th.off { opacity: 0.25; }
+
+/* readout */
+aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 900px) { aside { position: static; } }
+.readout { display: grid; gap: 12px; }
+.readout p { margin: 0; }
+.lk { display: grid; gap: 2px; padding: 8px 10px; border-radius: 6px; background: color-mix(in srgb, var(--line) 30%, transparent); }
+.lk .t { font-weight: 600; font-size: 13px; }
+.lk .w { color: var(--muted); font-size: 12.5px; }
+.lk.idea { background: color-mix(in srgb, var(--idea) 12%, transparent); }
+.chip { display: inline-block; font-size: 11px; font-family: var(--font-display); letter-spacing: 0.04em; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.chip.lv1 { border-color: var(--l2); } .chip.lv2 { border-color: var(--l2); color: var(--ink); } .chip.lv3 { background: var(--l3); border-color: var(--l3); color: var(--panel); }
+.chip.fit { border-color: var(--idea); color: var(--idea); }
+.note { border-left: 3px solid var(--brass); padding: 4px 10px; color: var(--muted); font-size: 12.5px; }
+.list { display: grid; gap: 6px; }
+.empty { color: var(--muted); font-style: italic; }
+.ideas { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.ideas .lk { align-content: start; }
+.err { color: var(--err); }
+.linkbtn { background: none; border: none; padding: 0; color: var(--holo); font: inherit; cursor: pointer; text-decoration: underline; }
+@media (prefers-reduced-motion: no-preference) { .rrow, td.c, .gchip { transition: background-color 0.12s, opacity 0.12s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow" id="eyebrow">Design tool</div>
+    <h1>Mechanic Intersectionality Tool</h1>
+    <p class="sub">How strongly each mechanic visibly changes the others. A link counts only when the player can see A change B; code links with no visible effect don't. Percent is the average strength across every other mechanic, so 100% would mean it drives everything.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="controls">
+    <div class="crow">
+      <span class="clabel">Groups in play</span>
+      <div class="gchips" id="groupChips"></div>
+    </div>
+    <div class="crow">
+      <label><input type="checkbox" id="optIdeas"> Count ideas as if built</label>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="col">
+      <section class="box">
+        <div>
+          <h2>Most isolated first</h2>
+          <p class="hint">Out: how much it changes others. In: how much others change it. Pick a row to see its links and ideas.</p>
+        </div>
+        <div class="rank" id="rank"></div>
+      </section>
+
+      <section class="box">
+        <div>
+          <h2>Matrix</h2>
+          <p class="hint">Row changes column. Pick a cell for the reason.</p>
+        </div>
+        <div class="mscroll"><table class="mx" id="mx"></table></div>
+      </section>
+
+      <section class="box">
+        <div>
+          <h2 id="ideasTitle">Ideas</h2>
+          <p class="hint" id="ideasHint">Proposed links, not built. Each names the step it fits.</p>
+        </div>
+        <div class="ideas" id="ideas"></div>
+      </section>
+    </div>
+
+    <aside>
+      <section class="box readout" id="readout"></section>
+    </aside>
+  </div>
+</div>
+
+<script>
+// Reads the data block at the top of this file, scores every mechanic and draws the ranked list, matrix, readout and ideas.
+(function () {
+  const state = { data: null, sel: null, cell: null, offGroups: new Set(), withIdeas: false, key: "mit" };
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const CHECK = `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5l2.5 2.5L10 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+  // Reads and writes remembered toggles, ignoring storage errors.
+  function recall(key, fallback) { try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (e) { return fallback; } }
+  function remember(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+
+  // Builds lookups: link level per pair, idea per pair, mechanic by id, group by id.
+  function index(d) {
+    d.byId = Object.fromEntries(d.mechanics.map(m => [m.id, m]));
+    d.groupById = Object.fromEntries(d.groups.map(g => [g.id, g]));
+    d.link = {}; d.idea = {};
+    d.links.forEach(l => d.link[l.from + ">" + l.to] = l);
+    (d.ideas || []).forEach(i => { if (!d.idea[i.from + ">" + i.to]) d.idea[i.from + ">" + i.to] = i; });
+    d.ideas = d.ideas || [];
+    d.purpose = Object.fromEntries((d.onPurpose || []).map(p => [p.id, p.why]));
+  }
+
+  // Applies the project's name and accent color from the data.
+  function brand(d) {
+    const name = d.project || "Project";
+    $("eyebrow").textContent = d.eyebrow || name + " design tool";
+    document.title = name + " mechanics";
+    const a = d.accent;
+    const light = typeof a === "string" ? a : a && a.light, dark = typeof a === "string" ? a : a && (a.dark || a.light);
+    if (light) document.documentElement.style.setProperty("--accent-light", light);
+    if (dark) document.documentElement.style.setProperty("--accent-dark", dark);
+  }
+
+  const isOff = m => state.offGroups.has(m.group);
+
+  // The mechanics in play under the current group chips.
+  function active() { return state.data.mechanics.filter(m => !isOff(m)); }
+
+  // Level for a pair, optionally lifted by an idea.
+  function level(a, b, withIdeas) {
+    const l = state.data.link[a + ">" + b], i = state.data.idea[a + ">" + b];
+    const base = l ? l.level : 0;
+    return withIdeas && i ? Math.max(base, i.level) : base;
+  }
+
+  // Out, In and touch count for each mechanic, now and with ideas.
+  function scores() {
+    const ms = active(), n = Math.max(1, ms.length - 1);
+    return ms.map(m => {
+      let out = 0, inn = 0, outI = 0, inI = 0, touch = 0;
+      ms.forEach(o => {
+        if (o.id === m.id) return;
+        const a = level(m.id, o.id, false), b = level(o.id, m.id, false);
+        out += a; inn += b; outI += level(m.id, o.id, true); inI += level(o.id, m.id, true);
+        if (a || b) touch++;
+      });
+      const pct = v => Math.round(v / 3 / n * 100);
+      return { m, out: pct(out), inn: pct(inn), outI: pct(outI), inI: pct(inI), touch, n,
+               total: (out + inn) / 6 / n * 100, totalI: (outI + inI) / 6 / n * 100 };
+    });
+  }
+
+  // Header numbers.
+  function drawStats(sc) {
+    const ms = active(), ids = new Set(ms.map(m => m.id));
+    const links = state.data.links.filter(l => ids.has(l.from) && ids.has(l.to)).length;
+    const ideas = state.data.ideas.filter(l => ids.has(l.from) && ids.has(l.to)).length;
+    const pairs = ms.length * (ms.length - 1);
+    const lonely = sc.filter(s => s.total < 8).length;
+    const mean = sc.length ? Math.round(sc.reduce((a, s) => a + (state.withIdeas ? s.totalI : s.total), 0) / sc.length) : 0;
+    $("stats").innerHTML = [
+      [ms.length, "mechanics"], [links + " of " + pairs, "pairs linked"], [mean + "%", "average connection"],
+      [lonely, "nearly isolated (under 8%)"], [ideas, "ideas proposed"], ["v" + esc(state.data.version), "checked " + esc(state.data.updated)]
+    ].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join("");
+  }
+
+  // One on/off chip per group, plus the level legend.
+  function drawControls() {
+    const d = state.data;
+    $("groupChips").innerHTML = d.groups.map(g => {
+      const count = d.mechanics.filter(m => m.group === g.id).length;
+      return `<button class="gchip" type="button" data-g="${esc(g.id)}" aria-pressed="${!state.offGroups.has(g.id)}" title="${state.offGroups.has(g.id) ? "Left out. Click to count it." : "Counted. Click to leave it out."}">${CHECK}${esc(g.name)} <span class="pct">${count}</span></button>`;
+    }).join("");
+    $("groupChips").querySelectorAll("[data-g]").forEach(b => b.onclick = () => toggleGroup(b.dataset.g));
+    const shade = ["", "var(--l1)", "var(--l2)", "var(--l3)"];
+    $("legend").innerHTML = d.levels.filter(l => l.level > 0).map(l => `<span><i class="sw" style="background:${shade[l.level] || "var(--l3)"}"></i>${esc(l.name)} ${esc(l.percent)}%</span>`).join("") +
+      `<span><i class="sw" style="box-shadow:inset 0 0 0 2px var(--idea)"></i>Idea</span>`;
+  }
+
+  // Ranked list, most isolated first.
+  function drawRank(sc) {
+    const key = state.withIdeas ? "totalI" : "total";
+    const rows = [...sc].sort((a, b) => a[key] - b[key]);
+    const bar = (now, withI) => `<div class="barcell"><div class="bar">${state.withIdeas && withI > now ? `<i class="plus" style="width:${withI}%"></i>` : ""}<i style="width:${now}%"></i></div><span class="pct">${state.withIdeas ? withI : now}%</span></div>`;
+    $("rank").innerHTML = `<div class="rrow head"><span></span><span>Mechanic</span><span>Out</span><span>In</span><span class="tc num">Touches</span></div>` +
+      (rows.length ? rows.map((s, i) => `<button class="rrow${state.sel === s.m.id ? " sel" : ""}${state.data.purpose[s.m.id] ? " dim" : ""}" data-id="${esc(s.m.id)}" type="button">
+        <span class="num">${i + 1}</span><span class="nm" title="${esc(s.m.summary)}">${esc(s.m.name)}</span>
+        ${bar(s.out, s.outI)}${bar(s.inn, s.inI)}<span class="tc num">${s.touch}/${s.n}</span></button>`).join("") : `<p class="empty">Every group is switched off.</p>`);
+    $("rank").querySelectorAll("button.rrow").forEach(b => b.onclick = () => select(b.dataset.id));
+  }
+
+  // The matrix, grouped by mechanic group in data order.
+  function drawMatrix() {
+    const ms = state.data.mechanics, sel = state.sel;
+    const firstOfGroup = new Set(); let g = null;
+    ms.forEach(m => { if (m.group !== g) { firstOfGroup.add(m.id); g = m.group; } });
+    let h = `<thead><tr><th></th>${ms.map(m => `<th class="${sel === m.id ? "hl" : ""}${isOff(m) ? " off" : ""}"><div>${esc(m.name)}</div></th>`).join("")}</tr></thead><tbody>`;
+    ms.forEach(r => {
+      h += `<tr><th class="${firstOfGroup.has(r.id) ? "grp " : ""}${sel === r.id ? "hl" : ""}${isOff(r) ? " off" : ""}">${esc(r.name)}</th>`;
+      ms.forEach(c => {
+        if (r.id === c.id) { h += `<td class="c self"></td>`; return; }
+        const l = state.data.link[r.id + ">" + c.id], i = state.data.idea[r.id + ">" + c.id];
+        let cls = "c";
+        if (l) cls += " v" + l.level;
+        if (i) cls += " idea" + (l ? "" : " only");
+        if (sel && (r.id === sel || c.id === sel)) cls += " cross";
+        if (state.cell === r.id + ">" + c.id) cls += " pick";
+        if (isOff(r) || isOff(c)) cls += " off";
+        const tip = r.name + " → " + c.name + (l ? ": " + l.why : i ? ": idea" : ": none");
+        h += `<td class="${cls}" data-p="${esc(r.id)}>${esc(c.id)}" tabindex="0" title="${esc(tip)}"></td>`;
+      });
+      h += `</tr>`;
+    });
+    $("mx").innerHTML = h + "</tbody>";
+    $("mx").querySelectorAll("td.c:not(.self)").forEach(td => {
+      td.onclick = () => pickCell(td.dataset.p);
+      td.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickCell(td.dataset.p); } };
+    });
+  }
+
+  const lvName = lv => (state.data.levels.find(l => l.level === lv) || { name: "Level " + lv }).name;
+  const linkCard = (l, idea) => {
+    const a = state.data.byId[l.from].name, b = state.data.byId[l.to].name;
+    return `<div class="lk${idea ? " idea" : ""}"><span class="t">${esc(a)} → ${esc(b)} <span class="chip lv${l.level}">${esc(lvName(l.level))}</span>${idea && l.fits ? ` <span class="chip fit">${esc(l.fits)}</span>` : ""}</span><span class="w">${esc(idea ? l.idea : l.why)}</span></div>`;
+  };
+
+  // Right-hand readout: a picked cell, a picked mechanic, or the starting hint.
+  function drawReadout(sc) {
+    const d = state.data, box = $("readout");
+    if (state.cell) {
+      const [a, b] = state.cell.split(">");
+      const l = d.link[state.cell], i = d.idea[state.cell], back = d.link[b + ">" + a], backI = d.idea[b + ">" + a];
+      box.innerHTML = `<div class="eyebrow">Pair</div><h2>${esc(d.byId[a].name)} → ${esc(d.byId[b].name)}</h2>
+        ${l ? linkCard(l) : `<p class="empty">No visible effect today.</p>`}
+        ${i ? linkCard(i, true) : ""}
+        <h3>The other way</h3>
+        ${back ? linkCard(back) : `<p class="empty">${esc(d.byId[b].name)} does not visibly change ${esc(d.byId[a].name)}.</p>`}
+        ${backI ? linkCard(backI, true) : ""}
+        <p><button class="linkbtn" type="button" data-go="${esc(a)}">Show ${esc(d.byId[a].name)}</button> · <button class="linkbtn" type="button" data-go="${esc(b)}">Show ${esc(d.byId[b].name)}</button></p>`;
+    } else if (state.sel) {
+      const m = d.byId[state.sel], s = sc.find(x => x.m.id === m.id);
+      const outs = d.links.filter(l => l.from === m.id).sort((x, y) => y.level - x.level);
+      const ins = d.links.filter(l => l.to === m.id).sort((x, y) => y.level - x.level);
+      const none = active().filter(o => o.id !== m.id && !d.link[m.id + ">" + o.id] && !d.link[o.id + ">" + m.id]).map(o => o.name);
+      const group = d.groupById[m.group];
+      box.innerHTML = `<div class="eyebrow">${esc(group ? group.name : m.group)}</div><h2>${esc(m.name)}</h2>
+        <p class="hint">${esc(m.summary)}</p>
+        ${s ? `<p class="pct">Out ${s.out}% · In ${s.inn}% · touches ${s.touch} of ${s.n}${state.withIdeas ? ` · with ideas: out ${s.outI}%, in ${s.inI}%` : ""}</p>` : `<p class="note">Left out: its group is switched off.</p>`}
+        ${d.purpose[m.id] ? `<p class="note">Apart on purpose: ${esc(d.purpose[m.id])}</p>` : ""}
+        <h3>Changes</h3><div class="list">${outs.length ? outs.map(l => linkCard(l)).join("") : `<p class="empty">Nothing yet.</p>`}</div>
+        <h3>Changed by</h3><div class="list">${ins.length ? ins.map(l => linkCard(l)).join("") : `<p class="empty">Nothing yet.</p>`}</div>
+        <h3>No link either way</h3><p class="hint">${none.length ? esc(none.join(", ")) : "Linked to everything in play."}</p>`;
+    } else {
+      const worst = [...sc].filter(s => !d.purpose[s.m.id]).sort((a, b) => a.total - b.total).slice(0, 3);
+      box.innerHTML = `<div class="eyebrow">Readout</div><h2>Pick a mechanic or a cell</h2>
+        <p class="hint">The weakest mechanics in play right now:</p>
+        <div class="list">${worst.length ? worst.map(s => `<button class="linkbtn" type="button" data-go="${esc(s.m.id)}">${esc(s.m.name)}</button>`).join("") : `<p class="empty">None in play.</p>`}</div>
+        <p class="note">The goal is not 100%. A link should change what the player sees or decides; forcing every pair makes the game busy. Use the low end of the list as a to-do list, and the ideas as the first candidates.</p>`;
+    }
+    box.querySelectorAll("[data-go]").forEach(b => b.onclick = () => select(b.dataset.go));
+  }
+
+  // Ideas, filtered to the picked mechanic when there is one.
+  function drawIdeas() {
+    const d = state.data, sel = state.sel;
+    const list = d.ideas.filter(i => !sel || i.from === sel || i.to === sel);
+    $("ideasTitle").textContent = sel ? `Ideas touching ${d.byId[sel].name}` : "Ideas";
+    $("ideas").innerHTML = list.length ? list.map(i => linkCard(i, true)).join("") : `<p class="empty">${sel ? "No ideas involve this mechanic yet." : "No ideas yet."}</p>`;
+  }
+
+  function render() {
+    const sc = scores();
+    drawStats(sc); drawControls(); drawRank(sc); drawMatrix(); drawReadout(sc); drawIdeas();
+  }
+  function select(id) { state.sel = state.sel === id && !state.cell ? null : id; state.cell = null; render(); }
+  function pickCell(p) { state.cell = state.cell === p ? null : p; state.sel = p.split(">")[0]; render(); }
+  function toggleGroup(id) {
+    state.offGroups.has(id) ? state.offGroups.delete(id) : state.offGroups.add(id);
+    remember(state.key + "-off", [...state.offGroups].join(","));
+    render();
+  }
+
+  // Parses the data block, restores this project's toggles and draws the page.
+  try {
+    const d = JSON.parse($("mechanics-data").textContent);
+    state.data = d; index(d); brand(d);
+    state.key = "mit-" + String(d.project || "project").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const ids = new Set(d.groups.map(g => g.id));
+    state.offGroups = new Set(recall(state.key + "-off", "").split(",").filter(g => ids.has(g)));
+    state.withIdeas = recall(state.key + "-ideas", "0") === "1";
+    $("optIdeas").checked = state.withIdeas;
+    $("optIdeas").onchange = e => { state.withIdeas = e.target.checked; remember(state.key + "-ideas", state.withIdeas ? "1" : "0"); render(); };
+    render();
+  } catch (e) {
+    $("readout").innerHTML = `<p class="err">The data block at the top of this file could not be read (${esc(e.message)}). Check it is valid JSON: no trailing commas, every string in double quotes.</p>`;
+  }
+})();
+</script>
