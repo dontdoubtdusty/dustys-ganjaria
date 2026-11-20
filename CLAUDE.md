@@ -7,10 +7,14 @@ Dusty's Ganjaria is a solo, private time-management game set in a legal cannabis
 C# / .NET 10 with Raylib-cs, the same stack as the other games here (add ImGui.NET only if a tool screen needs it).
 
 ## Code
-- `Program.cs`: window, game loop, `Version`. `DustysGanjaria.exe --shot <file.png>` stages a mid-order scene, saves one frame and quits; `--shot-throw <file.png>` also seals the bag and throws it at the bin, and should end on the result panel; `--shot-counter <file.png>` shows the counter with a line and a waiting customer. Use them to check changes (build to a temp folder first; desktop screen captures grab whatever window is on top, which may be the owner's private screen).
-- `Shop.cs`: the order queue and screens: arrivals, the line, taking orders, the waiting area, patience and walkouts, tabs (Counter, Weigh), served/walkout/tip totals and the order result panel. Hands each ticket to the weigh station (`Start`) and collects the bag (`TakeShipped`).
-- `Customer.cs`: one customer (name, shirt, order, patience, walking).
-- `WeighStation.cs`: the weigh station flow (place bag, toss buds, zip, throw into OUT bin, result panel). Layout rects and zip, bin and seal tuning at the top.
+- `Program.cs`: window, game loop, `Version`. `DustysGanjaria.exe --shot <file.png>` stages a mid-order scene, saves one frame and quits; `--shot-throw <file.png>` also seals the bag and throws it at the bin, and should end on the result panel; `--shot-counter <file.png>` shows the shop view with a line and a waiting customer; `--shot-order <file.png>` holds the order shot half way. Screenshot runs load every sound but play muted. Use them to check changes (build to a temp folder first; desktop screen captures grab whatever window is on top, which may be the owner's private screen).
+- `Shop.cs`: the shop and its screens: arrivals through the door, the line, the side-on shop view (layout constants at the top), taking orders, the waiting bench, patience and walkouts, tabs (Counter, Weigh), ticket drops onto the weigh station (`Start`, collects the bag with `TakeShipped`), served/walkout/tip totals and the order result panel.
+- `Customer.cs`: one customer (name, looks, order, patience, walking; `Pos` is the feet).
+- `OrderShot.cs`: the over-the-shoulder order shot (speech lines, items written onto the notepad, click to skip).
+- `Ticket.cs` and `TicketRail.cs`: an order ticket, and the rail across the top of every screen (slots, dragging; the shop decides what a drop does).
+- `Audio.cs`: every sound by name (`Audio.Play(name, volume, pitch)`), each with a few copies so it can overlap and a small random pitch per play. All are placeholders made in code; `resources/sounds/<name>.wav` replaces one (names at the top: doorbell, tick, pluck, ding, zip, seal, slip, thump, pop, till).
+- `Effects.cs`: particles (leaf bits) and floating pop-up words. Visual only, never scoring.
+- `WeighStation.cs`: the weigh station flow (place bag, toss buds, zip, throw into OUT bin). Layout rects and zip, bin and seal tuning at the top; feedback tuning (needle spring, tick and puff speeds, ding timing, zip teeth and shake, result delay) in its own block below the fields.
 - `Physics.cs`: small 2D physics: circles for buds (gravity, bud-bud pushes, line-segment walls; the held bud is immovable, so it shoves others) and `StepBox` for the thrown sealed bag (axis-aligned walls only).
 - `Bag.cs`: the baggie (position, zip progress, sealed, its walls).
 - `Bud.cs`: one bud; radius follows the square root of weight, so size is honest.
@@ -21,8 +25,11 @@ C# / .NET 10 with Raylib-cs, the same stack as the other games here (add ImGui.N
 ## Art
 Placeholders only (flat shapes and text labels) until the owner supplies PNG sprites. All drawing goes through `Art.cs`, so a placeholder can be swapped for a sprite in one place.
 
+## App icon
+The icon is the owner's picture `resources/art-reference/icon-reference.jpg` (HD badge and frame included). `art/icon/make_ico.ps1` turns it into `resources/icon.ico` (the .exe and shortcut icon, `ApplicationIcon` in the csproj) and `resources/icon.png` (window icon, set in `Program.SetWindowIcon`); `-Source <picture>` uses another picture. Not used, kept for reference: `art/icon/draw_icon.py` draws a version in code in Blender 5.3 (`blender -b --python art/icon/draw_icon.py`, renders `art/icon/icon_2048.png`; Blender 5.x only fills strokes with a non-zero `fill_id`).
+
 ## Version
-`Version` in `Program.cs` (now 0.4.0), follows `claude/versioning.md`.
+`Version` in `Program.cs` (now 0.6.0), follows `claude/versioning.md`.
 
 ## Run and build
 `Build Ganjaria.bat` publishes a Release copy to `..\Dustys Ganjaria` and puts a "Dusty's Ganjaria" shortcut on the Desktop and in the Start menu. Run it after every meaningful change (close the game first). To run it from a tool without hanging on `pause`, feed it NUL: `Start-Process cmd -ArgumentList '/c','"<path>\Build Ganjaria.bat" < NUL' -NoNewWindow -Wait`.

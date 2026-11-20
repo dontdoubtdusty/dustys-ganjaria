@@ -8,11 +8,17 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- The .exe icon (and so the shortcut's); made from art/icon by art/icon/make_ico.ps1 -->
+    <ApplicationIcon>resources\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- The game font and its licence (the licence must ship with the font) -->
     <None Include="resources\fonts\*.*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Window and taskbar icon, loaded at start-up -->
+    <None Include="resources\icon.png" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Optional sounds: resources\sounds\doorbell.wav replaces the chime made in code (see Audio.cs) -->
+    <None Include="resources\sounds\*.*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

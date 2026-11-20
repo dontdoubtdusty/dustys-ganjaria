@@ -14,6 +14,12 @@ sealed class Bud
     public Vector2 Pos;
     public Vector2 Vel;
     public float Angle;
+    // Fastest hit this frame (speed into a wall or another bud); the station reads and resets it for sounds.
+    public float Impact;
+    // 0-1, how squashed the bud looks after a hard landing; fades back to 0.
+    public float Squash;
+    // Seconds before this bud can tick again, so a rolling bud does not buzz.
+    public float TickCooldown;
 
     // Sealed buds are inside a closed bag: no physics, they ride along with the bag at LocalOffset.
     public bool Sealed;

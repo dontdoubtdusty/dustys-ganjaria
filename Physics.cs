@@ -52,11 +52,13 @@ sealed class Physics
     const float BoxBounce = 0.25f;
     const float BoxFriction = 0.85f;
 
-    // Moves a thrown box (the sealed bag) by dt seconds: gravity, then bump off the walls.
+    // Moves a thrown box (the sealed bag) by dt seconds: gravity, then bump off the walls. Returns the speed of the
+    // hardest hit into a wall this frame, 0 if it touched nothing.
     // Walls here are all straight up-down or side-to-side lines, so a simple box test is enough.
-    public static void StepBox(ref Vector2 pos, ref Vector2 vel, Vector2 size, List<Segment> walls, float dt)
+    public static float StepBox(ref Vector2 pos, ref Vector2 vel, Vector2 size, List<Segment> walls, float dt)
     {
         float h = dt / Substeps;
+        float hardest = 0;
         for (int s = 0; s < Substeps; s++)
         {
             vel.Y += Gravity * h;
@@ -64,17 +66,20 @@ sealed class Physics
                 vel = Vector2.Normalize(vel) * MaxSpeed;
             pos += vel * h;
             foreach (var w in walls)
-                CollideBox(ref pos, ref vel, size, w);
+                hardest = MathF.Max(hardest, CollideBox(ref pos, ref vel, size, w));
         }
+        return hardest;
     }
 
-    // Pushes a box out of a wall the short way and bounces it a little.
-    static void CollideBox(ref Vector2 pos, ref Vector2 vel, Vector2 size, Segment w)
+    // Pushes a box out of a wall the short way and bounces it a little. Returns the speed it hit with (0 = no touch;
+    // a box resting on a wall still returns a small number).
+    static float CollideBox(ref Vector2 pos, ref Vector2 vel, Vector2 size, Segment w)
     {
         float sl = MathF.Min(w.A.X, w.B.X), sr = MathF.Max(w.A.X, w.B.X);
         float st = MathF.Min(w.A.Y, w.B.Y), sb = MathF.Max(w.A.Y, w.B.Y);
         float bl = pos.X, br = pos.X + size.X, bt = pos.Y, bb = pos.Y + size.Y;
-        if (br <= sl || bl >= sr || bb <= st || bt >= sb) return;
+        if (br <= sl || bl >= sr || bb <= st || bt >= sb) return 0;
+        float speed = 0;
 
         float pushLeft = br - sl, pushRight = sr - bl, pushUp = bb - st, pushDown = sb - bt;
         if (MathF.Min(pushUp, pushDown) <= MathF.Min(pushLeft, pushRight))
@@ -82,24 +87,25 @@ sealed class Physics
             if (pushUp < pushDown)
             {
                 pos.Y -= pushUp;
-                if (vel.Y > 0) { vel.Y = -vel.Y * BoxBounce; vel.X *= BoxFriction; }
+                if (vel.Y > 0) { speed = vel.Y; vel.Y = -vel.Y * BoxBounce; vel.X *= BoxFriction; }
             }
             else
             {
                 pos.Y += pushDown;
-                if (vel.Y < 0) vel.Y = -vel.Y * BoxBounce;
+                if (vel.Y < 0) { speed = -vel.Y; vel.Y = -vel.Y * BoxBounce; }
             }
         }
         else if (pushLeft < pushRight)
         {
             pos.X -= pushLeft;
-            if (vel.X > 0) vel.X = -vel.X * BoxBounce;
+            if (vel.X > 0) { speed = vel.X; vel.X = -vel.X * BoxBounce; }
         }
         else
         {
             pos.X += pushRight;
-            if (vel.X < 0) vel.X = -vel.X * BoxBounce;
+            if (vel.X < 0) { speed = -vel.X; vel.X = -vel.X * BoxBounce; }
         }
+        return MathF.Max(speed, 0.01f);
     }
 
     // Pushes two overlapping buds apart and bounces them off each other.
@@ -124,6 +130,8 @@ sealed class Physics
         float vn = Vector2.Dot(b.Vel - a.Vel, n);
         if (vn < 0)
         {
+            a.Impact = MathF.Max(a.Impact, -vn);
+            b.Impact = MathF.Max(b.Impact, -vn);
             float j = -(1 + Restitution) * vn / (ia + ib);
             a.Vel -= n * j * ia;
             b.Vel += n * j * ib;
@@ -147,6 +155,7 @@ sealed class Physics
         float vn = Vector2.Dot(b.Vel, n);
         if (vn < 0)
         {
+            b.Impact = MathF.Max(b.Impact, -vn);
             var tangent = b.Vel - n * vn;
             b.Vel = -n * vn * Restitution + tangent * WallFriction;
         }

@@ -16,7 +16,7 @@ sealed class WeighStation
     const float ZipGrabRadius = 22f;
 
     const float FloorY = 665;
-    static readonly Rectangle TicketRect = new(50, 36, 330, 110);
+    static readonly Rectangle TicketRect = new(50, 150, 330, 110);
     static readonly Rectangle JarRect = new(70, 380, 330, 260);
     static readonly Rectangle StackRect = new(480, 590, 120, 70);
     static readonly Rectangle PlateRect = new(730, 470, 300, 12);
@@ -28,6 +28,8 @@ sealed class WeighStation
     const float SealedScale = 0.6f;
     // How long a bag must sit still in the bin before the order counts as shipped.
     const float BinRestSeconds = 0.25f;
+    // Pause between the bag shipping and the result panel, so the landing (wobble, clean-throw pop) can be seen.
+    const float ResultDelay = 0.9f;
 
     enum Phase { Idle, PlaceBag, Fill, Ship, Done }
     enum Drag { None, Bud, NewBag, Zip, Bag }
@@ -45,6 +47,8 @@ sealed class WeighStation
     Phase phase;
     Drag drag;
     WeighResult? shipped;
+    WeighResult? scored;
+    float doneTime;
     string message = "";
     float messageTime;
     float binRest;
@@ -52,9 +56,29 @@ sealed class WeighStation
     Bud? held;
     Vector2 grabOffset, lastMouse, mouseVel;
 
+    // ---------- Feedback (sound and visuals only; none of this changes the score) ----------
+    // The needle is a spring: it overshoots and wobbles before it settles.
+    const float NeedleStiffness = 170f, NeedleDamping = 10f;
+    // A bud hitting something faster than this ticks; faster than PuffSpeed it also throws off leaf bits.
+    const float TickSpeed = 220f, PuffSpeed = 650f, HardHit = 1400f;
+    const int MaxTicksPerFrame = 3;
+    // The weight must sit in the green this long before the ding, and leave it this long before it can ding again.
+    const float DingAfter = 0.25f, DingResetAfter = 0.3f;
+    // Spacing of the zip teeth; each one clicks as the tab passes it.
+    const float ZipToothGap = 12f;
+    // How close to slipping (0-1) the zip starts to shake.
+    const float ZipShakeFrom = 0.55f;
+    static readonly Color[] LeafBits = { new(96, 150, 70, 255), new(140, 170, 90, 255), new(214, 140, 70, 255) };
+
+    readonly Effects fx;
+    float needleVel, greenTime, outTime, greenGlow, zipDanger, binWobble, clock;
+    bool dinged, landed, touched;
+    int teethClosed;
+
     public WeighStation(Random rng)
     {
         this.rng = rng;
+        fx = new Effects(rng);
         BuildStaticWalls();
         Clear();
     }
@@ -145,6 +169,7 @@ sealed class WeighStation
         target = grams;
         band = Scoring.BandFor(target);
         shipped = null;
+        scored = null;
         needle = 0;
         seconds = 0;
         started = false;
@@ -153,6 +178,10 @@ sealed class WeighStation
         drag = Drag.None;
         messageTime = 0;
         binRest = 0;
+        needleVel = greenTime = outTime = greenGlow = zipDanger = binWobble = 0;
+        dinged = landed = touched = false;
+        teethClosed = 0;
+        fx.Clear();
 
         var size = target switch
         {
@@ -190,7 +219,7 @@ sealed class WeighStation
         // Run the physics for a couple of seconds so the pile has settled before the player sees it.
         for (int i = 0; i < 150; i++)
             physics.Step(buds, staticWalls, null, 1f / 60f);
-        foreach (var b in buds) b.Vel = Vector2.Zero;
+        foreach (var b in buds) { b.Vel = Vector2.Zero; b.Impact = 0; }
     }
 
     // Puts the bag on the scale and drops a few buds into it, for the --shot layout check.
@@ -221,8 +250,18 @@ sealed class WeighStation
         if (dt > 0) mouseVel = Vector2.Lerp(mouseVel, (mouse - lastMouse) / dt, 0.5f);
         lastMouse = mouse;
         if (messageTime > 0) messageTime -= dt;
+        clock += dt;
+        fx.Update(dt);
+        binWobble = MathF.Max(0, binWobble - dt * 2.5f);
+        if (drag != Drag.Zip) zipDanger = MathF.Max(0, zipDanger - dt * 4f);
 
-        if (phase == Phase.Done) return;
+        if (phase == Phase.Done)
+        {
+            // Hand the result over once the landing has had a moment on screen.
+            doneTime += dt;
+            if (scored != null && doneTime >= ResultDelay) { shipped = scored; scored = null; }
+            return;
+        }
 
         if (started) seconds += dt;
         if (press && drag == Drag.None) BeginDrag(mouse);
@@ -239,10 +278,67 @@ sealed class WeighStation
         walls.AddRange(staticWalls);
         if (bag.Placed && !bag.Sealed) walls.AddRange(bag.Walls);
         physics.Step(buds, walls, held, dt);
+        ReactToImpacts(dt);
         if (phase == Phase.Ship && drag != Drag.Bag) UpdateFlyingBag(dt);
 
-        // The needle eases toward the real weight, like a spring scale settling.
-        needle += (BagGrams - needle) * MathF.Min(1f, dt * 6f);
+        UpdateNeedle(dt);
+    }
+
+    // Turns this frame's bud hits into ticks, squash and leaf bits. The hardest few hits make a sound, so a
+    // whole pile settling does not become a rattle.
+    void ReactToImpacts(float dt)
+    {
+        foreach (var b in buds)
+        {
+            b.Squash = MathF.Max(0, b.Squash - dt * 6f);
+            if (b.TickCooldown > 0) b.TickCooldown -= dt;
+        }
+
+        var hits = buds.Where(b => b != held && !b.Sealed && b.Impact > TickSpeed && b.TickCooldown <= 0)
+                       .OrderByDescending(b => b.Impact).Take(MaxTicksPerFrame);
+        foreach (var b in hits)
+        {
+            float strength = MathF.Min(1f, b.Impact / HardHit);
+            b.Squash = MathF.Max(b.Squash, strength);
+            b.TickCooldown = 0.08f;
+            // Bigger buds knock lower; shake barely makes a sound.
+            float size = MathF.Min(1f, b.Radius / 26f);
+            Audio.Play(Audio.Tick, MathF.Max(0.15f, strength) * (b.IsShake ? 0.4f : 1f), 1.5f - 0.6f * size);
+            if (b.Impact > PuffSpeed && !b.IsShake)
+                fx.Puff(b.Pos + new Vector2(0, b.Radius * 0.6f), 4, 260f * strength + 80f, LeafBits);
+        }
+        foreach (var b in buds) b.Impact = 0;
+    }
+
+    // Moves the needle like a spring toward the real weight, and rings a ding once the weight has settled
+    // in the green. The green band glows while the needle is in it.
+    void UpdateNeedle(float dt)
+    {
+        float goal = BagGrams;
+        needleVel += ((goal - needle) * NeedleStiffness - needleVel * NeedleDamping) * dt;
+        needle += needleVel * dt;
+        if (needle < 0) { needle = 0; needleVel = -needleVel * 0.3f; }
+
+        bool weightIn = target > 0 && phase == Phase.Fill && MathF.Abs(goal - target) <= band;
+        bool needleIn = target > 0 && MathF.Abs(needle - target) <= band && (phase == Phase.Fill || bag.Sealed);
+        greenGlow += ((needleIn ? 1f : 0f) - greenGlow) * MathF.Min(1f, dt * 10f);
+
+        if (weightIn)
+        {
+            outTime = 0;
+            greenTime += dt;
+            if (greenTime >= DingAfter && !dinged)
+            {
+                dinged = true;
+                Audio.Play(Audio.Ding, 0.6f);
+            }
+        }
+        else
+        {
+            greenTime = 0;
+            outTime += dt;
+            if (outTime >= DingResetAfter) dinged = false;
+        }
     }
 
     // Works out what a fresh mouse press picks up: the bag to ship, the zip tab, a bud, or a new bag.
@@ -256,6 +352,7 @@ sealed class WeighStation
                 drag = Drag.Bag;
                 grabOffset = mouse - bag.Pos;
                 started = true;
+                Audio.Play(Audio.Pluck, 0.7f, 0.8f);
             }
             return;
         }
@@ -278,6 +375,7 @@ sealed class WeighStation
             buds.Remove(hit);
             buds.Add(hit);
             started = true;
+            Audio.Play(Audio.Pluck, hit.IsShake ? 0.35f : 0.6f, 1.3f - 0.4f * MathF.Min(1f, hit.Radius / 26f));
             return;
         }
 
@@ -285,6 +383,7 @@ sealed class WeighStation
         {
             drag = Drag.NewBag;
             started = true;
+            Audio.Play(Audio.Pluck, 0.8f, 0.7f);
         }
     }
 
@@ -311,17 +410,31 @@ sealed class WeighStation
         bag.Placed = true;
         bag.Pos = BagHome;
         phase = Phase.Fill;
+        Audio.Play(Audio.Tick, 0.7f, 0.6f);
+        needleVel = 0.4f * GaugeMax;  // the plate dips a little under the bag
     }
 
     // Drags the zip tab along the bag top; straying off the line or going too fast makes it slip open.
+    // Each tooth clicks as the tab passes it, a little higher as the zip closes; the tab shakes when close to slipping.
     void UpdateZip(Vector2 mouse, bool release)
     {
+        float p = (mouse.X - bag.Pos.X) / bag.Size.X;
+        // How close each slip rule is to tripping (1 = slips); the worst one sets the shake.
+        zipDanger = MathF.Max(MathF.Abs(mouse.Y - bag.ZipY) / ZipSlipDistance,
+                    MathF.Max(mouseVel.X / ZipMaxSpeed, (p - bag.Zip) / 0.2f));
+
         if (MathF.Abs(mouse.Y - bag.ZipY) > ZipSlipDistance) { Slip("Zip slipped: stay on the line"); return; }
         if (mouseVel.X > ZipMaxSpeed) { Slip("Zip slipped: too fast"); return; }
-
-        float p = (mouse.X - bag.Pos.X) / bag.Size.X;
         if (p > bag.Zip + 0.2f) { Slip("Zip slipped: too fast"); return; }
         if (p > bag.Zip) bag.Zip = MathF.Min(1f, p);
+
+        int teeth = (int)(bag.Zip * bag.Size.X / ZipToothGap);
+        int clicks = 0;
+        while (teethClosed < teeth)
+        {
+            teethClosed++;
+            if (clicks++ < 2) Audio.Play(Audio.ZipTooth, 0.5f, 0.85f + 0.5f * bag.Zip);
+        }
 
         if (bag.Zip >= 0.98f) { Seal(); return; }
         if (release) drag = Drag.None;
@@ -332,8 +445,11 @@ sealed class WeighStation
     {
         bag.Zip = 0;
         slips++;
+        teethClosed = 0;
+        zipDanger = 0;
         drag = Drag.None;
         Say(why);
+        Audio.Play(Audio.Slip, 0.8f);
     }
 
     // Closes the bag: everything inside is locked in, the bag is pressed flat and can be thrown.
@@ -360,6 +476,13 @@ sealed class WeighStation
             b.LocalOffset = (b.Pos - oldPos) * SealedScale;
         }
         MoveBag(bag.Pos);
+
+        // Say how the weight came out, right where the player is looking.
+        Audio.Play(Audio.Seal, 0.8f);
+        float diff = buds.Where(b => b.Sealed).Sum(b => b.Grams) - target;
+        var at = new Vector2(bag.Center.X, bag.Pos.Y - 30);
+        if (MathF.Abs(diff) <= band) fx.Say("In the green!", at, Art.Accent);
+        else fx.Say(diff > 0 ? $"{diff:0.00} g over" : $"{-diff:0.00} g short", at, Art.Warn);
     }
 
     // Carries the sealed bag; letting go throws it with the mouse's speed.
@@ -367,17 +490,35 @@ sealed class WeighStation
     {
         MoveBag(mouse - grabOffset);
         bag.Vel = ClampLength(mouseVel, MaxToss);
-        if (release) drag = Drag.None;
+        if (!release) return;
+        drag = Drag.None;
+        landed = touched = false;
     }
 
     // Lets a thrown bag fly and land; once it sits still inside the bin, the order is shipped.
+    // A throw whose first touch is the bottom of the bin counts as clean (a pop, no points).
     void UpdateFlyingBag(float dt)
     {
-        Physics.StepBox(ref bag.Pos, ref bag.Vel, bag.Size, staticWalls, dt);
+        float hit = Physics.StepBox(ref bag.Pos, ref bag.Vel, bag.Size, staticWalls, dt);
         MoveBag(bag.Pos);
 
-        bool inBin = bag.Pos.X >= BinRect.X - 1 && bag.Pos.X + bag.Size.X <= BinRect.X + BinRect.Width + 1
-                     && bag.Pos.Y + bag.Size.Y >= FloorY - 2;
+        bool overBin = bag.Pos.X >= BinRect.X - 1 && bag.Pos.X + bag.Size.X <= BinRect.X + BinRect.Width + 1;
+        bool inBin = overBin && bag.Pos.Y + bag.Size.Y >= FloorY - 2;
+        if (hit > 0 && !landed)
+        {
+            if (inBin)
+            {
+                landed = true;
+                binWobble = MathF.Min(1f, hit / 900f);
+                if (!touched)
+                {
+                    Audio.Play(Audio.Pop, 0.7f);
+                    fx.Say("Clean throw!", new Vector2(BinRect.X + BinRect.Width / 2, BinRect.Y - 70), Art.Accent);
+                }
+            }
+            else touched = true;
+        }
+        if (hit > 150f) Audio.Play(Audio.Thump, Math.Clamp(hit / 1500f, 0.2f, 1f));
         if (inBin && bag.Vel.Length() < 40f)
         {
             binRest += dt;
@@ -399,7 +540,8 @@ sealed class WeighStation
     {
         float grams = buds.Where(b => b.Sealed).Sum(b => b.Grams);
         int spilled = buds.Count(b => !b.Sealed && !Raylib.CheckCollisionPointRec(b.Pos, JarRect));
-        shipped = Scoring.Score(target, band, grams, seconds, slips, spilled);
+        scored = Scoring.Score(target, band, grams, seconds, slips, spilled);
+        doneTime = 0;
         phase = Phase.Done;
     }
 
@@ -410,17 +552,20 @@ sealed class WeighStation
         messageTime = 1.6f;
     }
 
-    // Draws the station. The ticket shows whose order it is, their patience, and how many more tickets wait.
-    public void Draw(Customer? customer, int moreTickets)
+    // Draws the station. The ticket holder shows whose order it is and their patience; it glows while a ticket is dragged.
+    public void Draw(Customer? customer, int ticketNumber, bool dropGlow)
     {
         var mouse = Raylib.GetMousePosition();
 
         Art.DrawTable(FloorY);
-        Art.DrawTicket(TicketRect, customer, moreTickets);
+        Art.DrawTicket(TicketRect, customer, ticketNumber, dropGlow && phase == Phase.Idle);
         Art.DrawJarBack(JarRect);
-        Art.DrawScale(ScaleBody, PlateRect, DialCenter, DialRadius, needle, target, band, GaugeMax);
+        Art.DrawScale(ScaleBody, PlateRect, DialCenter, DialRadius, needle, target, band, GaugeMax, greenGlow);
         Art.DrawBagStack(StackRect, phase == Phase.PlaceBag && drag == Drag.None);
-        Art.DrawBinBack(BinRect, phase == Phase.Ship);
+        // The bin shakes side to side for a moment after a bag lands in it (drawing only; its walls stay put).
+        var bin = BinRect;
+        bin.X += MathF.Sin(clock * 45f) * binWobble * 5f;
+        Art.DrawBinBack(bin, phase == Phase.Ship);
 
         bool showBag = bag.Placed || drag == Drag.NewBag;
         if (showBag) Art.DrawBagBack(bag.Rect);
@@ -435,30 +580,33 @@ sealed class WeighStation
         if (showBag)
         {
             bool zipHot = drag == Drag.Zip || (canGrab && phase == Phase.Fill && Vector2.Distance(mouse, bag.ZipPoint) <= ZipGrabRadius);
-            Art.DrawBagFront(bag.Rect, bag.Zip, bag.Sealed, zipHot);
+            float shake = Math.Clamp((zipDanger - ZipShakeFrom) / (1f - ZipShakeFrom), 0f, 1f);
+            var jitter = new Vector2(MathF.Sin(clock * 90f), MathF.Cos(clock * 77f)) * shake * 4f;
+            Art.DrawBagFront(bag.Rect, bag.Zip, bag.Sealed, zipHot, shake, jitter, ZipToothGap);
         }
 
-        Art.DrawBinFront(BinRect);
+        Art.DrawBinFront(bin);
         if (held != null) Art.DrawBud(held, false, true);
 
+        fx.Draw();
         DrawHud();
     }
 
     // Draws the timer, the hint for the current step and any short message.
     void DrawHud()
     {
-        Art.Label($"Time {seconds:0.0} s", 1060, 40, 30, Art.Text);
-        Art.Label($"Zip slips {slips}", 1060, 78, 20, Art.Faint);
+        Art.Label($"Time {seconds:0.0} s", 1060, 150, 30, Art.Text);
+        Art.Label($"Zip slips {slips}", 1060, 188, 20, Art.Faint);
 
         string hint = phase switch
         {
             Phase.PlaceBag => "Drag a bag from the stack onto the scale.",
             Phase.Fill => "Toss buds in the bag until the needle sits in the green.\nThen drag the zip tab across to seal it. Not too fast.",
             Phase.Ship => "Grab the sealed bag and throw it into the OUT bin.",
-            Phase.Idle => "No ticket yet. Take an order at the counter.",
+            Phase.Idle => "No ticket on the station. Drag one down from the rail.",
             _ => "",
         };
-        Art.Label(hint, 420, 50, 22, Art.Faint);
+        Art.Label(hint, 420, 160, 22, Art.Faint);
 
         if (messageTime > 0)
             Art.LabelCentered(message, bag.Center.X, bag.Pos.Y - 50, 24, Art.Warn);

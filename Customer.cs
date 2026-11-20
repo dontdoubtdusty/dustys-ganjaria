@@ -4,9 +4,10 @@ using Raylib_cs;
 namespace DustysGanjaria;
 
 // One customer: who they are, what they want, how much patience they have left, and where they are walking.
+// Pos is where their feet touch the floor in the shop view.
 sealed class Customer
 {
-    public enum State { InLine, Waiting, Leaving }
+    public enum State { InLine, Ordering, Waiting, Leaving }
 
     // Placeholder looks until the owner draws sprites.
     static readonly string[] Names =
@@ -19,24 +20,32 @@ sealed class Customer
         new(200, 90, 90, 255), new(90, 140, 210, 255), new(220, 180, 70, 255), new(150, 100, 190, 255),
         new(80, 170, 150, 255), new(230, 130, 60, 255), new(170, 170, 180, 255), new(120, 160, 80, 255),
     };
+    static readonly Color[] Pants =
+    {
+        new(70, 80, 110, 255), new(95, 85, 75, 255), new(60, 60, 66, 255), new(120, 110, 90, 255),
+    };
     static readonly float[] Orders = { 1f, 3.5f, 7f };
 
     const float WalkSpeed = 260f;
 
     public string Name { get; }
     public Color Shirt { get; }
+    public Color Trousers { get; }
     public float Grams { get; }
     public State Now = State.InLine;
     public float Patience, PatienceMax;
     public Vector2 Pos, Goal;
+    // True once they have reached the line for the first time; line patience only drains from then on.
+    public bool Reached;
     // How they felt when they left: true if served, false if they walked out.
     public bool Served;
 
-    // Makes a random customer standing at the given spot, just off screen.
+    // Makes a random customer standing at the given spot (the door).
     public Customer(Random rng, Vector2 start)
     {
         Name = Names[rng.Next(Names.Length)];
         Shirt = Shirts[rng.Next(Shirts.Length)];
+        Trousers = Pants[rng.Next(Pants.Length)];
         Grams = Orders[rng.Next(Orders.Length)];
         PatienceMax = Patience = Scoring.LinePatience;
         Pos = Goal = start;
@@ -46,16 +55,17 @@ sealed class Customer
     public float PatienceFraction => PatienceMax <= 0 ? 0 : Math.Clamp(Patience / PatienceMax, 0f, 1f);
 
     // True once the customer has reached the spot they were walking to.
-    public bool Arrived => MathF.Abs(Pos.X - Goal.X) < 2f;
+    public bool Arrived => Vector2.Distance(Pos, Goal) < 2f;
 
-    // Walks toward the goal at a steady pace.
+    // Walks straight toward the goal at a steady pace.
     public void Walk(float dt)
     {
-        float dx = Goal.X - Pos.X;
+        var to = Goal - Pos;
         float step = WalkSpeed * dt;
-        Pos.X = MathF.Abs(dx) <= step ? Goal.X : Pos.X + MathF.Sign(dx) * step;
+        Pos = to.Length() <= step ? Goal : Pos + Vector2.Normalize(to) * step;
+        if (Now == State.InLine && Arrived) Reached = true;
     }
 
-    // The order as the ticket and speech bubble say it.
+    // The order as the tickets say it.
     public string OrderText => $"{Grams:0.0#} g flower";
 }
