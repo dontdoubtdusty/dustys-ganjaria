@@ -3,6 +3,7 @@
 ## Open reminders
 - 0.1.0 to 0.4.0 are not committed (all code, Build Ganjaria.bat, resources, mechanics page, notes).
 - 0.4.0 order queue is built and screenshot-checked but not played; tuning questions in vision.md.
+- 0.7.0 shop days, hand-over shot, day results, tip jar and rank: built and screenshot-checked, not played. Not committed.
 - Art: layered customers, paused. Base locked and a hair edit test passed; next are the mouth edit test and the C# layer cutter. Plan and prompts in vision.md, "Customer art pipeline".
 - Claude does not read or use the decompiled game file (`D:\Downloads\papaspizzeria_v2.swf`).
 

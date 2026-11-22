@@ -5,7 +5,7 @@ namespace DustysGanjaria;
 // Opens the window and runs the game loop around the shop.
 static class Program
 {
-    public const string Version = "0.6.0";
+    public const string Version = "0.8.0";
     public const int Width = 1280;
     public const int Height = 720;
 
@@ -19,13 +19,19 @@ static class Program
         Raylib.UnloadImage(icon);
     }
 
-    // Normal start opens the game. Screenshot flags set up a scene, save one frame and quit (for checking the layout):
-    // "--shot <file.png>" a mid-order weigh station, "--shot-throw <file.png>" a bag sealed and thrown at the bin
-    // (should end on the result panel), "--shot-counter <file.png>" the shop view with a line and a waiting customer,
-    // "--shot-order <file.png>" the order shot half way through. Screenshot runs make no sound.
+    // Normal start opens the game on the saved day. Screenshot flags set up a scene, save one frame and quit (for
+    // checking the layout): "--shot <file.png>" a mid-order weigh station, "--shot-throw <file.png>" a bag sealed and
+    // thrown at the bin (ends as the hand-over's bag slides over), "--shot-counter <file.png>" the shop view with
+    // a line and a waiting customer, "--shot-order <file.png>" the order shot half way through, "--shot-handover"
+    // the end of a hand-over, "--shot-check" the customer's bag check half way, "--shot-results" and "--shot-tipjar" the two day-end screens. Screenshot runs make no
+    // sound and never read or write the save.
     static void Main(string[] args)
     {
-        string[] shotModes = { "--shot", "--shot-throw", "--shot-counter", "--shot-order" };
+        string[] shotModes =
+        {
+            "--shot", "--shot-throw", "--shot-counter", "--shot-order", "--shot-handover", "--shot-check", "--shot-results",
+            "--shot-tipjar",
+        };
         string? mode = args.Length == 2 && shotModes.Contains(args[0]) ? args[0] : null;
         string? shotPath = mode != null ? args[1] : null;
 
@@ -38,7 +44,9 @@ static class Program
         Audio.Load();
         if (mode != null) Raylib.SetMasterVolume(0f);
 
-        var shop = new Shop(new Random(mode == null ? Environment.TickCount : 7));
+        var shop = mode == null
+            ? new Shop(new Random(Environment.TickCount), Progress.Load(), persistent: true)
+            : new Shop(new Random(7), new Progress(), persistent: false);
         if (mode != null) shop.StageForScreenshot(mode);
         int frames = 0;
 
@@ -53,6 +61,7 @@ static class Program
             }
 
             shop.Update(Raylib.GetFrameTime());
+            if (shop.QuitRequested) break;
 
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Art.Background);

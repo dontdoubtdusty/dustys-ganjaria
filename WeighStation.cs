@@ -28,7 +28,8 @@ sealed class WeighStation
     const float SealedScale = 0.6f;
     // How long a bag must sit still in the bin before the order counts as shipped.
     const float BinRestSeconds = 0.25f;
-    // Pause between the bag shipping and the result panel, so the landing (wobble, clean-throw pop) can be seen.
+    // Pause between the bag landing and the order counting as done (the hand-over shot), so the landing (wobble,
+    // clean-throw pop) can be seen.
     const float ResultDelay = 0.9f;
 
     enum Phase { Idle, PlaceBag, Fill, Ship, Done }

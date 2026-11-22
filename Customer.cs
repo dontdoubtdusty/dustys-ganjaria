@@ -39,6 +39,13 @@ sealed class Customer
     public bool Reached;
     // How they felt when they left: true if served, false if they walked out.
     public bool Served;
+    // Seconds spent waiting so far: in line once they reached it, then from order to hand-over. Paused shots
+    // (taking the order, the hand-over) do not count. The Waiting score is judged on this.
+    public float Waited;
+    // A face set from outside (0 = upset, 1 = happy), used in the hand-over shot; null follows patience.
+    public float? Mood;
+    // True while they look the bag over in the hand-over shot: eyes on the bag, one brow up, a neutral "hmm".
+    public bool Inspecting;
 
     // Makes a random customer standing at the given spot (the door).
     public Customer(Random rng, Vector2 start)

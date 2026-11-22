@@ -4,7 +4,7 @@ using Raylib_cs;
 namespace DustysGanjaria;
 
 // Every placeholder drawing and all text live here, so each one can be swapped for a PNG sprite in one place.
-static class Art
+static partial class Art
 {
     public static readonly Color Background = new(38, 34, 44, 255);
     public static readonly Color Panel = new(58, 52, 66, 255);
@@ -361,7 +361,7 @@ static class Art
     public static void DrawCustomer(Customer c, Vector2 feet, float s, bool showBar)
     {
         var head = HeadOf(feet, s);
-        float mood = c.Now switch
+        float mood = c.Mood ?? c.Now switch
         {
             Customer.State.Leaving => c.Served ? 1f : 0f,
             Customer.State.Ordering => 1f,
@@ -377,11 +377,18 @@ static class Art
 
         Raylib.DrawCircleV(head, HeadRadius * s, Skin);
         var eye = new Color(40, 34, 30, 255);
-        Raylib.DrawCircleV(head + new Vector2(-11, -6) * s, 4 * s, eye);
-        Raylib.DrawCircleV(head + new Vector2(11, -6) * s, 4 * s, eye);
+        // Inspecting: eyes turned down toward the bag in their hand, one brow raised, a small sideways "hmm" mouth.
+        var look = c.Inspecting ? new Vector2(3, 3) : Vector2.Zero;
+        Raylib.DrawCircleV(head + (new Vector2(-11, -6) + look) * s, 4 * s, eye);
+        Raylib.DrawCircleV(head + (new Vector2(11, -6) + look) * s, 4 * s, eye);
 
         var mouth = new Color(90, 40, 40, 255);
-        if (mood > 0.5f) Raylib.DrawRing(head + new Vector2(0, 2) * s, 12 * s, 15 * s, 30, 150, 12, mouth);
+        if (c.Inspecting)
+        {
+            Raylib.DrawLineEx(head + new Vector2(5, -19) * s, head + new Vector2(17, -23) * s, 2.5f * s, eye);
+            Raylib.DrawLineEx(head + new Vector2(-4, 15) * s, head + new Vector2(9, 13) * s, 3 * s, mouth);
+        }
+        else if (mood > 0.5f) Raylib.DrawRing(head + new Vector2(0, 2) * s, 12 * s, 15 * s, 30, 150, 12, mouth);
         else if (mood > 0.25f) Raylib.DrawLineEx(head + new Vector2(-10, 14) * s, head + new Vector2(10, 14) * s, 3 * s, mouth);
         else Raylib.DrawRing(head + new Vector2(0, 28) * s, 12 * s, 15 * s, 210, 330, 12, mouth);
 

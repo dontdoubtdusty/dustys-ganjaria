@@ -8,7 +8,8 @@ namespace DustysGanjaria;
 static class Audio
 {
     public const string Doorbell = "doorbell", Tick = "tick", Pluck = "pluck", Ding = "ding", ZipTooth = "zip",
-        Seal = "seal", Slip = "slip", Thump = "thump", Pop = "pop", Till = "till";
+        Seal = "seal", Slip = "slip", Thump = "thump", Pop = "pop", Till = "till",
+        Crinkle = "crinkle", Chime = "chime", Coin = "coin", Fanfare = "fanfare";
 
     const string SoundFolder = "resources/sounds";
     const int Copies = 6;
@@ -44,6 +45,10 @@ static class Audio
         Add(Thump, MakeThump);
         Add(Pop, MakePop);
         Add(Till, MakeTill);
+        Add(Crinkle, MakeCrinkle);
+        Add(Chime, MakeChime);
+        Add(Coin, MakeCoin);
+        Add(Fanfare, MakeFanfare);
         ready = true;
     }
 
@@ -186,6 +191,56 @@ static class Audio
         }
         float rattle = t < 0.12f ? noise() * 0.4f * Decay(t, 20) : 0;
         return rattle + Bell(0.08f, 2093f) + 0.8f * Bell(0.18f, 2637f);
+    });
+
+    // A plastic bag crinkle: the customer picking up the bag in the hand-over. Random sharp crackles of bright
+    // noise over a faint rustle, swelling and fading over half a second.
+    static float[] MakeCrinkle()
+    {
+        const float seconds = 0.55f;
+        var crackles = new Random(11);
+        float low = 0, age = 1f, amp = 0f;
+        return Synth(seconds, (t, noise) =>
+        {
+            float env = MathF.Sqrt(MathF.Sin(MathF.PI * t / seconds));
+            if (crackles.NextDouble() < 140.0 * env / Rate) { age = 0f; amp = 0.4f + 0.6f * (float)crackles.NextDouble(); }
+            age += 1f / Rate;
+            float n = noise();
+            low += (n - low) * 0.2f;
+            float bright = n - low;                               // the noise minus its low part: crisp plastic
+            return bright * (amp * Decay(age, 350) + 0.12f * env);
+        });
+    }
+
+    // A soft two-note chime (G then C, high and light): the scores start landing on the card.
+    static float[] MakeChime() => Synth(0.9f, (t, _) =>
+    {
+        float Bell(float start, float f)
+        {
+            float u = t - start;
+            if (u < 0) return 0;
+            return Attack(u, 0.004f) * (Sine(f, u) * Decay(u, 6f) + 0.25f * Sine(f * 2.76f, u) * Decay(u, 14f));
+        }
+        return 0.6f * (Bell(0f, 1568f) + Bell(0.1f, 2093f));
+    });
+
+    // A small coin clinking onto the others in the tip jar.
+    static float[] MakeCoin() => Synth(0.25f, (t, _) =>
+        Attack(t, 0.0005f) * (Sine(2900, t) * Decay(t, 22) + 0.6f * Sine(4350, t) * Decay(t, 30)
+                              + 0.3f * Sine(6100, t) * Decay(t, 45)));
+
+    // A short rising fanfare: a new rank.
+    static float[] MakeFanfare() => Synth(1.3f, (t, _) =>
+    {
+        float Note(float start, float length, float f)
+        {
+            float u = t - start;
+            if (u < 0 || u > length) return 0;
+            float env = Attack(u, 0.01f) * MathF.Min(1f, (length - u) / 0.05f);
+            return env * (Sine(f, u) + 0.4f * Sine(2 * f, u) + 0.2f * Sine(3 * f, u));
+        }
+        return Note(0f, 0.14f, 523.25f) + Note(0.15f, 0.14f, 659.25f) + Note(0.3f, 0.14f, 783.99f)
+               + Note(0.45f, 0.8f, 1046.5f) * Decay(MathF.Max(0, t - 0.45f), 2.5f);
     });
 
     // Wraps samples in a 16-bit mono WAV file in memory, scaled so the loudest point is at 80 percent.

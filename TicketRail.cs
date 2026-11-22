@@ -64,6 +64,13 @@ sealed class TicketRail
         return dropped;
     }
 
+    // Takes every ticket down (a new day).
+    public void Clear()
+    {
+        tickets.Clear();
+        dragged = null;
+    }
+
     // Puts down a held ticket without dropping it anywhere (used when the shop pauses).
     public void LetGo() => dragged = null;
 
