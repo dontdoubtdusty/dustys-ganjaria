@@ -15,6 +15,8 @@ sealed class Day
     const int OpenHour = 10, CloseHour = 20;
 
     public int Number { get; }
+    // The strains on sale today: a jar of each on the weigh bench and a pad of each one's labels at Label.
+    public Strain[] Menu { get; }
     public int Expected => arrivals.Count;
     public float Clock { get; private set; }
     public float CloseAt { get; }
@@ -26,9 +28,10 @@ sealed class Day
     public readonly List<OrderResult> Orders = new();
     public int Walkouts;
 
-    public Day(int number, Random rng)
+    public Day(int number, Strain[] menu, Random rng)
     {
         Number = number;
+        Menu = menu;
         int count = Math.Min(FirstDayCustomers + MoreEachDay * (number - 1), MostCustomers);
         float t = FirstArrival;
         for (int i = 0; i < count; i++)
@@ -99,5 +102,5 @@ sealed class Day
     }
 
     // True if a metric's station exists yet (the day results show the others as not built).
-    public static bool Built(int metric) => metric <= 1;
+    public static bool Built(int metric) => metric < Scoring.MetricNames.Length;
 }

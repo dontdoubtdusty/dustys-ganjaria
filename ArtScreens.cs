@@ -16,8 +16,9 @@ static partial class Art
 
     // ---------- Day ----------
 
-    // Draws the card before a day starts: day number, how many customers to expect, rank and tip jar.
-    public static void DrawDayIntro(Rectangle panel, int day, int expected, string rank, string jar)
+    // Draws the card before a day starts: day number, how many customers to expect, rank and tip jar, the strains
+    // on today's menu, and the next strain still to unlock (null when all are open).
+    public static void DrawDayIntro(Rectangle panel, int day, int expected, string rank, string jar, Strain[] menu, string? next)
     {
         Raylib.DrawRectangle(0, 0, Program.Width, Program.Height, new Color(0, 0, 0, 130));
         DrawPanel(panel);
@@ -27,6 +28,19 @@ static partial class Art
         LabelCentered("Doors open 10:00 AM and close at 8:00 PM.", cx, panel.Y + 146, 22, Faint);
         LabelCentered("At closing, finish everyone still inside.", cx, panel.Y + 174, 22, Faint);
         LabelCentered($"{rank}   Tip jar {jar}", cx, panel.Y + 214, 22, Faint);
+
+        // Today's strains as tags in a row.
+        LabelCentered("On the menu today", cx, panel.Y + 256, 22, Text);
+        const int size = 20;
+        float gap = 12, total = menu.Sum(s => Measure(s.Name, size) + size) + gap * (menu.Length - 1);
+        float x = cx - total / 2;
+        foreach (var s in menu)
+        {
+            float w = Measure(s.Name, size) + size;
+            DrawStrainTag(s, x + w / 2, panel.Y + 288, size);
+            x += w + gap;
+        }
+        if (next != null) LabelCentered(next, cx, panel.Y + 330, 20, Faint);
     }
 
     // Draws the day and wall clock in the bottom bar; after closing it says so, and >> shows while time is sped up.
@@ -128,17 +142,17 @@ static partial class Art
         Raylib.DrawRectangleLinesEx(jar, 3, Glass);
         LabelCentered("TIPS", jar.X + jar.Width / 2, jar.Y + 34, 18, Faint);
         float eased = 1f - (1f - slide) * (1f - slide);
-        var bag = new Rectangle(500 + 300 * eased, counterY - 76, 72, 80);
+        var bag = new Rectangle(500 + 300 * eased, counterY - 90, 76, 90);
         static float Ease(float x) => x * x * (3f - 2f * x);   // smoothstep: slow start and end
         float lift = check < 0.25f ? Ease(check / 0.25f) : check < 0.8f ? 1f : 1f - Ease((check - 0.8f) / 0.2f);
         float sway = check > 0.25f && check < 0.8f ? MathF.Sin((check - 0.25f) / 0.55f * MathF.PI * 3f) * 7f : 0f;
         var lifted = new Vector2(head.X + 145 - (bag.X + bag.Width / 2), head.Y + 60 - (bag.Y + bag.Height / 2));
         bag.X += lifted.X * lift + sway;
         bag.Y += lifted.Y * lift;
-        Raylib.DrawRectangleRec(bag, new Color(230, 236, 242, 150));
-        Raylib.DrawRectangleLinesEx(bag, 3, Plastic);
-        Raylib.DrawLineEx(new(bag.X, bag.Y + 4), new(bag.X + bag.Width, bag.Y + 4), 6, new Color(110, 150, 210, 255));
-        Raylib.DrawCircleV(new(bag.X + 36, bag.Y + 50), 16, BudShades[1]);
+        DrawPackedContainer(bag, r.Pack.Used, c.Strain, true);
+        // The label where it actually went: off the guide and as crooked as it was pressed on.
+        var (labelAt, labelSize) = LabelStation.LabelOn(bag, r.Label.At);
+        DrawStrainLabel(labelAt, labelSize, r.Label.Angle, r.Label.Used, false, false, 0, false);
 
         // The budtender from behind, arm out across the counter; it draws back once the customer has the bag.
         float reach = 300 + 200 * eased * (1f - MathF.Min(1f, check * 3f));
@@ -154,7 +168,7 @@ static partial class Art
         Raylib.DrawRectangleRec(card, Paper);
         Raylib.DrawRectangleRec(new Rectangle(card.X, card.Y, card.Width, 22), new Color(200, 80, 70, 255));
         Label($"{t.Label}  {c.Name.ToUpperInvariant()}", card.X + 18, card.Y + 32, 24, Ink);
-        Label(c.OrderText, card.X + card.Width - 18 - Measure(c.OrderText, 22), card.Y + 34, 22, new Color(110, 100, 90, 255));
+        Label(c.FullOrderText, card.X + card.Width - 18 - Measure(c.FullOrderText, 20), card.Y + 36, 20, new Color(110, 100, 90, 255));
 
         var metrics = r.Metrics;
         for (int i = 0; i < metrics.Length; i++)

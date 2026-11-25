@@ -14,13 +14,6 @@ static partial class Art
     public static readonly Color Accent = new(120, 200, 110, 255);
     public static readonly Color Warn = new(240, 160, 80, 255);
 
-    static readonly Color[] BudShades =
-    {
-        new(96, 150, 70, 255),
-        new(120, 170, 80, 255),
-        new(140, 160, 90, 255),
-    };
-    static readonly Color Hair = new(214, 140, 70, 255);
     static readonly Color Glass = new(170, 205, 220, 220);
     static readonly Color Plastic = new(225, 232, 240, 230);
 
@@ -64,6 +57,15 @@ static partial class Art
     public static void LabelCentered(string text, float centerX, float y, int size, Color color) =>
         Label(text, centerX - Measure(text, size) / 2f, y, size, color);
 
+    // Draws text turned with a shape: centred on a point offset from pivot (in the shape's own, unturned
+    // coordinates), the whole thing turned by degrees (clockwise) about pivot.
+    public static void LabelTurned(string text, Vector2 pivot, Vector2 offset, float degrees, int size, Color color)
+    {
+        var dims = Raylib.MeasureTextEx(font, text, size, Spacing(size));
+        var origin = new Vector2(dims.X / 2 - offset.X, dims.Y / 2 - offset.Y);
+        Raylib.DrawTextPro(font, text, pivot, origin, degrees, size, Spacing(size), color);
+    }
+
     // ---------- Station pieces ----------
 
     // Draws the table top the station stands on.
@@ -89,12 +91,12 @@ static partial class Art
         Vector2 Turn(Vector2 v) => new Vector2(v.X * cos - v.Y * sin, v.X * sin + v.Y * cos) * k * squash;
 
         foreach (var lobe in bud.Lobes)
-            Raylib.DrawCircleV(center + Turn(lobe.Offset), lobe.Radius * k * (1f + 0.1f * q), BudShades[lobe.Shade]);
+            Raylib.DrawCircleV(center + Turn(lobe.Offset), lobe.Radius * k * (1f + 0.1f * q), bud.Strain.Shades[lobe.Shade]);
         if (!bud.IsShake)
         {
             // A few orange specks so it reads as flower rather than a pea.
             foreach (var lobe in bud.Lobes)
-                Raylib.DrawCircleV(center + Turn(lobe.Offset * 1.3f), 1.6f, Hair);
+                Raylib.DrawCircleV(center + Turn(lobe.Offset * 1.3f), 1.6f, bud.Strain.Hair);
         }
 
         if (highlight)
@@ -105,14 +107,23 @@ static partial class Art
     public static void DrawJarBack(Rectangle rect) =>
         Raylib.DrawRectangleRec(rect, new Color(150, 190, 210, 35));
 
-    // Draws the jar's walls in front of its contents.
-    public static void DrawJarFront(Rectangle rect)
+    // Draws the jar's walls in front of its contents, with its strain's name on a tag above it.
+    public static void DrawJarFront(Rectangle rect, Strain strain)
     {
         float l = rect.X, r = rect.X + rect.Width, t = rect.Y, b = rect.Y + rect.Height;
         Raylib.DrawLineEx(new(l, t), new(l, b), 5, Glass);
         Raylib.DrawLineEx(new(l - 2, b), new(r + 2, b), 5, Glass);
         Raylib.DrawLineEx(new(r, t), new(r, b), 5, Glass);
-        LabelCentered("JAR", l + rect.Width / 2, t - 30, 22, Faint);
+        DrawStrainTag(strain, l + rect.Width / 2, t - 36, 20);
+    }
+
+    // Draws a strain's name on a pill in its label colour, centred on x with its top at y.
+    public static void DrawStrainTag(Strain strain, float centerX, float y, int size)
+    {
+        float w = Measure(strain.Name, size) + size;
+        var pill = new Rectangle(centerX - w / 2, y, w, size + 8);
+        Raylib.DrawRectangleRounded(pill, 0.5f, 8, strain.Tag);
+        LabelCentered(strain.Name, centerX, y + 4, size, new Color(250, 248, 240, 255));
     }
 
     // Draws the scale: body, plate, and a dial with a green band around the target and a needle.
@@ -234,7 +245,10 @@ static partial class Art
         Raylib.DrawRectangleLinesEx(rect, 2, new Color(190, 180, 160, 255));
         string title = number > 0 ? $"#{number:000}  {customer.Name.ToUpperInvariant()}" : customer.Name.ToUpperInvariant();
         Label(title, rect.X + 16, rect.Y + 10, 22, Ink);
-        Label(customer.OrderText, rect.X + 16, rect.Y + 38, 40, Ink);
+        Label(customer.ContainerText, rect.X + rect.Width - 16 - Measure(customer.ContainerText, 22), rect.Y + 10, 22,
+              new Color(60, 70, 120, 255));
+        Label(customer.OrderText, rect.X + 16, rect.Y + 40, 34, Ink);
+        DrawStrainTag(customer.Strain, rect.X + 112 + (Measure(customer.Strain.Name, 22) + 22) / 2, rect.Y + 44, 22);
         DrawPatienceBar(new Rectangle(rect.X + 16, rect.Y + rect.Height - 20, rect.Width - 32, 8), customer.PatienceFraction);
     }
 
@@ -252,8 +266,9 @@ static partial class Art
         Label("TICKETS", Program.Width - 110, height - 30, 18, Faint);
     }
 
-    // Draws one ticket on the rail: number, name, order and the customer's patience. A new ticket glows green,
-    // a hovered one is outlined, a held one casts a shadow.
+    // Draws one ticket on the rail: number, name, amount and strain, container and the customer's patience; a
+    // weighed order gets a green WEIGHED stamp (it goes to Pack next), a packed one a purple PACKED stamp (Label
+    // next). A new ticket glows green, a hovered one is outlined, a held one casts a shadow.
     public static void DrawRailTicket(Rectangle r, Ticket t, bool hover, bool lifted)
     {
         if (lifted) Raylib.DrawRectangleRec(new Rectangle(r.X + 6, r.Y + 8, r.Width, r.Height), new Color(0, 0, 0, 90));
@@ -264,8 +279,21 @@ static partial class Art
         Raylib.DrawRectangleRec(new Rectangle(r.X + r.Width / 2 - 12, r.Y - 8, 24, 12), new Color(120, 120, 130, 255));
 
         Label($"{t.Label}  {t.Customer.Name.ToUpperInvariant()}", r.X + 8, r.Y + 8, 18, Ink);
-        Label(t.Customer.OrderText, r.X + 8, r.Y + 32, 22, Ink);
-        DrawPatienceBar(new Rectangle(r.X + 8, r.Y + r.Height - 14, r.Width - 16, 6), t.Customer.PatienceFraction);
+        Label(t.Customer.OrderText, r.X + 8, r.Y + 30, 20, Ink);
+        var strain = t.Customer.Strain;
+        float sw = Measure(strain.Short, 14) + 12;
+        var chip = new Rectangle(r.X + r.Width - 8 - sw, r.Y + 31, sw, 18);
+        Raylib.DrawRectangleRounded(chip, 0.4f, 6, strain.Tag);
+        LabelCentered(strain.Short, chip.X + sw / 2, chip.Y + 2, 14, new Color(250, 248, 240, 255));
+        Label(t.Customer.ContainerText, r.X + 8, r.Y + 50, 16, new Color(60, 70, 120, 255));
+        if (t.Next != Stage.Weigh)
+        {
+            var (word, ink) = t.Next == Stage.Pack ? ("WEIGHED", new Color(60, 150, 70, 255)) : ("PACKED", new Color(130, 80, 170, 255));
+            var stamp = new Rectangle(r.X + r.Width - 74, r.Y + 51, 66, 18);
+            Raylib.DrawRectangleRoundedLinesEx(stamp, 0.3f, 4, 2, ink);
+            LabelCentered(word, stamp.X + stamp.Width / 2, stamp.Y + 2, 14, ink);
+        }
+        DrawPatienceBar(new Rectangle(r.X + 8, r.Y + r.Height - 10, r.Width - 16, 5), t.Customer.PatienceFraction);
     }
 
     // Draws a short message on a dark pill, centred on x.
@@ -438,7 +466,7 @@ static partial class Art
         {
             int size = 34;
             float w = Measure(said, size) + 48;
-            var bubble = new Rectangle(head.X + 110, head.Y - 140, w, 72);
+            var bubble = new Rectangle(MathF.Min(head.X + 110, Program.Width - 16 - w), head.Y - 140, w, 72);
             Raylib.DrawRectangleRounded(bubble, 0.4f, 10, Paper);
             Raylib.DrawTriangle(new(bubble.X + 20, bubble.Y + bubble.Height - 4), new(head.X + 70, head.Y - 30),
                                 new(bubble.X + 60, bubble.Y + bubble.Height - 4), Paper);

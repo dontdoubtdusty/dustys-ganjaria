@@ -21,8 +21,9 @@ sealed class OrderShot
     {
         Ticket = ticket;
         Customer = ticket.Customer;
-        speech = new[] { "Hi there!", $"{Customer.Grams:0.0#} grams...", "...of flower, please." };
-        items = new[] { $"{Customer.Grams:0.0#} g", "Flower" };
+        string container = Customer.Wants == ContainerKind.Jar ? "In a jar, thanks." : "In a pouch, thanks.";
+        speech = new[] { "Hi there!", $"{Customer.Grams:0.0#} grams...", $"...of {Customer.Strain.Name}, please.", container };
+        items = new[] { $"{Customer.Grams:0.0#} g", Customer.Strain.Name, Customer.ContainerText };
     }
 
     // True once every item is written and the closing pause is over.

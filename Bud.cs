@@ -9,6 +9,8 @@ sealed class Bud
     const float RadiusPerRootGram = 26f;
 
     public float Grams { get; }
+    // The strain it is: its colours, and whether it is what the order asked for.
+    public Strain Strain { get; }
     public float Radius { get; }
     public float InvMass { get; }
     public Vector2 Pos;
@@ -31,10 +33,11 @@ sealed class Bud
 
     public bool IsShake => Grams < 0.2f;
 
-    // Makes a bud of the given weight, with lobe shapes picked from rng.
-    public Bud(float grams, Random rng)
+    // Makes a bud of a strain and weight, with lobe shapes picked from rng.
+    public Bud(float grams, Strain strain, Random rng)
     {
         Grams = grams;
+        Strain = strain;
         Radius = RadiusPerRootGram * MathF.Sqrt(grams);
         InvMass = 1f / grams;
         Angle = (float)(rng.NextDouble() * Math.Tau);

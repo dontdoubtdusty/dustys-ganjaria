@@ -36,6 +36,9 @@ sealed class TicketRail
         if (dragged == t) dragged = null;
     }
 
+    // How many tickets on the rail need a station next.
+    public int Waiting(Stage stage) => tickets.Count(t => t.Next == stage);
+
     // The ticket for a customer, if one is on the rail.
     public Ticket? For(Customer c) => tickets.FirstOrDefault(t => t.Customer == c);
 

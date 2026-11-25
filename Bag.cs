@@ -13,7 +13,18 @@ sealed class Bag
     public bool Sealed;
     public float Zip;            // 0 = open, 1 = fully zipped
 
+    // Sealing presses the bag flat to this share of its size (see WeighStation).
+    public const float SealedScale = 0.6f;
+
     public Bag(Vector2 size) => Size = size;
+
+    // An empty bag's size for an order: bigger orders get bigger bags.
+    public static Vector2 SizeFor(float grams) => grams switch
+    {
+        <= 1f => new Vector2(120, 120),
+        <= 3.5f => new Vector2(165, 160),
+        _ => new Vector2(215, 200),
+    };
 
     public Rectangle Rect => new(Pos.X, Pos.Y, Size.X, Size.Y);
     public Vector2 Center => Pos + Size / 2;

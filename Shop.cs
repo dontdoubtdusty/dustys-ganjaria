@@ -4,15 +4,17 @@ using Raylib_cs;
 namespace DustysGanjaria;
 
 // The shop, one day at a time. Each day opens with a card (day number, customers expected); then customers ring
-// the door chime on the day's schedule, walk in and queue at the counter. Taking an order cuts to the order shot,
-// where they say it and the ticket goes up on the rail; they wait while you drag tickets onto the weigh station
-// and make them. A finished order cuts to the hand-over shot (bag check, scores, reaction, tip); a customer who
-// runs out of patience walks out. At closing time the doors shut, you finish whoever is inside, and the day ends
-// with the results and the tip jar. Screens are switched with tabs along the bottom (or the 1 and 2 keys); the
-// rail is on every screen. Both shots pause the shop: the clock, arrivals and everyone's patience.
+// the door chime on the day's schedule, walk in and queue at the counter, each ordering a strain from the day's
+// menu. Taking an order cuts to the order shot, where they say it and the ticket goes up on the rail; they wait
+// while you drag tickets onto the weigh station, then (once the bag is in the OUT bin and the ticket is back on the
+// rail, marked weighed) onto the pack station, then (closed, marked packed) onto the label station. A labeled
+// order cuts to the hand-over shot (bag check, scores, reaction, tip); a customer who runs out of patience walks
+// out. At closing time the doors shut, you finish whoever is inside, and the day ends with the results and the tip
+// jar. Screens are switched with tabs along the bottom (or the 1 to 4 keys); the rail is on every screen. Both
+// shots pause the shop: the clock, arrivals and everyone's patience.
 sealed class Shop
 {
-    enum Screen { Counter, Weigh }
+    enum Screen { Counter, Weigh, Pack, Label }
     enum Phase { Intro, Open, Ended }
 
     // Most customers that queue in the line, and most taken orders at once (rail, stations and the order shot).
@@ -36,16 +38,24 @@ sealed class Shop
     static readonly Vector2 NotepadSpot = new(420, 420);
 
     static readonly Rectangle TakeButton = new(925, 580, 230, 56);
-    static readonly Rectangle CounterTab = new(470, 676, 170, 38);
-    static readonly Rectangle WeighTab = new(650, 676, 170, 38);
-    static readonly Rectangle IntroPanel = new(390, 160, 500, 350);
-    static readonly Rectangle OpenButton = new(520, 430, 240, 56);
+    static readonly Rectangle CounterTab = new(225, 676, 160, 38);
+    static readonly Rectangle WeighTab = new(395, 676, 160, 38);
+    static readonly Rectangle PackTab = new(565, 676, 160, 38);
+    static readonly Rectangle LabelTab = new(735, 676, 160, 38);
+    // Where a weighed ticket starts its flight back up to the rail (the weigh station's OUT bin), and a packed one
+    // (the pack station's mat).
+    static readonly Vector2 BinSpot = new(1160, 520);
+    static readonly Vector2 MatSpot = new(640, 560);
+    static readonly Rectangle IntroPanel = new(390, 110, 500, 460);
+    static readonly Rectangle OpenButton = new(520, 494, 240, 56);
     static readonly Vector2 ClockSpot = new(990, 30);
 
     readonly Random rng;
     readonly Progress progress;
     readonly bool persistent;
     readonly WeighStation weigh;
+    readonly PackStation pack;
+    readonly LabelStation label;
     readonly TicketRail rail = new();
     readonly List<Customer> line = new();
     readonly List<Customer> waiting = new();
@@ -59,7 +69,7 @@ sealed class Shop
     OrderShot? shot;
     HandOver? handOver;
     DayEnd? dayEnd;
-    Ticket? onWeigh;
+    Ticket? onWeigh, onPack, onLabel;
     int nextTicket = 1;
     bool closingSaid, fast;
     float endTimer;
@@ -76,13 +86,16 @@ sealed class Shop
         this.progress = progress;
         this.persistent = persistent;
         weigh = new WeighStation(rng);
+        pack = new PackStation(rng);
+        label = new LabelStation(rng);
         StartDay(progress.Day);
     }
 
-    // Clears the shop and sets up a day, waiting on its intro card.
+    // Clears the shop and sets up a day, waiting on its intro card. The day's menu follows the rank reached.
     void StartDay(int number)
     {
-        day = new Day(number, rng);
+        day = new Day(number, Strains.MenuFor(Progress.RankOf(progress.RankPoints), rng), rng);
+        weigh.SetMenu(day.Menu);
         phase = Phase.Intro;
         screen = Screen.Counter;
         line.Clear();
@@ -91,10 +104,12 @@ sealed class Shop
         toHandOver.Clear();
         rail.Clear();
         weigh.Clear();
+        pack.Clear();
+        label.Clear();
         shot = null;
         handOver = null;
         dayEnd = null;
-        onWeigh = null;
+        onWeigh = onPack = onLabel = null;
         nextTicket = 1;
         closingSaid = fast = false;
         endTimer = 0;
@@ -124,16 +139,33 @@ sealed class Shop
 
     // Sets up a scene for the --shot flags. All but the day-end ones have one order already taken.
     // --shot-counter: two in line and one waiting, shop view. --shot-order: the order shot mid-way.
-    // --shot and --shot-throw: one ticket on the weigh station and another on the rail.
-    // --shot-handover: the end of a hand-over; --shot-check: its bag check. --shot-results and --shot-tipjar: the two day-end screens.
+    // --shot and --shot-throw: one ticket on the weigh station and another on the rail. --shot-pack (a pouch) and
+    // --shot-pack-jar: one weighed order half closed on the pack station and another ticket on the rail.
+    // --shot-handover: the end of a hand-over; --shot-check: its bag check. --shot-results and --shot-tipjar: the two
+    // day-end screens. --shot-label: a packed jar on the label station with its label stuck on loosely. --shot-intro:
+    // the day card, at a rank with all five strains open (a menu of three, and no next strain).
     public void StageForScreenshot(string mode)
     {
+        if (mode == "--shot-intro")
+        {
+            progress.RankPoints = Progress.PointsFor(5);
+            StartDay(4);
+            return;
+        }
         phase = Phase.Open;
+        // A packed order for the staged scores: the right container, a few seconds, no mistakes (or one, with slip).
+        static PackResult Packed(Container c, bool slip) =>
+            Scoring.ScorePack(c, c, slip ? 12f : 6f, slip ? 1 : 0, 0, 0);
+        // A labeled order for the staged scores: the right strain, a little off and crooked (more so with slip).
+        static LabelResult Labeled(Strain s, bool slip) =>
+            Scoring.ScoreLabel(s, s, slip ? 8f : 4f, slip ? 18f : 5f, slip ? 6f : 1.5f, 0,
+                               slip ? new Vector2(0.06f, -0.04f) : new Vector2(0.02f, 0f));
         if (mode == "--shot-results" || mode == "--shot-tipjar")
         {
             var w = Scoring.Score(3.5f, Scoring.BandFor(3.5f), 3.55f, 13f, 0, 1);
-            day.Orders.Add(Scoring.ScoreOrder(w, 3.5f, 40f));
-            day.Orders.Add(Scoring.ScoreOrder(Scoring.Score(1f, Scoring.BandFor(1f), 1.02f, 9f, 0, 0), 1f, 70f));
+            day.Orders.Add(Scoring.ScoreOrder(w, Packed(new(ContainerKind.Jar, false), true), Labeled(day.Menu[0], true), 3.5f, 40f));
+            day.Orders.Add(Scoring.ScoreOrder(Scoring.Score(1f, Scoring.BandFor(1f), 1.02f, 9f, 0, 0),
+                                              Packed(new(ContainerKind.Pouch, false), false), Labeled(day.Menu[1], false), 1f, 70f));
             day.Walkouts = 1;
             progress.RankPoints = 180;
             progress.TipsCents = 950;
@@ -156,7 +188,8 @@ sealed class Shop
             var t = rail.For(first)!;
             rail.Remove(t);
             waiting.Remove(first);
-            handOver = new HandOver(t, Scoring.ScoreOrder(w, first.Grams, first.Waited));
+            handOver = new HandOver(t, Scoring.ScoreOrder(w, Packed(Containers.For(first), false), Labeled(first.Strain, true),
+                                                          first.Grams, first.Waited));
             if (mode == "--shot-check") handOver.HoldAtCheck();
             else handOver.HoldAt(true);
             return;
@@ -186,6 +219,32 @@ sealed class Shop
         TakeOrder();
         FinishOrder();
         second.Pos = second.Goal = WaitingSpot(1);
+
+        if (mode == "--shot-pack" || mode == "--shot-pack-jar")
+        {
+            first.Wants = mode == "--shot-pack-jar" ? ContainerKind.Jar : ContainerKind.Pouch;
+            var t = rail.For(first)!;
+            t.Next = Stage.Pack;
+            t.Weighed = Scoring.Score(first.Grams, Scoring.BandFor(first.Grams), first.Grams, 11f, 0, 0);
+            screen = Screen.Pack;
+            PutOnPack(t);
+            pack.StageForScreenshot();
+            return;
+        }
+
+        if (mode == "--shot-label")
+        {
+            first.Wants = ContainerKind.Jar;
+            var t = rail.For(first)!;
+            t.Next = Stage.Label;
+            t.Weighed = Scoring.Score(first.Grams, Scoring.BandFor(first.Grams), first.Grams, 11f, 0, 0);
+            t.Packed = Packed(Containers.For(first), false);
+            rail.For(second)!.Next = Stage.Label;
+            screen = Screen.Label;
+            PutOnLabel(t);
+            label.StageForScreenshot();
+            return;
+        }
 
         screen = Screen.Weigh;
         PutOnWeigh(rail.For(first)!);
@@ -232,8 +291,12 @@ sealed class Shop
         {
             if (press && Raylib.CheckCollisionPointRec(mouse, CounterTab)) { SwitchTo(Screen.Counter); tabClicked = true; }
             if (press && Raylib.CheckCollisionPointRec(mouse, WeighTab)) { SwitchTo(Screen.Weigh); tabClicked = true; }
+            if (press && Raylib.CheckCollisionPointRec(mouse, PackTab)) { SwitchTo(Screen.Pack); tabClicked = true; }
+            if (press && Raylib.CheckCollisionPointRec(mouse, LabelTab)) { SwitchTo(Screen.Label); tabClicked = true; }
             if (Raylib.IsKeyPressed(KeyboardKey.One)) SwitchTo(Screen.Counter);
             if (Raylib.IsKeyPressed(KeyboardKey.Two)) SwitchTo(Screen.Weigh);
+            if (Raylib.IsKeyPressed(KeyboardKey.Three)) SwitchTo(Screen.Pack);
+            if (Raylib.IsKeyPressed(KeyboardKey.Four)) SwitchTo(Screen.Label);
         }
 
         if (!InShot)
@@ -262,19 +325,25 @@ sealed class Shop
             if ((click || confirm) && AtCounter != null) TakeOrder();
         }
 
-        bool weighInput = screen == Screen.Weigh && !tabClicked && !railTook && rail.Dragged == null;
-        weigh.Update(dt, weighInput);
+        bool stationInput = !tabClicked && !railTook && rail.Dragged == null;
+        weigh.Update(dt, stationInput && screen == Screen.Weigh);
+        pack.Update(dt, stationInput && screen == Screen.Pack);
+        label.Update(dt, stationInput && screen == Screen.Label);
 
-        var shipped = weigh.TakeShipped();
-        if (shipped != null && onWeigh != null) Finish(onWeigh, shipped.Value);
+        var weighed = weigh.TakeShipped();
+        if (weighed != null && onWeigh != null) ToPack(onWeigh, weighed.Value);
+        var packed = pack.TakeShipped();
+        if (packed != null && onPack != null) ToLabel(onPack, packed.Value);
+        var labeled = label.TakeShipped();
+        if (labeled != null && onLabel != null) Finish(onLabel, labeled.Value);
 
         if (!InShot && toHandOver.Count > 0) StartHandOver();
         UpdateClosing(dt);
     }
 
     // True when nobody is in the shop and no work is in progress.
-    bool ShopEmpty => line.Count == 0 && waiting.Count == 0 && rail.Count == 0 && weigh.IsIdle
-                      && shot == null && handOver == null && toHandOver.Count == 0;
+    bool ShopEmpty => line.Count == 0 && waiting.Count == 0 && rail.Count == 0 && weigh.IsIdle && pack.IsIdle
+                      && label.IsIdle && shot == null && handOver == null && toHandOver.Count == 0;
 
     // At closing time the doors shut; once everyone inside has been served or has left, the day ends.
     void UpdateClosing(float dt)
@@ -303,22 +372,55 @@ sealed class Shop
         rail.LetGo();
     }
 
-    // Changes screen; anything held at the weigh station is dropped first. A ticket being dragged comes along.
+    // Changes screen; anything held at a station is dropped first. A ticket being dragged comes along.
     void SwitchTo(Screen to)
     {
         if (to == screen) return;
         if (screen == Screen.Weigh) weigh.LetGo();
+        if (screen == Screen.Pack) pack.LetGo();
+        if (screen == Screen.Label) label.LetGo();
         screen = to;
     }
 
-    // A ticket let go: dropped below the rail on the weigh screen it goes onto the station if the station is free.
-    // Anywhere else it slides back to the rail.
+    // A ticket let go: dropped below the rail on the screen of the station it needs next, it goes onto that
+    // station if the station is free. Anywhere else it slides back to the rail.
     void Drop(Ticket t, Vector2 mouse)
     {
         if (mouse.Y <= TicketRail.Height) return;
-        if (screen != Screen.Weigh) { Say("Drop tickets on a station: open the Weigh tab"); return; }
-        if (!weigh.IsIdle) { Say("Finish the bag on the scale first"); return; }
-        PutOnWeigh(t);
+        if (t.Next == Stage.Weigh)
+        {
+            if (screen != Screen.Weigh) { Say("This order needs weighing: open the Weigh tab"); return; }
+            if (!weigh.IsIdle) { Say("Finish the bag on the scale first"); return; }
+            PutOnWeigh(t);
+        }
+        else if (t.Next == Stage.Pack)
+        {
+            if (screen != Screen.Pack) { Say("This order is weighed: open the Pack tab"); return; }
+            if (!pack.IsIdle) { Say("Finish the order on the pack station first"); return; }
+            PutOnPack(t);
+        }
+        else
+        {
+            if (screen != Screen.Label) { Say("This order is packed: open the Label tab"); return; }
+            if (!label.IsIdle) { Say("Finish the order on the label station first"); return; }
+            PutOnLabel(t);
+        }
+    }
+
+    // Moves a packed ticket from the rail onto the label station; its closed container is waiting on the mat.
+    void PutOnLabel(Ticket t)
+    {
+        rail.Remove(t);
+        onLabel = t;
+        label.Start(t.Customer, t.Packed!.Value.Used, day.Menu);
+    }
+
+    // Moves a weighed ticket from the rail onto the pack station; its bag is waiting in the IN tray.
+    void PutOnPack(Ticket t)
+    {
+        rail.Remove(t);
+        onPack = t;
+        pack.Start(t.Customer);
     }
 
     // Moves a ticket from the rail onto the weigh station and starts its bag.
@@ -326,7 +428,7 @@ sealed class Shop
     {
         rail.Remove(t);
         onWeigh = t;
-        weigh.Start(t.Customer.Grams);
+        weigh.Start(t.Customer.Grams, t.Customer.Strain);
     }
 
     // Lets in the next customer when they are due, if the line has room (otherwise they wait outside a moment).
@@ -340,7 +442,7 @@ sealed class Shop
     // Rings the door chime and adds a customer at the back of the line, walking in from the door.
     Customer Arrive()
     {
-        var c = new Customer(rng, DoorSpot);
+        var c = new Customer(rng, DoorSpot, day.Menu);
         line.Add(c);
         c.Goal = LineSpot(line.Count - 1);
         Audio.Play(Audio.Doorbell);
@@ -376,6 +478,16 @@ sealed class Shop
         {
             onWeigh = null;
             weigh.Clear();
+        }
+        if (onPack?.Customer == c)
+        {
+            onPack = null;
+            pack.Clear();
+        }
+        if (onLabel?.Customer == c)
+        {
+            onLabel = null;
+            label.Clear();
         }
     }
 
@@ -421,16 +533,38 @@ sealed class Shop
         shot = null;
     }
 
-    // The order is done (for now the weigh station is the last station): score it, clear the bench, and line up
-    // its hand-over. The customer stops waiting here, so the hand-over queue never costs them points.
-    void Finish(Ticket t, WeighResult weighResult)
+    // The bag is in the OUT bin: the weigh station clears, and the ticket flies back up to the rail marked
+    // weighed, to be dragged onto the pack station.
+    void ToPack(Ticket t, WeighResult weighResult)
     {
-        var c = t.Customer;
-        var result = Scoring.ScoreOrder(weighResult, c.Grams, c.Waited);
-        day.Orders.Add(result);
-        waiting.Remove(c);
+        t.Weighed = weighResult;
+        t.Next = Stage.Pack;
         onWeigh = null;
         weigh.Clear();
+        rail.Add(t, BinSpot);
+    }
+
+    // The container is closed: the pack station clears, and the ticket flies back up to the rail marked packed, to
+    // be dragged onto the label station.
+    void ToLabel(Ticket t, PackResult packResult)
+    {
+        t.Packed = packResult;
+        t.Next = Stage.Label;
+        onPack = null;
+        pack.Clear();
+        rail.Add(t, MatSpot);
+    }
+
+    // The order is done (the label station is the last station): score it, clear the station, and line up its
+    // hand-over. The customer stops waiting here, so the hand-over queue never costs them points.
+    void Finish(Ticket t, LabelResult labelResult)
+    {
+        var c = t.Customer;
+        var result = Scoring.ScoreOrder(t.Weighed!.Value, t.Packed!.Value, labelResult, c.Grams, c.Waited);
+        day.Orders.Add(result);
+        waiting.Remove(c);
+        onLabel = null;
+        label.Clear();
         rail.LetGo();
         toHandOver.Enqueue((t, result));
     }
@@ -440,6 +574,8 @@ sealed class Shop
     {
         var (t, result) = toHandOver.Dequeue();
         weigh.LetGo();
+        pack.LetGo();
+        label.LetGo();
         handOver = new HandOver(t, result);
     }
 
@@ -466,29 +602,46 @@ sealed class Shop
 
         if (shot != null) shot.Draw();
         else if (screen == Screen.Counter) DrawShopView(mouse);
-        else weigh.Draw(onWeigh?.Customer, onWeigh?.Number ?? 0, rail.Dragged != null);
+        else if (screen == Screen.Weigh) weigh.Draw(onWeigh?.Customer, onWeigh?.Number ?? 0, rail.Dragged?.Next == Stage.Weigh);
+        else if (screen == Screen.Pack) pack.Draw(onPack?.Customer, onPack?.Number ?? 0, rail.Dragged?.Next == Stage.Pack);
+        else label.Draw(onLabel?.Customer, onLabel?.Number ?? 0, rail.Dragged?.Next == Stage.Label);
 
         rail.Draw(mouse, shot == null && phase == Phase.Open);
         Art.DrawClock(ClockSpot.X, ClockSpot.Y, day.Number, day.ClockText, day.Closed, fast);
 
+        // Tickets waiting on the rail for each station, and whether a station's tab should light up: it is free
+        // with a ticket waiting, or someone whose order is there is close to walking out.
+        int toWeigh = rail.Waiting(Stage.Weigh), toPack = rail.Waiting(Stage.Pack), toLabel = rail.Waiting(Stage.Label);
+        bool UrgentAt(Stage s, Ticket? on) =>
+            waiting.Any(c => c.PatienceFraction < 0.3f && (on?.Customer == c || rail.For(c)?.Next == s));
         bool counterNeeds = AtCounter != null || AnyUrgent(line);
-        bool weighNeeds = AnyUrgent(waiting) || (weigh.IsIdle && rail.Count > 0);
+        bool weighNeeds = UrgentAt(Stage.Weigh, onWeigh) || (weigh.IsIdle && toWeigh > 0);
+        bool packNeeds = UrgentAt(Stage.Pack, onPack) || (pack.IsIdle && toPack > 0);
+        bool labelNeeds = UrgentAt(Stage.Label, onLabel) || (label.IsIdle && toLabel > 0);
         string counterText = line.Count > 0 ? $"1 Counter ({line.Count})" : "1 Counter";
-        string weighText = rail.Count > 0 ? $"2 Weigh ({rail.Count})" : "2 Weigh";
+        string weighText = toWeigh > 0 ? $"2 Weigh ({toWeigh})" : "2 Weigh";
+        string packText = toPack > 0 ? $"3 Pack ({toPack})" : "3 Pack";
+        string labelText = toLabel > 0 ? $"4 Label ({toLabel})" : "4 Label";
         Art.DrawTab(CounterTab, counterText, screen == Screen.Counter, Raylib.CheckCollisionPointRec(mouse, CounterTab),
                     screen != Screen.Counter && counterNeeds);
         Art.DrawTab(WeighTab, weighText, screen == Screen.Weigh, Raylib.CheckCollisionPointRec(mouse, WeighTab),
                     screen != Screen.Weigh && weighNeeds);
+        Art.DrawTab(PackTab, packText, screen == Screen.Pack, Raylib.CheckCollisionPointRec(mouse, PackTab),
+                    screen != Screen.Pack && packNeeds);
+        Art.DrawTab(LabelTab, labelText, screen == Screen.Label, Raylib.CheckCollisionPointRec(mouse, LabelTab),
+                    screen != Screen.Label && labelNeeds);
         Art.Label($"Served {day.Served}/{day.Expected}   Walkouts {day.Walkouts}   Tips {Scoring.Money(day.TipsCents)}",
-                  840, 684, 22, Art.Text);
+                  910, 686, 20, Art.Text);
 
         if (bannerTime > 0) Art.DrawBanner(banner, Program.Width / 2f, TicketRail.Height + 10);
 
         if (phase == Phase.Intro)
         {
             int rank = Progress.RankOf(progress.RankPoints);
+            var next = Strains.NextLocked(rank);
+            string? nextText = next == null ? null : $"Next strain: {next.Name}, at rank {next.Rank} ({Progress.RankName(next.Rank)})";
             Art.DrawDayIntro(IntroPanel, day.Number, day.Expected, $"Rank {rank} {Progress.RankName(rank)}",
-                             Scoring.Money(progress.TipsCents));
+                             Scoring.Money(progress.TipsCents), day.Menu, nextText);
             Art.DrawButton(OpenButton, "Open the shop", Raylib.CheckCollisionPointRec(mouse, OpenButton), true);
         }
         if (phase == Phase.Ended) dayEnd!.Draw(mouse);

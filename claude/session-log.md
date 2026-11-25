@@ -1,9 +1,9 @@
 # Session log
 
 ## Open reminders
-- 0.1.0 to 0.4.0 are not committed (all code, Build Ganjaria.bat, resources, mechanics page, notes).
-- 0.4.0 order queue is built and screenshot-checked but not played; tuning questions in vision.md.
-- 0.7.0 shop days, hand-over shot, day results, tip jar and rank: built and screenshot-checked, not played. Not committed.
+- Everything up to 0.8.0 is committed (02913d6). 0.9.0-0.10.0 (Pack, Label, strains) is not committed.
+- 0.9.1 Pack station: built and screenshot-checked; the owner tried 0.9.0 and the circle lid twist felt awkward, so 0.9.1 turns it in sideways strokes (not played yet). Tuning questions in vision.md (Open questions). The owner says the 0.7.0-0.8.0 loop works alright for now.
+- 0.10.0 Label station and strains: built and screenshot-checked, not played yet. The label swing and press can only be judged by playing. Tuning questions in vision.md (Open questions).
 - Art: layered customers, paused. Base locked and a hair edit test passed; next are the mouth edit test and the C# layer cutter. Plan and prompts in vision.md, "Customer art pipeline".
 - Claude does not read or use the decompiled game file (`D:\Downloads\papaspizzeria_v2.swf`).
 
@@ -12,3 +12,6 @@
 |---|---|---|---|---|
 | 1 | 2026-11-17 | none | Folder set up: `CLAUDE.md`, `README.md`, `claude/` (vision, this log, copies of versioning and readme-format). Owner chose placeholder art (owner's sprites later) and a first cut of one polished station. | Design the weigh station with the owner, then the first code (C# Raylib project, `Build Ganjaria.bat`). |
 | 2 | 2026-11-17 | 0.2.0-0.4.0 | Weigh station reworked (physics tossing, zip, throw to bin), then 0.4.0 order queue: customers, line, waiting area, patience, walkouts, Counter/Weigh tabs, order score with wait, tips. Full design settled with the owner (vision.md, Full design); familiarity to genre fans is the first rule. Customer art prompts drafted. | Owner plays 0.4.0 and picks an art style; then ticket rail and parallel orders, then Package. |
+| 3 | 2026-11-23 | 0.9.0 | (Sessions for 0.5.0-0.8.0 were not logged here; see git and vision.md.) Pack station: owner chose twist-the-lid / press-the-strip closing, the ticket going back to the rail between stations, a locked-in wrong pick with a Start over at a time cost, and size tiers. Built `PackStation.cs`, `ArtPack.cs`, Packing score, container on the order and ticket, WEIGHED stamp, Pack tab (key 3), packed container in the hand-over, `--shot-pack` and `--shot-pack-jar`. Waiting par +12 s. Mechanics page, README, CLAUDE.md updated. | Owner plays 0.9.0 and tunes Pack; commit; then Label. |
+| 4 | 2026-11-23 | 0.9.1 | Owner: the circle lid twist did not translate to a mouse. Jar lid now turns in sideways strokes (grab, drag right, let go, grab again; about three strokes; ridges slide with the mouse; a jerky stroke cross-threads), straight arrow over the lid, lid sinks as it tightens. Notes and mechanics page updated. | Owner plays 0.9.1 and tunes Pack; commit; then Label. |
+| 5 | 2026-11-23 | 0.10.0 | Label station (the last station) and strains. Owner chose strains at Weigh and Label, pick-then-stick labels, 3 strains now plus 2 by rank, strains differing in look and bud size. Built `Strain.cs` (5 strains, day menu of 3), a jar per strain on the weigh bench (wrong-strain buds cost points), `LabelStation.cs` and `ArtLabel.cs` (swinging label, stick loosely, hold to press, drag to peel), PACKED stamp, Label tab (key 4), Labeling score, label drawn in the hand-over, menu on the day card, `--shot-label` and `--shot-intro`. Waiting par and wait patience raised. Notes, README, mechanics page updated. | Owner plays 0.10.0 and tunes Label and strains; commit; then ID check. |

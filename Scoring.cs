@@ -1,17 +1,31 @@
 namespace DustysGanjaria;
 
-// The outcome of one bagged order, with its part scores (0-100 each).
+// The outcome of one bagged order, with its part scores (0-100 each). Weight is what the scale read; WrongBuds
+// counts buds of another strain sealed in with it.
 readonly record struct WeighResult(
     float Target, float Band, float Weight, float Seconds, int Slips, int Spilled,
-    int Accuracy, int Speed, int Handling, int Total, string Grade);
+    int Accuracy, int Speed, int Handling, int Total, string Grade, int WrongBuds = 0);
 
-// The outcome of one served customer: a score (0-100) for each of the four things every order is judged on
-// (null for a station that is not built yet), the order score, grade, tip in cents, and seconds waited.
+// The outcome of one labeled order: the strain asked for and the label used, how far off and how crooked it went
+// on, peels, and the part scores (0-100 each). At (offset over the container's size) and Angle let the hand-over
+// draw the label where it actually went.
+readonly record struct LabelResult(
+    Strain Wanted, Strain Used, float Seconds, float Off, float Angle, int Peels, System.Numerics.Vector2 At,
+    int Match, int Placement, int Speed, int Total);
+
+// The outcome of one packed order: the container asked for and the one used, and the part scores (0-100 each).
+readonly record struct PackResult(
+    Container Wanted, Container Used, float Seconds, int CrossThreads, int Drops, int Restarts,
+    int Fit, int Speed, int Handling, int Total);
+
+// The outcome of one served customer: a score (0-100) for each of the four things every order is judged on,
+// the order score, grade, tip in cents, and seconds waited.
 readonly record struct OrderResult(
-    WeighResult Weigh, int Waiting, int? Packing, int? Labeling, int Total, string Grade, int TipCents, float Waited)
+    WeighResult Weigh, PackResult Pack, LabelResult Label, int Waiting, int Total, string Grade, int TipCents, float Waited)
 {
-    // The four scores in station order, matching Scoring.MetricNames.
-    public int?[] Metrics => new int?[] { Waiting, Weigh.Total, Packing, Labeling };
+    // The four scores in station order, matching Scoring.MetricNames (nullable so a future unbuilt station can show
+    // as not built).
+    public int?[] Metrics => new int?[] { Waiting, Weigh.Total, Pack.Total, Label.Total };
 }
 
 // Turns finished work into scores. All tuning numbers for scoring live here.
@@ -32,44 +46,99 @@ static class Scoring
     // How wide the green band is either side of the target, in grams.
     public static float BandFor(float target) => 0.08f + 0.03f * target;
 
-    // Scores a bag from target, sealed weight, time taken, zip slips and spilled buds.
-    public static WeighResult Score(float target, float band, float weight, float seconds, int slips, int spilled)
+    // Points lost per bud of the wrong strain sealed in the bag.
+    const int WrongBudCost = 15;
+
+    // Scores a bag from target, sealed weight, time taken, zip slips and spilled buds. Buds of the wrong strain
+    // (wrongBuds of them, wrongGrams in all) weigh on the scale but do not count toward the order's weight, and each
+    // one costs handling: a bag of the wrong strain scores no accuracy at all.
+    public static WeighResult Score(float target, float band, float weight, float seconds, int slips, int spilled,
+                                    float wrongGrams = 0, int wrongBuds = 0)
     {
-        float off = MathF.Abs(weight - target);
+        float off = MathF.Abs(weight - wrongGrams - target);
         float acc = off <= band ? 100f : 100f * (1f - (off - band) / (band * BandsToZero));
 
         float par = ParBase + ParPerGram * target;
         float speed = seconds <= par ? 100f : 100f * (1f - (seconds - par) / (2f * par));
 
-        float handling = 100f - SlipCost * slips - SpillCost * spilled;
+        float handling = 100f - SlipCost * slips - SpillCost * spilled - WrongBudCost * wrongBuds;
 
         int a = Clamp(acc), s = Clamp(speed), h = Clamp(handling);
         int total = (int)MathF.Round(AccuracyShare * a + SpeedShare * s + (1f - AccuracyShare - SpeedShare) * h);
-        return new WeighResult(target, band, weight, seconds, slips, spilled, a, s, h, total, GradeFor(total));
+        return new WeighResult(target, band, weight, seconds, slips, spilled, a, s, h, total, GradeFor(total), wrongBuds);
+    }
+
+    // ---------- Packing ----------
+
+    // Container points: right kind and size, right kind but wrong size, wrong kind but right size, both wrong.
+    const int FitRight = 100, FitWrongSize = 40, FitWrongKind = 20, FitBothWrong = 0;
+    // Seconds allowed before packing speed starts dropping (a jar has more turning to do than a pouch strip).
+    const float PackParPouch = 7f, PackParJar = 9f;
+    // Points lost per cross-threaded lid and per bag dropped on the table.
+    const int CrossThreadCost = 25, DropCost = 10;
+    // Share of the Packing score for the container and for speed; handling gets the rest.
+    const float FitShare = 0.5f, PackSpeedShare = 0.3f;
+    // Seconds Start over adds to the packing clock.
+    public const float RestartSeconds = 5f;
+
+    // Scores a closed container: the right one, how long it took, cross-threaded lids and dropped bags.
+    public static PackResult ScorePack(Container wanted, Container used, float seconds, int crossThreads, int drops, int restarts)
+    {
+        bool kind = wanted.Kind == used.Kind, size = wanted.Large == used.Large;
+        int fit = kind && size ? FitRight : kind ? FitWrongSize : size ? FitWrongKind : FitBothWrong;
+
+        float par = used.Kind == ContainerKind.Jar ? PackParJar : PackParPouch;
+        float speed = seconds <= par ? 100f : 100f * (1f - (seconds - par) / (2f * par));
+        float handling = 100f - CrossThreadCost * crossThreads - DropCost * drops;
+
+        int s = Clamp(speed), h = Clamp(handling);
+        int total = (int)MathF.Round(FitShare * fit + PackSpeedShare * s + (1f - FitShare - PackSpeedShare) * h);
+        return new PackResult(wanted, used, seconds, crossThreads, drops, restarts, fit, s, h, total);
+    }
+
+    // ---------- Labeling ----------
+
+    // Share of the Labeling score for the right strain and for placement; speed gets the rest.
+    const float MatchShare = 0.5f, PlaceShare = 0.3f;
+    // Placement: full marks within this many pixels of the guide and degrees of straight, zero at the far value.
+    const float OffFull = 8f, OffZero = 60f, AngleFull = 2f, AngleZero = 15f;
+    // Seconds allowed before labeling speed starts dropping.
+    const float LabelPar = 6f;
+
+    // Scores a pressed-on label: the right strain, how close to the guide and how straight, and how long it took.
+    // Peels cost only the time they take.
+    public static LabelResult ScoreLabel(Strain wanted, Strain used, float seconds, float off, float angle, int peels,
+                                         System.Numerics.Vector2 at)
+    {
+        int match = wanted == used ? 100 : 0;
+        static float Ramp(float v, float full, float zero) => v <= full ? 100f : 100f * (1f - (v - full) / (zero - full));
+        int place = Clamp((Ramp(off, OffFull, OffZero) + Ramp(MathF.Abs(angle), AngleFull, AngleZero)) / 2f);
+        int s = Clamp(seconds <= LabelPar ? 100f : 100f * (1f - (seconds - LabelPar) / (2f * LabelPar)));
+        int total = (int)MathF.Round(MatchShare * match + PlaceShare * place + (1f - MatchShare - PlaceShare) * s);
+        return new LabelResult(wanted, used, seconds, off, angle, peels, at, match, place, s, total);
     }
 
     // ---------- Customers ----------
 
     // Seconds a customer waits in line before walking out, if nobody takes their order.
     public const float LinePatience = 70f;
-    // Seconds a customer waits for their order once it is taken; bigger orders get a little longer.
-    public static float WaitPatience(float grams) => 60f + 6f * grams;
+    // Seconds a customer waits for their order once it is taken; bigger orders get a little longer. The base went
+    // from 60 to 72 when Label was added.
+    public static float WaitPatience(float grams) => 72f + 6f * grams;
 
     // The Waiting score covers the whole visit: seconds in line plus seconds from order to hand-over.
     // Full marks up to par, then it drops to zero over WaitZeroAfter more seconds. Par grows with the order
-    // size; raise OrderParBase when the Pack and Label stations are added (they make every order longer).
-    const float LinePar = 12f, OrderParBase = 40f, OrderParPerGram = 4f, WaitZeroAfter = 60f;
+    // size; OrderParBase went from 40 to 52 when Pack was added, and to 62 with Label.
+    const float LinePar = 12f, OrderParBase = 62f, OrderParPerGram = 4f, WaitZeroAfter = 60f;
     public static float WaitPar(float grams) => LinePar + OrderParBase + OrderParPerGram * grams;
 
-    // Scores a served order: each built station's score plus the wait, averaged, and the tip it earns.
-    public static OrderResult ScoreOrder(WeighResult weigh, float grams, float waited)
+    // Scores a served order: the four metrics averaged, and the tip it earns.
+    public static OrderResult ScoreOrder(WeighResult weigh, PackResult pack, LabelResult label, float grams, float waited)
     {
         float par = WaitPar(grams);
         int wait = Clamp(waited <= par ? 100f : 100f * (1f - (waited - par) / WaitZeroAfter));
-        int?[] metrics = { wait, weigh.Total, null, null };
-        var built = metrics.Where(m => m != null).Select(m => m!.Value).ToList();
-        int total = (int)MathF.Round((float)built.Average());
-        return new OrderResult(weigh, wait, null, null, total, GradeFor(total), TipFor(total), waited);
+        int total = (int)MathF.Round((wait + weigh.Total + pack.Total + label.Total) / 4f);
+        return new OrderResult(weigh, pack, label, wait, total, GradeFor(total), TipFor(total), waited);
     }
 
     // Tip in cents: nothing below 40, then rising faster toward the top, to $5.00 at 100; rounded to 5 cents.

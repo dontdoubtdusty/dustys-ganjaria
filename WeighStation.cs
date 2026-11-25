@@ -3,9 +3,10 @@ using Raylib_cs;
 
 namespace DustysGanjaria;
 
-// The weigh station: put a bag on the scale, toss buds in until the needle sits in the green,
-// drag the zip across to seal it, then throw the bag into the OUT bin. The shop hands it each ticket
-// with Start and collects the finished bag with TakeShipped.
+// The weigh station: put a bag on the scale, toss buds in from the jar of the strain the order asks for until the
+// needle sits in the green, drag the zip across to seal it, then throw the bag into the OUT bin. There is a jar for
+// each strain on the day's menu (SetMenu). The shop hands it each ticket with Start and collects the finished bag
+// with TakeShipped.
 sealed class WeighStation
 {
     const int MinShake = 8;
@@ -17,15 +18,18 @@ sealed class WeighStation
 
     const float FloorY = 665;
     static readonly Rectangle TicketRect = new(50, 150, 330, 110);
-    static readonly Rectangle JarRect = new(70, 380, 330, 260);
-    static readonly Rectangle StackRect = new(480, 590, 120, 70);
+    // The strain jars stand side by side from JarsLeft, one per strain on the menu.
+    const float JarsLeft = 40, JarWidth = 170, JarGap = 20, JarTop = 330, JarBottom = 640;
+    // Grams in each jar: enough for the order with plenty to spare, the same in every jar.
+    const float FillPerGram = 1.3f, FillExtra = 2f;
+    static readonly Rectangle StackRect = new(612, 590, 108, 70);
     static readonly Rectangle PlateRect = new(730, 470, 300, 12);
     static readonly Rectangle ScaleBody = new(730, 470, 300, FloorY - 470);
     static readonly Vector2 DialCenter = new(880, 645);
     const float DialRadius = 80;
     static readonly Rectangle BinRect = new(1065, 480, 195, FloorY - 480);
     // A sealed bag is pressed flat to this share of its size, so even the biggest fits the bin.
-    const float SealedScale = 0.6f;
+    const float SealedScale = Bag.SealedScale;
     // How long a bag must sit still in the bin before the order counts as shipped.
     const float BinRestSeconds = 0.25f;
     // Pause between the bag landing and the order counting as done (the hand-over shot), so the landing (wobble,
@@ -40,6 +44,10 @@ sealed class WeighStation
     readonly List<Bud> buds = new();
     readonly List<Segment> staticWalls = new();
     readonly List<Segment> walls = new();
+
+    // The jars on the bench, one per strain on the day's menu, and the strain this order asks for.
+    readonly List<(Strain Strain, Rectangle Rect)> jars = new();
+    Strain? wanted;
 
     Bag bag = null!;
     float target, band, needle, seconds;
@@ -109,19 +117,36 @@ sealed class WeighStation
         }
     }
 
-    // The table, screen edges, jar and scale as physics walls.
+    // Puts a jar of each strain on the day's menu on the bench, and empties the station.
+    public void SetMenu(Strain[] menu)
+    {
+        jars.Clear();
+        for (int i = 0; i < menu.Length; i++)
+            jars.Add((menu[i], new Rectangle(JarsLeft + i * (JarWidth + JarGap), JarTop, JarWidth, JarBottom - JarTop)));
+        BuildStaticWalls();
+        Clear();
+    }
+
+    // True if a point is inside any jar.
+    bool InAJar(Vector2 p) => jars.Any(j => Raylib.CheckCollisionPointRec(p, j.Rect));
+
+    // The table, screen edges, jars and scale as physics walls.
     void BuildStaticWalls()
     {
+        staticWalls.Clear();
         void Add(float x1, float y1, float x2, float y2) => staticWalls.Add(new Segment(new(x1, y1), new(x2, y2)));
 
         Add(0, FloorY, Program.Width, FloorY);
         Add(0, 0, 0, FloorY);
         Add(Program.Width, 0, Program.Width, FloorY);
 
-        float jl = JarRect.X, jr = JarRect.X + JarRect.Width, jt = JarRect.Y, jb = JarRect.Y + JarRect.Height;
-        Add(jl, jt, jl, jb);
-        Add(jl, jb, jr, jb);
-        Add(jr, jt, jr, jb);
+        foreach (var (_, jar) in jars)
+        {
+            float jl = jar.X, jr = jar.X + jar.Width, jt = jar.Y, jb = jar.Y + jar.Height;
+            Add(jl, jt, jl, jb);
+            Add(jl, jb, jr, jb);
+            Add(jr, jt, jr, jb);
+        }
 
         float pl = PlateRect.X, pr = PlateRect.X + PlateRect.Width, pt = PlateRect.Y;
         Add(pl, pt, pr, pt);
@@ -133,10 +158,11 @@ sealed class WeighStation
         Add(br, bt, br, FloorY);
     }
 
-    // Starts a ticket: the weight to bag, a new empty bag in the stack and a newly filled jar.
-    public void Start(float grams)
+    // Starts a ticket: the weight and strain to bag, a new empty bag in the stack and freshly filled jars.
+    public void Start(float grams, Strain strain)
     {
         Reset(grams);
+        wanted = strain;
         phase = Phase.PlaceBag;
     }
 
@@ -144,6 +170,7 @@ sealed class WeighStation
     public void Clear()
     {
         Reset(0);
+        wanted = null;
         phase = Phase.Idle;
     }
 
@@ -184,37 +211,34 @@ sealed class WeighStation
         teethClosed = 0;
         fx.Clear();
 
-        var size = target switch
-        {
-            <= 1f => new Vector2(120, 120),
-            <= 3.5f => new Vector2(165, 160),
-            _ => new Vector2(215, 200),
-        };
-        bag = new Bag(size);
+        bag = new Bag(Bag.SizeFor(target));
 
         FillJar();
     }
 
-    // Drops a fresh mix of buds and shake into the jar and lets them settle.
+    // Drops a fresh mix of buds and shake into every jar, each in its strain's size mix, and lets them settle.
     void FillJar()
     {
         buds.Clear();
-        float total = 0;
-        int shake = 0;
-        while (total < target * 2f + 3f || shake < MinShake)
+        foreach (var (strain, jar) in jars)
         {
-            double roll = rng.NextDouble();
-            float grams;
-            if (shake < MinShake || roll < 0.25) { grams = Range(0.05f, 0.15f); shake++; }
-            else if (roll < 0.6) grams = Range(0.3f, 0.6f);
-            else grams = Range(0.6f, 1.0f);
+            float total = 0;
+            int shake = 0;
+            while (total < target * FillPerGram + FillExtra || shake < MinShake)
+            {
+                double roll = rng.NextDouble();
+                float grams;
+                if (shake < MinShake || roll < strain.ShakeShare) { grams = Range(0.05f, 0.15f); shake++; }
+                else if (roll < strain.ShakeShare + strain.SmallShare) grams = Range(strain.SmallMin, strain.SmallMax);
+                else grams = Range(strain.LargeMin, strain.LargeMax);
 
-            var bud = new Bud(MathF.Round(grams, 2), rng);
-            bud.Pos = new Vector2(
-                Range(JarRect.X + bud.Radius + 4, JarRect.X + JarRect.Width - bud.Radius - 4),
-                Range(JarRect.Y + bud.Radius, JarRect.Y + JarRect.Height - bud.Radius - 4));
-            buds.Add(bud);
-            total += bud.Grams;
+                var bud = new Bud(MathF.Round(grams, 2), strain, rng);
+                bud.Pos = new Vector2(
+                    Range(jar.X + bud.Radius + 4, jar.X + jar.Width - bud.Radius - 4),
+                    Range(jar.Y + bud.Radius, jar.Y + jar.Height - bud.Radius - 4));
+                buds.Add(bud);
+                total += bud.Grams;
+            }
         }
 
         // Run the physics for a couple of seconds so the pile has settled before the player sees it.
@@ -232,7 +256,7 @@ sealed class WeighStation
         bag.Zip = 0.4f;
         phase = Phase.Fill;
         started = true;
-        foreach (var b in buds.Where(b => !b.IsShake).Take(4))
+        foreach (var b in buds.Where(b => !b.IsShake && b.Strain == wanted).Take(4))
             b.Pos = bag.Center + new Vector2(Range(-30, 30), Range(-60, 0));
         if (!throwBag) return;
 
@@ -482,7 +506,8 @@ sealed class WeighStation
         Audio.Play(Audio.Seal, 0.8f);
         float diff = buds.Where(b => b.Sealed).Sum(b => b.Grams) - target;
         var at = new Vector2(bag.Center.X, bag.Pos.Y - 30);
-        if (MathF.Abs(diff) <= band) fx.Say("In the green!", at, Art.Accent);
+        if (buds.Any(b => b.Sealed && b.Strain != wanted)) fx.Say("Wrong strain in the bag!", at, Art.Warn);
+        else if (MathF.Abs(diff) <= band) fx.Say("In the green!", at, Art.Accent);
         else fx.Say(diff > 0 ? $"{diff:0.00} g over" : $"{-diff:0.00} g short", at, Art.Warn);
     }
 
@@ -540,8 +565,9 @@ sealed class WeighStation
     void Finish()
     {
         float grams = buds.Where(b => b.Sealed).Sum(b => b.Grams);
-        int spilled = buds.Count(b => !b.Sealed && !Raylib.CheckCollisionPointRec(b.Pos, JarRect));
-        scored = Scoring.Score(target, band, grams, seconds, slips, spilled);
+        var wrong = buds.Where(b => b.Sealed && b.Strain != wanted).ToList();
+        int spilled = buds.Count(b => !b.Sealed && !InAJar(b.Pos));
+        scored = Scoring.Score(target, band, grams, seconds, slips, spilled, wrong.Sum(b => b.Grams), wrong.Count);
         doneTime = 0;
         phase = Phase.Done;
     }
@@ -560,7 +586,7 @@ sealed class WeighStation
 
         Art.DrawTable(FloorY);
         Art.DrawTicket(TicketRect, customer, ticketNumber, dropGlow && phase == Phase.Idle);
-        Art.DrawJarBack(JarRect);
+        foreach (var (_, jar) in jars) Art.DrawJarBack(jar);
         Art.DrawScale(ScaleBody, PlateRect, DialCenter, DialRadius, needle, target, band, GaugeMax, greenGlow);
         Art.DrawBagStack(StackRect, phase == Phase.PlaceBag && drag == Drag.None);
         // The bin shakes side to side for a moment after a bag lands in it (drawing only; its walls stay put).
@@ -576,7 +602,7 @@ sealed class WeighStation
         foreach (var bud in buds)
             if (bud != held) Art.DrawBud(bud, bud == hover, false);
 
-        Art.DrawJarFront(JarRect);
+        foreach (var (strain, jar) in jars) Art.DrawJarFront(jar, strain);
 
         if (showBag)
         {
@@ -602,7 +628,7 @@ sealed class WeighStation
         string hint = phase switch
         {
             Phase.PlaceBag => "Drag a bag from the stack onto the scale.",
-            Phase.Fill => "Toss buds in the bag until the needle sits in the green.\nThen drag the zip tab across to seal it. Not too fast.",
+            Phase.Fill => $"Toss {wanted?.Name} buds in the bag until the needle sits in the green.\nThen drag the zip tab across to seal it. Not too fast.",
             Phase.Ship => "Grab the sealed bag and throw it into the OUT bin.",
             Phase.Idle => "No ticket on the station. Drag one down from the rail.",
             _ => "",

@@ -32,6 +32,11 @@ sealed class Customer
     public Color Shirt { get; }
     public Color Trousers { get; }
     public float Grams { get; }
+    // The strain they asked for, from the day's menu.
+    public Strain Strain { get; }
+    // The container they asked for. The size is not said: it follows the grams (Containers.SizeFor).
+    // Settable only so screenshot runs can stage a jar order.
+    public ContainerKind Wants { get; set; }
     public State Now = State.InLine;
     public float Patience, PatienceMax;
     public Vector2 Pos, Goal;
@@ -47,13 +52,15 @@ sealed class Customer
     // True while they look the bag over in the hand-over shot: eyes on the bag, one brow up, a neutral "hmm".
     public bool Inspecting;
 
-    // Makes a random customer standing at the given spot (the door).
-    public Customer(Random rng, Vector2 start)
+    // Makes a random customer standing at the given spot (the door), ordering a strain from the menu.
+    public Customer(Random rng, Vector2 start, Strain[] menu)
     {
         Name = Names[rng.Next(Names.Length)];
         Shirt = Shirts[rng.Next(Shirts.Length)];
         Trousers = Pants[rng.Next(Pants.Length)];
         Grams = Orders[rng.Next(Orders.Length)];
+        Strain = menu[rng.Next(menu.Length)];
+        Wants = rng.Next(2) == 0 ? ContainerKind.Pouch : ContainerKind.Jar;
         PatienceMax = Patience = Scoring.LinePatience;
         Pos = Goal = start;
     }
@@ -73,6 +80,12 @@ sealed class Customer
         if (Now == State.InLine && Arrived) Reached = true;
     }
 
-    // The order as the tickets say it.
-    public string OrderText => $"{Grams:0.0#} g flower";
+    // The amount as the tickets say it.
+    public string OrderText => $"{Grams:0.0#} g";
+
+    // The whole order on one line, like 3.5 g Midnight Kush.
+    public string FullOrderText => $"{Grams:0.0#} g {Strain.Name}";
+
+    // The container as the tickets say it.
+    public string ContainerText => Wants == ContainerKind.Jar ? "Jar" : "Pouch";
 }
