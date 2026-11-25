@@ -43,6 +43,33 @@ static partial class Art
         if (next != null) LabelCentered(next, cx, panel.Y + 330, 20, Faint);
     }
 
+    // ---------- Pause menu ----------
+
+    // Dims the game and draws the pause panel with its title and, under it, a line of small print (may be empty).
+    public static void DrawPausePanel(Rectangle panel, string title, string note)
+    {
+        Raylib.DrawRectangle(0, 0, Program.Width, Program.Height, new Color(0, 0, 0, 150));
+        DrawPanel(panel);
+        float cx = panel.X + panel.Width / 2;
+        LabelCentered(title, cx, panel.Y + 22, 48, Accent);
+        if (note.Length > 0) LabelCentered(note, cx, panel.Y + 80, 20, Faint);
+    }
+
+    // Draws a volume slider: a label, the track, the filled part up to value (0-1), a knob and the percentage.
+    public static void DrawSlider(Rectangle track, string label, float value, bool hot)
+    {
+        Label(label, track.X, track.Y - 30, 22, Text);
+        LabelRight($"{value * 100:0}%", track.X + track.Width, track.Y - 30, 22, Faint);
+        Raylib.DrawRectangleRounded(track, 1f, 8, new Color(40, 34, 48, 255));
+        Raylib.DrawRectangleRounded(new Rectangle(track.X, track.Y, track.Width * value, track.Height), 1f, 8, Accent);
+        var knob = new Vector2(track.X + track.Width * value, track.Y + track.Height / 2);
+        Raylib.DrawCircleV(knob, hot ? 13 : 11, hot ? new Color(250, 248, 240, 255) : Text);
+    }
+
+    // Draws text ending at x.
+    static void LabelRight(string text, float x, float y, int size, Color color) =>
+        Label(text, x - Measure(text, size), y, size, color);
+
     // Draws the day and wall clock in the bottom bar; after closing it says so, and >> shows while time is sped up.
     public static void DrawClock(float x, float y, int day, string clock, bool closed, bool fast)
     {

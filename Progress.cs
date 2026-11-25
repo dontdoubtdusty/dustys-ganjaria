@@ -9,6 +9,8 @@ sealed class Progress
     public int Day { get; set; } = 1;
     public int TipsCents { get; set; }
     public int RankPoints { get; set; }
+    // The steps the player has done at least once ("take", "weigh", "pack", "label"); their pointers stop showing.
+    public List<string> Learned { get; set; } = new();
 
     // Rank names, lowest first. Rank 1 is where everyone starts.
     static readonly string[] RankNames =

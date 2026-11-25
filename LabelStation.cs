@@ -149,10 +149,11 @@ sealed class LabelStation
     }
 
     // Drops whatever the mouse is holding (the player switched screens): a carried label is let go where it is,
-    // a press stops.
-    public void LetGo()
+    // a press stops. Pausing (pausing = true) puts a carried label back on its pad instead, at no cost.
+    public void LetGo(bool pausing = false)
     {
-        if (hold == Hold.Carry) Release();
+        if (hold == Hold.Carry && pausing) label = null;
+        else if (hold == Hold.Carry) Release();
         hold = Hold.None;
         pressTime = 0;
     }

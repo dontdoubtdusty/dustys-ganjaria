@@ -86,6 +86,10 @@ sealed class Customer
     // The whole order on one line, like 3.5 g Midnight Kush.
     public string FullOrderText => $"{Grams:0.0#} g {Strain.Name}";
 
-    // The container as the tickets say it.
-    public string ContainerText => Wants == ContainerKind.Jar ? "Jar" : "Pouch";
+    // The container with its size, as the budtender writes it on the notepad and the station ticket: "Large jar".
+    // The customer only says the kind; the size follows the grams.
+    public string ContainerText => (Grams >= Containers.LargeFrom ? "Large " : "Small ") + (Wants == ContainerKind.Jar ? "jar" : "pouch");
+
+    // The same, short, as the rail ticket and the shelf labels say it: "Jar L".
+    public string ContainerShort => (Wants == ContainerKind.Jar ? "Jar " : "Pouch ") + (Grams >= Containers.LargeFrom ? "L" : "S");
 }

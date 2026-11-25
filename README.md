@@ -16,8 +16,10 @@ in the Start menu. Start the game from that shortcut.
 - Four screens, switched with the tabs at the bottom or the 1 to 4 keys: Counter, Weigh, Pack and Label. Each tab
   counts the tickets waiting for it and lights up orange when someone there needs you.
 - Counter: customers walk in and queue. Click Take order (or press Enter) and the view cuts to the counter, where
-  they say their order (1 g, 3.5 g or 7 g of one strain, in a pouch or a jar); then their ticket goes up on the rail and they sit
-  down to wait.
+  they say their order (1 g, 3.5 g or 7 g of one strain, in a pouch or a jar) and you write it down, with the
+  container size it needs (Jar L, Pouch S); then their ticket goes up on the rail and they sit down to wait.
+- New to a step? A yellow arrow points at what to do next (take the order, open a tab, drag a ticket down) until
+  you have done that step once.
 - Everyone has a patience bar. It drains while they queue and again while they wait for their order. If it runs
   out they walk out, and an order you were making for them is dropped. Taking an order and handing one over pause
   the whole shop.
@@ -32,8 +34,8 @@ in the Start menu. Start the game from that shortcut.
 - Grab the sealed bag and throw it into the OUT bin. Missed? Pick it up and try again. Once it lands, its ticket
   goes back up on the rail, stamped WEIGHED.
 - Pack: drag the weighed ticket down onto the pack station. The bag is waiting in the IN tray.
-- Drag the right container off the shelf onto the mat: the kind the ticket says, small for 1 g or 3.5 g, large for
-  7 g. Changed your mind? Drag it back off, as long as the bag is not in yet.
+- Drag the container the ticket names off the shelf onto the mat (small holds 1 g or 3.5 g, large holds 7 g).
+  Changed your mind? Drag it back off, as long as the bag is not in yet.
 - Drag or throw the bag into the container. Once it settles inside, it stays there.
 - Jar: grab the lid and drag it to the right, let go, grab it again: about three strokes screw it on, each one
   clicking as the ridges slide. A jerky, too-fast stroke cross-threads it and it pops loose.
@@ -52,7 +54,9 @@ in the Start menu. Start the game from that shortcut.
   counts the day's tips and your rank grows with every good order. Next day carries on; Save and quit stops.
 - The game saves at the end of every day. To start over from day 1, delete
   `%APPDATA%\DustysGanjaria\save.json`.
-- Esc quits (a day in progress is not saved).
+- Esc pauses: the whole shop stands still. The pause menu has Resume, the volume (remembered in
+  `%APPDATA%\DustysGanjaria\settings.json`, so starting over keeps it), Restart day and Quit. Restarting or quitting
+  mid-day loses that day, so both ask first. Closing the window also quits.
 - F1 shows or hides a tuning panel with the live numbers behind the current screen: patience and waiting times
   on the Counter, the exact weight and green band at Weigh, lid strokes or strip at Pack, tilt and distance to the
   guide at Label, and time against par everywhere. It is for tuning; play without it, or the game is easier than

@@ -1,8 +1,8 @@
-﻿# Session log
+# Session log
 
 ## Open reminders
-- Everything up to 0.10.0 is committed and pushed (eecf0a5, then the file map).
-- Refinement plan (2026-11-25, owner): 1 tidy-up (done), 2 play log and F1 tuning overlay (done, 0.11.0), 3 clarity (size on ticket, first-time hints, pause menu), then the ID check. Confirm with the owner at the start of each part.
+- Everything up to 0.12.0 is committed and pushed.
+- Refinement plan (2026-11-25, owner): 1 tidy-up (done), 2 play log and F1 tuning overlay (done, 0.11.0), 3 clarity: size on ticket, day-1 pointers instead of hint cards, pause menu (done, 0.12.0), then the ID check (next; owner chose: fine and lost sale, bad IDs from day 2 about 1 in 6, no timer). Confirm with the owner at the start of each part.
 - 0.9.1 Pack station: built and screenshot-checked; the owner tried 0.9.0 and the circle lid twist felt awkward, so 0.9.1 turns it in sideways strokes (not played yet). Tuning questions in vision.md (Open questions). The owner says the 0.7.0-0.8.0 loop works alright for now.
 - 0.10.0 Label station and strains: built and screenshot-checked, not played yet. The label swing and press can only be judged by playing. Tuning questions in vision.md (Open questions).
 - Art: layered customers, paused. Base locked and a hair edit test passed; next are the mouth edit test and the C# layer cutter. Plan and prompts in vision.md, "Customer art pipeline".

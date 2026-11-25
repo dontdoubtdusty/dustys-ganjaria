@@ -285,7 +285,7 @@ static partial class Art
         var chip = new Rectangle(r.X + r.Width - 8 - sw, r.Y + 31, sw, 18);
         Raylib.DrawRectangleRounded(chip, 0.4f, 6, strain.Tag);
         LabelCentered(strain.Short, chip.X + sw / 2, chip.Y + 2, 14, new Color(250, 248, 240, 255));
-        Label(t.Customer.ContainerText, r.X + 8, r.Y + 50, 16, new Color(60, 70, 120, 255));
+        Label(t.Customer.ContainerShort, r.X + 8, r.Y + 50, 16, new Color(60, 70, 120, 255));
         if (t.Next != Stage.Weigh)
         {
             var (word, ink) = t.Next == Stage.Pack ? ("WEIGHED", new Color(60, 150, 70, 255)) : ("PACKED", new Color(130, 80, 170, 255));
@@ -522,6 +522,27 @@ static partial class Art
     {
         Raylib.DrawRectangleRounded(rect, 0.05f, 8, Panel);
         Raylib.DrawRectangleLinesEx(rect, 2, PanelEdge);
+    }
+
+    // Draws a bouncing arrow with a short line of text, pointing at tip: down at it from above, or (up = true) up
+    // at it from below. The text is kept on screen. Used for the first-time pointers.
+    public static void DrawPointer(Vector2 tip, string text, bool up)
+    {
+        float bob = 6f * MathF.Sin((float)Raylib.GetTime() * 6f);
+        float dir = up ? 1f : -1f;
+        var point = tip + new Vector2(0, dir * (6 + bob));
+        var tail = point + new Vector2(0, dir * 44);
+        var color = new Color(255, 214, 90, 255);
+        Raylib.DrawLineEx(point + new Vector2(0, dir * 10), tail, 8, color);
+        // Corners counter-clockwise on screen, or Raylib skips the triangle.
+        Raylib.DrawTriangle(point, point + new Vector2(-dir * 16, dir * 20), point + new Vector2(dir * 16, dir * 20), color);
+
+        const int size = 24;
+        float w = Measure(text, size) + 28;
+        float cx = Math.Clamp(tip.X, w / 2 + 8, Program.Width - w / 2 - 8);
+        float ty = up ? tail.Y + 6 : tail.Y - size - 16;
+        Raylib.DrawRectangleRounded(new Rectangle(cx - w / 2, ty, w, size + 12), 0.5f, 8, new Color(30, 26, 34, 235));
+        LabelCentered(text, cx, ty + 6, size, color);
     }
 
     // Draws the F1 tuning panel in the top right, under the rail: a title, then one line per value, warnings orange.

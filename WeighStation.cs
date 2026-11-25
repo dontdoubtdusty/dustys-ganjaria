@@ -204,11 +204,11 @@ sealed class WeighStation
         return done;
     }
 
-    // Drops whatever the mouse is holding; used when the player switches to another screen.
-    // A half-done zip slips open; a bag still being carried from the stack goes back to it.
-    public void LetGo()
+    // Drops whatever the mouse is holding; used when the player switches to another screen, where a half-done zip
+    // slips open. Pausing (pausing = true) lets go of the zip without a slip, as a normal release would.
+    public void LetGo(bool pausing = false)
     {
-        if (drag == Drag.Zip) Slip("Zip slipped: you let go");
+        if (drag == Drag.Zip && !pausing) Slip("Zip slipped: you let go");
         held = null;
         drag = Drag.None;
     }

@@ -2,7 +2,7 @@
 
 One entry per file: what it does today. Read this first each session, then open only the files the task needs. Update it when a file is added, split, renamed or deleted, and when a file's job changes. Describe the current state only; history lives in git and the session log.
 
-Line counts are rough (2026-11-25, version 0.11.0). Files over ~400 lines are marked *. Length only flags a file to look at; a long file with one job is fine.
+Line counts are rough (2026-11-25, version 0.12.0). Files over ~400 lines are marked *. Length only flags a file to look at; a long file with one job is fine.
 
 ---
 
@@ -10,15 +10,17 @@ Line counts are rough (2026-11-25, version 0.11.0). Files over ~400 lines are ma
 
 | File | Lines | What it does |
 |---|---|---|
-| `Program.cs` | 80 | Window, game loop, `Version`, window icon, and the `--shot...` screenshot flags (listed in `CLAUDE.md`). |
-| `Shop.cs` * | 676 | The shop, one day at a time: day intro card, arrivals on the day's schedule, the line, the side-on shop view (layout constants at the top), taking orders, the waiting bench, patience and walkouts, tabs (Counter, Weigh, Pack, Label), ticket drops onto the station a ticket needs next (`Ticket.Next`; each station has `Start` and `TakeShipped`), finished tickets back up to the rail, the hand-over queue, closing time and the end of the day. Both shots pause the clock, arrivals and patience. |
+| `Program.cs` | 104 | Window, game loop, `Version`, window icon, settings and volume at start, Esc opens the pause menu (the shop does not update while it is open), and the `--shot...` screenshot flags (listed in `CLAUDE.md`). |
+| `Shop.cs` * | 771 | The shop, one day at a time: day intro card, arrivals on the day's schedule, the line, the side-on shop view (layout constants at the top), taking orders, the waiting bench, patience and walkouts, tabs (Counter, Weigh, Pack, Label), ticket drops onto the station a ticket needs next (`Ticket.Next`; each station has `Start` and `TakeShipped`), finished tickets back up to the rail, the hand-over queue, closing time and the end of the day. Both shots pause the clock, arrivals and patience. Also the first-time pointers (`DrawPointer`, `Learn`), the Counter's F1 lines (`DrawTuning`), and `Pause` / `RestartDay` / `DayInProgress` for the pause menu. |
 | `Day.cs` | 106 | One shop day: the strain menu, customers per day, the arrival schedule with rushes, the wall clock, and the tally (orders, walkouts, metric averages, service quality). |
-| `Progress.cs` | 60 | What carries between days (day, tip jar, rank points), rank names and steps, the save at `%APPDATA%\DustysGanjaria\save.json`. |
-| `Customer.cs` | 91 | One customer: name, looks, order, strain and container kind wanted, patience, walking (`Pos` is the feet). |
+| `Progress.cs` | 62 | What carries between days (day, tip jar, rank points, `Learned` steps whose pointers no longer show), rank names and steps, the save at `%APPDATA%\DustysGanjaria\save.json`. |
+| `Customer.cs` | 95 | One customer: name, looks, order, strain and container kind wanted (`ContainerText` "Large jar" and `ContainerShort` "Jar L" add the size the grams need), patience, walking (`Pos` is the feet). |
 | `Ticket.cs` | 33 | An order ticket: the station it needs next, the weigh result once weighed. |
-| `TicketRail.cs` | 103 | The rail across the top of every screen: slots and dragging; the shop decides what a drop does. |
+| `TicketRail.cs` | 106 | The rail across the top of every screen: slots and dragging (`CardRect`, `FirstFor`); the shop decides what a drop does. |
 | `Scoring.cs` | 190 | All scoring tuning: the four metric names, green band width, par times (`WeighPar`, `PackPar`, `LabelPar`, `WaitPar`), slip, spill and wrong-strain costs, shares, Packing and Labeling scores (`PlacementFor`), Start over cost, grades, line and wait patience, tips, reactions. |
-| `PlayLog.cs` | 120 | The play log: one CSV row per served order and per walkout (every part score) appended to `%APPDATA%\DustysGanjaria\playlog.csv`; column list at the top. A header change renames the old file and starts a new one. Off in screenshot runs. |
+| `PlayLog.cs` | 107 | The play log: one CSV row per served order and per walkout (every part score) appended to `%APPDATA%\DustysGanjaria\playlog.csv`; column list at the top. A header change renames the old file and starts a new one. Off in screenshot runs. |
+| `PauseMenu.cs` | 106 | The Esc pause menu: Resume, volume slider, Restart day and Quit (both confirm while a day is in progress). Layout at the top. |
+| `Settings.cs` | 41 | Player settings (volume), saved apart from progress at `%APPDATA%\DustysGanjaria\settings.json`. |
 
 ## Shots and day end
 
@@ -44,8 +46,8 @@ Line counts are rough (2026-11-25, version 0.11.0). Files over ~400 lines are ma
 
 | File | Lines | What it does |
 |---|---|---|
-| `Art.cs` * | 528 | `partial class Art`, part 1: font and text (`Label` / `LabelCentered` / `LabelTurned` / `Measure`), weigh station pieces (buds, jars, scale, bags, bin), tickets and rail, shop view (room, door, bench, budtender, customers, patience bars), the order shot, tabs, buttons and panels, and the F1 tuning panel (`DrawTuning`, `TuningLine`). Each station's `TuningLines()` and `Shop.DrawTuning` supply its lines. |
-| `ArtScreens.cs` | 351 | `Art` part 2: day card, hand-over, results and tip jar drawing. |
+| `Art.cs` * | 528 | `partial class Art`, part 1: font and text (`Label` / `LabelCentered` / `LabelTurned` / `Measure`), weigh station pieces (buds, jars, scale, bags, bin), tickets and rail, shop view (room, door, bench, budtender, customers, patience bars), the order shot, tabs, buttons and panels, the first-time pointer arrow (`DrawPointer`) and the F1 tuning panel (`DrawTuning`, `TuningLine`). Each station's `TuningLines()` and `Shop.DrawTuning` supply its lines. |
+| `ArtScreens.cs` | 351 | `Art` part 2: day card, pause panel and volume slider, hand-over, results and tip jar drawing. |
 | `ArtPack.cs` | 167 | `Art` part 3: the pack station's pieces. |
 | `ArtLabel.cs` | 80 | `Art` part 4: the label station's rack, pads and labels. |
 | `Audio.cs` | 268 | Every sound by name (`Audio.Play(name, volume, pitch)`), a few copies each, random pitch per play. Placeholders made in code; `resources/sounds/<name>.wav` replaces one (names at the top). |

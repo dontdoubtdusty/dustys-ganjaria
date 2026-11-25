@@ -118,6 +118,21 @@ sealed class Shop
         bannerTime = 0;
     }
 
+    // True while a day is being played (not on its intro card or its day-end screens): quitting now loses it.
+    public bool DayInProgress => phase == Phase.Open;
+
+    // The pause menu opened: put down anything held, without the costs a tab switch has.
+    public void Pause()
+    {
+        rail.LetGo();
+        weigh.LetGo(pausing: true);
+        pack.LetGo();
+        label.LetGo(pausing: true);
+    }
+
+    // Starts today over from its intro card. Nothing was saved yet today, so the save is untouched.
+    public void RestartDay() => StartDay(progress.Day);
+
     // Spot in the line for place i (0 = at the counter).
     static Vector2 LineSpot(int i) => new(LineFrontX - LineGap * i, FrontY);
 
@@ -416,6 +431,7 @@ sealed class Shop
         rail.Remove(t);
         onLabel = t;
         label.Start(t.Customer, t.Packed!.Value.Used, day.Menu);
+        Learn("label");
     }
 
     // Moves a weighed ticket from the rail onto the pack station; its bag is waiting in the IN tray.
@@ -424,6 +440,7 @@ sealed class Shop
         rail.Remove(t);
         onPack = t;
         pack.Start(t.Customer);
+        Learn("pack");
     }
 
     // Moves a ticket from the rail onto the weigh station and starts its bag.
@@ -432,6 +449,13 @@ sealed class Shop
         rail.Remove(t);
         onWeigh = t;
         weigh.Start(t.Customer.Grams, t.Customer.Strain);
+        Learn("weigh");
+    }
+
+    // Marks a step as done once, so its first-time pointer stops showing (saved with the day).
+    void Learn(string step)
+    {
+        if (!progress.Learned.Contains(step)) progress.Learned.Add(step);
     }
 
     // Lets in the next customer when they are due, if the line has room (otherwise they wait outside a moment).
@@ -527,6 +551,7 @@ sealed class Shop
         if (TakenOrders >= MaxWaiting) { Say("The waiting area is full: finish an order first"); return; }
         c.Now = Customer.State.Ordering;
         shot = new OrderShot(new Ticket(nextTicket++, c));
+        Learn("take");
     }
 
     // The order is said: the ticket goes up on the rail, the customer goes to the waiting bench with fresh
@@ -645,6 +670,7 @@ sealed class Shop
                   910, 686, 20, Art.Text);
 
         if (bannerTime > 0) Art.DrawBanner(banner, Program.Width / 2f, TicketRail.Height + 10);
+        DrawPointer();
         if (Tuning && phase == Phase.Open && shot == null) DrawTuning();
 
         if (phase == Phase.Intro)
@@ -657,6 +683,37 @@ sealed class Shop
             Art.DrawButton(OpenButton, "Open the shop", Raylib.CheckCollisionPointRec(mouse, OpenButton), true);
         }
         if (phase == Phase.Ended) dayEnd!.Draw(mouse);
+    }
+
+    // Draws the first-time pointer: an arrow at the next thing to do for one step the player has not done yet
+    // (take an order, then put a ticket on each station). The other screen's tab first, then the button or the
+    // ticket to drag. A step on the current screen wins over one elsewhere. Nothing shows while dragging.
+    void DrawPointer()
+    {
+        if (phase != Phase.Open || shot != null || rail.Dragged != null) return;
+        bool New(string step) => !progress.Learned.Contains(step);
+
+        var steps = new List<(Screen At, Rectangle Tab, string Name, Ticket? Ticket)>();
+        if (New("take") && AtCounter != null && TakenOrders < MaxWaiting) steps.Add((Screen.Counter, CounterTab, "Counter", null));
+        if (New("weigh") && weigh.IsIdle && rail.FirstFor(Stage.Weigh) is { } w) steps.Add((Screen.Weigh, WeighTab, "Weigh", w));
+        if (New("pack") && pack.IsIdle && rail.FirstFor(Stage.Pack) is { } p) steps.Add((Screen.Pack, PackTab, "Pack", p));
+        if (New("label") && label.IsIdle && rail.FirstFor(Stage.Label) is { } l) steps.Add((Screen.Label, LabelTab, "Label", l));
+        if (steps.Count == 0) return;
+
+        var step = steps.FirstOrDefault(s => s.At == screen);
+        if (step.Name == null)
+        {
+            step = steps[0];
+            Art.DrawPointer(new Vector2(step.Tab.X + step.Tab.Width / 2, step.Tab.Y - 2), $"Open {step.Name}", up: false);
+            return;
+        }
+        if (step.Ticket == null)
+        {
+            Art.DrawPointer(new Vector2(TakeButton.X + TakeButton.Width / 2, TakeButton.Y - 2), "Take the order", up: false);
+            return;
+        }
+        var card = TicketRail.CardRect(step.Ticket);
+        Art.DrawPointer(new Vector2(card.X + card.Width / 2, card.Y + card.Height + 2), "Drag this ticket down onto the station", up: true);
     }
 
     // Draws the F1 tuning panel for the current screen. The Counter's shows the day's pace and each customer's

@@ -19,7 +19,10 @@ sealed class TicketRail
     public Ticket? Dragged => dragged;
 
     static Vector2 Slot(int i) => new(Left + i * (CardW + Gap), Top);
-    static Rectangle CardRect(Ticket t) => new(t.Pos.X, t.Pos.Y, CardW, CardH);
+    public static Rectangle CardRect(Ticket t) => new(t.Pos.X, t.Pos.Y, CardW, CardH);
+
+    // The leftmost ticket waiting for a station, if any.
+    public Ticket? FirstFor(Stage stage) => tickets.FirstOrDefault(t => t.Next == stage);
 
     // Hangs a new ticket at the end of the rail; it flies up from the given point and glows for a moment.
     public void Add(Ticket t, Vector2 from)
