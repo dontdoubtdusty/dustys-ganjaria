@@ -72,6 +72,8 @@ sealed class Shop
     Ticket? onWeigh, onPack, onLabel;
     int nextTicket = 1;
     bool closingSaid, fast;
+    // True while the F1 tuning panel is showing (screenshot runs set it with --tuning).
+    public bool Tuning;
     float endTimer;
     string banner = "";
     float bannerTime;
@@ -262,6 +264,7 @@ sealed class Shop
         bool confirm = Raylib.IsKeyPressed(KeyboardKey.Enter) || Raylib.IsKeyPressed(KeyboardKey.KpEnter)
                        || Raylib.IsKeyPressed(KeyboardKey.Space);
         if (bannerTime > 0) bannerTime -= dt;
+        if (Raylib.IsKeyPressed(KeyboardKey.F1)) Tuning = !Tuning;
 
         if (phase == Phase.Intro)
         {
@@ -466,6 +469,13 @@ sealed class Shop
     // order was on the bench, the bench is cleared.
     void WalkOut(Customer c)
     {
+        var ticket = rail.For(c) ?? (onWeigh?.Customer == c ? onWeigh : onPack?.Customer == c ? onPack
+                                     : onLabel?.Customer == c ? onLabel : null);
+        string stage = line.Contains(c) ? "line"
+            : onWeigh?.Customer == c ? "on weigh" : onPack?.Customer == c ? "on pack" : onLabel?.Customer == c ? "on label"
+            : ticket != null ? $"rail for {ticket.Next.ToString().ToLowerInvariant()}" : "waiting";
+        PlayLog.Walkout(day, Progress.RankOf(progress.RankPoints), c, ticket, stage);
+
         line.Remove(c);
         waiting.Remove(c);
         Leave(c, served: false);
@@ -562,6 +572,7 @@ sealed class Shop
         var c = t.Customer;
         var result = Scoring.ScoreOrder(t.Weighed!.Value, t.Packed!.Value, labelResult, c.Grams, c.Waited);
         day.Orders.Add(result);
+        PlayLog.Served(day, Progress.RankOf(progress.RankPoints), t, result);
         waiting.Remove(c);
         onLabel = null;
         label.Clear();
@@ -634,6 +645,7 @@ sealed class Shop
                   910, 686, 20, Art.Text);
 
         if (bannerTime > 0) Art.DrawBanner(banner, Program.Width / 2f, TicketRail.Height + 10);
+        if (Tuning && phase == Phase.Open && shot == null) DrawTuning();
 
         if (phase == Phase.Intro)
         {
@@ -645,6 +657,32 @@ sealed class Shop
             Art.DrawButton(OpenButton, "Open the shop", Raylib.CheckCollisionPointRec(mouse, OpenButton), true);
         }
         if (phase == Phase.Ended) dayEnd!.Draw(mouse);
+    }
+
+    // Draws the F1 tuning panel for the current screen. The Counter's shows the day's pace and each customer's
+    // patience and waiting time against the Waiting par; each station supplies its own lines.
+    void DrawTuning()
+    {
+        switch (screen)
+        {
+            case Screen.Weigh: Art.DrawTuning("Weigh tuning", weigh.TuningLines()); return;
+            case Screen.Pack: Art.DrawTuning("Pack tuning", pack.TuningLines()); return;
+            case Screen.Label: Art.DrawTuning("Label tuning", label.TuningLines()); return;
+        }
+        string next = float.IsInfinity(day.UntilNext) ? "nobody else coming" : $"next in {day.UntilNext:0} s";
+        var lines = new List<TuningLine>
+        {
+            new($"Day {day.Clock:0} of {day.CloseAt:0} s, {next}, {day.StillToCome} to come"),
+        };
+        foreach (var c in line.Concat(waiting))
+        {
+            string where = c.Now == Customer.State.Waiting ? "waiting" : "in line";
+            float par = Scoring.WaitPar(c.Grams);
+            lines.Add(new($"{c.Name} {where}: patience {c.Patience:0}/{c.PatienceMax:0} s, waited {c.Waited:0}/{par:0} s",
+                          c.PatienceFraction < 0.3f || c.Waited > par));
+        }
+        if (line.Count + waiting.Count == 0) lines.Add(new("Nobody in the shop."));
+        Art.DrawTuning("Counter tuning", lines);
     }
 
     // Draws the side-on shop view: the door with its open sign, the waiting bench, everyone on the floor (back row

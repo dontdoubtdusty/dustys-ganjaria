@@ -5,7 +5,7 @@ namespace DustysGanjaria;
 // Opens the window and runs the game loop around the shop.
 static class Program
 {
-    public const string Version = "0.10.0";
+    public const string Version = "0.11.0";
     public const int Width = 1280;
     public const int Height = 720;
 
@@ -27,7 +27,8 @@ static class Program
     // "--shot-pack" and "--shot-pack-jar" a weighed order half closed on the pack station (pouch strip, jar lid),
     // "--shot-label" a packed jar on the label station with a label stuck on loosely, a little crooked, "--shot-intro"
     // the day card with a menu picked from all five strains.
-    // Screenshot runs make no sound and never read or write the save.
+    // A third argument "--tuning" shows the F1 tuning panel in the shot.
+    // Screenshot runs make no sound, never read or write the save and never write the play log.
     static void Main(string[] args)
     {
         string[] shotModes =
@@ -35,7 +36,7 @@ static class Program
             "--shot", "--shot-throw", "--shot-counter", "--shot-order", "--shot-handover", "--shot-check", "--shot-results",
             "--shot-tipjar", "--shot-pack", "--shot-pack-jar", "--shot-label", "--shot-intro",
         };
-        string? mode = args.Length == 2 && shotModes.Contains(args[0]) ? args[0] : null;
+        string? mode = args.Length >= 2 && shotModes.Contains(args[0]) ? args[0] : null;
         string? shotPath = mode != null ? args[1] : null;
 
         Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.VSyncHint);
@@ -46,11 +47,13 @@ static class Program
         // Screenshot runs load the sounds too (so a broken one shows up) but play them muted.
         Audio.Load();
         if (mode != null) Raylib.SetMasterVolume(0f);
+        PlayLog.Enabled = mode == null;
 
         var shop = mode == null
             ? new Shop(new Random(Environment.TickCount), Progress.Load(), persistent: true)
             : new Shop(new Random(7), new Progress(), persistent: false);
         if (mode != null) shop.StageForScreenshot(mode);
+        if (mode != null && args.Contains("--tuning")) shop.Tuning = true;
         int frames = 0;
 
         while (!Raylib.WindowShouldClose())

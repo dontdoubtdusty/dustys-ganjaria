@@ -2,7 +2,7 @@
 
 One entry per file: what it does today. Read this first each session, then open only the files the task needs. Update it when a file is added, split, renamed or deleted, and when a file's job changes. Describe the current state only; history lives in git and the session log.
 
-Line counts are rough (2026-11-25, version 0.10.0). Files over ~400 lines are marked *. Length only flags a file to look at; a long file with one job is fine.
+Line counts are rough (2026-11-25, version 0.11.0). Files over ~400 lines are marked *. Length only flags a file to look at; a long file with one job is fine.
 
 ---
 
@@ -17,7 +17,8 @@ Line counts are rough (2026-11-25, version 0.10.0). Files over ~400 lines are ma
 | `Customer.cs` | 91 | One customer: name, looks, order, strain and container kind wanted, patience, walking (`Pos` is the feet). |
 | `Ticket.cs` | 33 | An order ticket: the station it needs next, the weigh result once weighed. |
 | `TicketRail.cs` | 103 | The rail across the top of every screen: slots and dragging; the shop decides what a drop does. |
-| `Scoring.cs` | 177 | All scoring tuning: the four metric names, green band width, par times, slip, spill and wrong-strain costs, shares, Packing and Labeling scores, Start over cost, grades, line and wait patience, the Waiting par, tips, reactions. |
+| `Scoring.cs` | 190 | All scoring tuning: the four metric names, green band width, par times (`WeighPar`, `PackPar`, `LabelPar`, `WaitPar`), slip, spill and wrong-strain costs, shares, Packing and Labeling scores (`PlacementFor`), Start over cost, grades, line and wait patience, tips, reactions. |
+| `PlayLog.cs` | 120 | The play log: one CSV row per served order and per walkout (every part score) appended to `%APPDATA%\DustysGanjaria\playlog.csv`; column list at the top. A header change renames the old file and starts a new one. Off in screenshot runs. |
 
 ## Shots and day end
 
@@ -43,7 +44,7 @@ Line counts are rough (2026-11-25, version 0.10.0). Files over ~400 lines are ma
 
 | File | Lines | What it does |
 |---|---|---|
-| `Art.cs` * | 528 | `partial class Art`, part 1: font and text (`Label` / `LabelCentered` / `LabelTurned` / `Measure`), weigh station pieces (buds, jars, scale, bags, bin), tickets and rail, shop view (room, door, bench, budtender, customers, patience bars), the order shot, tabs, buttons and panels. |
+| `Art.cs` * | 528 | `partial class Art`, part 1: font and text (`Label` / `LabelCentered` / `LabelTurned` / `Measure`), weigh station pieces (buds, jars, scale, bags, bin), tickets and rail, shop view (room, door, bench, budtender, customers, patience bars), the order shot, tabs, buttons and panels, and the F1 tuning panel (`DrawTuning`, `TuningLine`). Each station's `TuningLines()` and `Shop.DrawTuning` supply its lines. |
 | `ArtScreens.cs` | 351 | `Art` part 2: day card, hand-over, results and tip jar drawing. |
 | `ArtPack.cs` | 167 | `Art` part 3: the pack station's pieces. |
 | `ArtLabel.cs` | 80 | `Art` part 4: the label station's rack, pads and labels. |
@@ -78,3 +79,5 @@ Line counts are rough (2026-11-25, version 0.10.0). Files over ~400 lines are ma
 | Where something is drawn | `Art*.cs` (the four `Art` parts above) |
 | What a drop on the rail does | `Shop.cs` |
 | Rank names and steps, the save file | `Progress.cs` |
+| What was logged from play, and its columns | `PlayLog.cs`; the file is `%APPDATA%\DustysGanjaria\playlog.csv` |
+| A value missing from the F1 panel | That station's `TuningLines()`, or `Shop.DrawTuning` for the Counter |

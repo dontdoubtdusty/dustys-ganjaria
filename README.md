@@ -53,6 +53,12 @@ in the Start menu. Start the game from that shortcut.
 - The game saves at the end of every day. To start over from day 1, delete
   `%APPDATA%\DustysGanjaria\save.json`.
 - Esc quits (a day in progress is not saved).
+- F1 shows or hides a tuning panel with the live numbers behind the current screen: patience and waiting times
+  on the Counter, the exact weight and green band at Weigh, lid strokes or strip at Pack, tilt and distance to the
+  guide at Label, and time against par everywhere. It is for tuning; play without it, or the game is easier than
+  it should be.
+- Every served order and every walkout adds a row to `%APPDATA%\DustysGanjaria\playlog.csv` with all its part
+  scores, for tuning. Delete the file to start a fresh log.
 
 ## Known limits
 - Windows only.

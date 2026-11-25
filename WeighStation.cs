@@ -117,6 +117,28 @@ sealed class WeighStation
         }
     }
 
+    // Live values for the F1 tuning panel: target and band, what the scale reads and how much of it counts, time
+    // against par, and the zip.
+    public List<TuningLine> TuningLines()
+    {
+        if (phase == Phase.Idle) return new() { new("No ticket on the station.") };
+        bool InBag(Bud b) => bag.Sealed ? b.Sealed : bag.Placed && b != held && bag.Contains(b.Pos);
+        var inBag = buds.Where(InBag).ToList();
+        var wrong = inBag.Where(b => b.Strain != wanted).ToList();
+        float reads = BagGrams, counts = inBag.Sum(b => b.Grams) - wrong.Sum(b => b.Grams);
+        float par = Scoring.WeighPar(target);
+        return new()
+        {
+            new($"Target {target:0.0#} g {wanted?.Name}, band +/- {band:0.00} g"),
+            new($"Green from {target - band:0.00} to {target + band:0.00} g"),
+            new($"Scale reads {reads:0.00} g, counts {counts:0.00} g", MathF.Abs(counts - target) > band),
+            new($"Wrong strain: {wrong.Count} buds, {wrong.Sum(b => b.Grams):0.00} g", wrong.Count > 0),
+            new($"Time {seconds:0.0} s, par {par:0.0} s", seconds > par),
+            new($"Zip slips {slips}, slip danger {zipDanger * 100:0}%", zipDanger >= ZipShakeFrom),
+            new($"Zip limits: {ZipMaxSpeed:0} px/s, {ZipSlipDistance:0} px off the line"),
+        };
+    }
+
     // Puts a jar of each strain on the day's menu on the bench, and empties the station.
     public void SetMenu(Strain[] menu)
     {

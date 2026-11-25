@@ -49,6 +49,9 @@ static class Scoring
     // Points lost per bud of the wrong strain sealed in the bag.
     const int WrongBudCost = 15;
 
+    // Seconds a bag of this many grams may take before weigh speed starts dropping.
+    public static float WeighPar(float target) => ParBase + ParPerGram * target;
+
     // Scores a bag from target, sealed weight, time taken, zip slips and spilled buds. Buds of the wrong strain
     // (wrongBuds of them, wrongGrams in all) weigh on the scale but do not count toward the order's weight, and each
     // one costs handling: a bag of the wrong strain scores no accuracy at all.
@@ -58,7 +61,7 @@ static class Scoring
         float off = MathF.Abs(weight - wrongGrams - target);
         float acc = off <= band ? 100f : 100f * (1f - (off - band) / (band * BandsToZero));
 
-        float par = ParBase + ParPerGram * target;
+        float par = WeighPar(target);
         float speed = seconds <= par ? 100f : 100f * (1f - (seconds - par) / (2f * par));
 
         float handling = 100f - SlipCost * slips - SpillCost * spilled - WrongBudCost * wrongBuds;
@@ -81,13 +84,16 @@ static class Scoring
     // Seconds Start over adds to the packing clock.
     public const float RestartSeconds = 5f;
 
+    // Seconds packing this kind of container may take before speed starts dropping.
+    public static float PackPar(ContainerKind kind) => kind == ContainerKind.Jar ? PackParJar : PackParPouch;
+
     // Scores a closed container: the right one, how long it took, cross-threaded lids and dropped bags.
     public static PackResult ScorePack(Container wanted, Container used, float seconds, int crossThreads, int drops, int restarts)
     {
         bool kind = wanted.Kind == used.Kind, size = wanted.Large == used.Large;
         int fit = kind && size ? FitRight : kind ? FitWrongSize : size ? FitWrongKind : FitBothWrong;
 
-        float par = used.Kind == ContainerKind.Jar ? PackParJar : PackParPouch;
+        float par = PackPar(used.Kind);
         float speed = seconds <= par ? 100f : 100f * (1f - (seconds - par) / (2f * par));
         float handling = 100f - CrossThreadCost * crossThreads - DropCost * drops;
 
@@ -101,9 +107,16 @@ static class Scoring
     // Share of the Labeling score for the right strain and for placement; speed gets the rest.
     const float MatchShare = 0.5f, PlaceShare = 0.3f;
     // Placement: full marks within this many pixels of the guide and degrees of straight, zero at the far value.
-    const float OffFull = 8f, OffZero = 60f, AngleFull = 2f, AngleZero = 15f;
+    public const float OffFull = 8f, OffZero = 60f, AngleFull = 2f, AngleZero = 15f;
     // Seconds allowed before labeling speed starts dropping.
-    const float LabelPar = 6f;
+    public const float LabelPar = 6f;
+
+    // Placement points (0-100) for a label this many pixels off the guide and this many degrees crooked.
+    public static int PlacementFor(float off, float angle)
+    {
+        static float Ramp(float v, float full, float zero) => v <= full ? 100f : 100f * (1f - (v - full) / (zero - full));
+        return Clamp((Ramp(off, OffFull, OffZero) + Ramp(MathF.Abs(angle), AngleFull, AngleZero)) / 2f);
+    }
 
     // Scores a pressed-on label: the right strain, how close to the guide and how straight, and how long it took.
     // Peels cost only the time they take.
@@ -111,8 +124,7 @@ static class Scoring
                                          System.Numerics.Vector2 at)
     {
         int match = wanted == used ? 100 : 0;
-        static float Ramp(float v, float full, float zero) => v <= full ? 100f : 100f * (1f - (v - full) / (zero - full));
-        int place = Clamp((Ramp(off, OffFull, OffZero) + Ramp(MathF.Abs(angle), AngleFull, AngleZero)) / 2f);
+        int place = PlacementFor(off, angle);
         int s = Clamp(seconds <= LabelPar ? 100f : 100f * (1f - (seconds - LabelPar) / (2f * LabelPar)));
         int total = (int)MathF.Round(MatchShare * match + PlaceShare * place + (1f - MatchShare - PlaceShare) * s);
         return new LabelResult(wanted, used, seconds, off, angle, peels, at, match, place, s, total);

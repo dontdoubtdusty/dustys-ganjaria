@@ -183,6 +183,33 @@ sealed class PackStation
         Array.Clear(sealedSeg);
     }
 
+    // Live values for the F1 tuning panel: the container wanted and on the mat, time against par, and how the lid
+    // or strip is going.
+    public List<TuningLine> TuningLines()
+    {
+        if (phase == Phase.Idle) return new() { new("No ticket on the station.") };
+        var kind = onMat?.Kind ?? wanted.Kind;
+        float par = Scoring.PackPar(kind);
+        var lines = new List<TuningLine>
+        {
+            new($"Wants {wanted.Name}, on the mat: {onMat?.Name ?? "nothing"}", onMat is { } m && m != wanted),
+            new($"Time {seconds:0.0} s, par {par:0.0} s (Start over adds {Scoring.RestartSeconds:0} s)", seconds > par),
+        };
+        if (kind == ContainerKind.Jar)
+        {
+            float strokes = StrokeLength > 0 ? twist / StrokeLength : 0;
+            lines.Add(new($"Lid {strokes:0.0} of {StrokesToClose:0.0} strokes, this stroke {stroke * 100:0}% used"));
+            lines.Add(new($"Stroke speed {twistRate:0} px/s, cross-threads at {MaxStrokeSpeed:0}", twistDanger >= TwistShakeFrom));
+        }
+        else
+        {
+            lines.Add(new($"Strip {sealedSeg.Count(s => s)} of {StripSegments} sealed, {SealHold:0.00} s each"));
+            lines.Add(new($"Reach {StripReach:0} px from the strip"));
+        }
+        lines.Add(new($"Cross-threads {crossThreads}, drops {drops}, restarts {restarts}", crossThreads + drops > 0));
+        return lines;
+    }
+
     // Hands over the packed order's result once.
     public PackResult? TakeShipped()
     {

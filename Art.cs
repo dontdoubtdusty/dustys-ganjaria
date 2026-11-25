@@ -524,5 +524,21 @@ static partial class Art
         Raylib.DrawRectangleLinesEx(rect, 2, PanelEdge);
     }
 
+    // Draws the F1 tuning panel in the top right, under the rail: a title, then one line per value, warnings orange.
+    public static void DrawTuning(string title, IReadOnlyList<TuningLine> lines)
+    {
+        const int size = 18, gap = 22;
+        const float width = 540, x = Program.Width - width - 12, y = 112;
+        var rect = new Rectangle(x, y, width, 40 + gap * lines.Count);
+        Raylib.DrawRectangleRounded(rect, 0.06f, 8, new Color(20, 18, 26, 225));
+        Raylib.DrawRectangleRoundedLinesEx(rect, 0.06f, 8, 2, PanelEdge);
+        Label($"{title}   (F1 hides)", x + 12, y + 8, size, Faint);
+        for (int i = 0; i < lines.Count; i++)
+            Label(lines[i].Text, x + 12, y + 32 + gap * i, size, lines[i].Warn ? Warn : Text);
+    }
+
     static Rectangle Grow(Rectangle r, float by) => new(r.X - by, r.Y - by, r.Width + 2 * by, r.Height + 2 * by);
 }
+
+// One line of the F1 tuning panel; Warn draws it orange (over par, close to a slip, outside the green).
+readonly record struct TuningLine(string Text, bool Warn = false);

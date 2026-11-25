@@ -116,6 +116,30 @@ sealed class LabelStation
         fx.Clear();
     }
 
+    // Live values for the F1 tuning panel: the strain wanted and held, the swing, how far off the guide it is and
+    // the placement that would score, the press, and time against par.
+    public List<TuningLine> TuningLines()
+    {
+        if (phase == Phase.Idle) return new() { new("No ticket on the station.") };
+        var lines = new List<TuningLine>
+        {
+            new($"Wants {wantedStrain.Name}, holding: {label?.Name ?? "nothing"}", label != null && label != wantedStrain),
+        };
+        if (label != null)
+        {
+            float off = (labelPos - Guide).Length();
+            int place = Scoring.PlacementFor(off, angle);
+            float target = Math.Clamp(mouseVel.X * TiltPerSpeed, -MaxTilt, MaxTilt);
+            lines.Add(new($"Tilt {angle:0.0} deg (swinging toward {target:0.0}), full marks within {Scoring.AngleFull:0}",
+                          MathF.Abs(angle) > Scoring.AngleFull));
+            lines.Add(new($"Off the guide {off:0} px, full marks within {Scoring.OffFull:0}", off > Scoring.OffFull));
+            lines.Add(new($"Placement if pressed now: {place}", place < 90));
+            lines.Add(new(hold == Hold.Press ? $"Pressing {pressTime:0.00} of {PressHold:0.00} s" : loose ? "Stuck on loosely" : "Carrying"));
+        }
+        lines.Add(new($"Time {seconds:0.0} s, par {Scoring.LabelPar:0.0} s, peels {peels}", seconds > Scoring.LabelPar));
+        return lines;
+    }
+
     // Hands over the labeled order's result once.
     public LabelResult? TakeShipped()
     {
