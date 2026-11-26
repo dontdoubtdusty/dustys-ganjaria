@@ -1,0 +1,8 @@
+Sound credits
+
+doorbell.wav
+  "Convenience Store Door Chime (16bit, 44.1kHz, Stereo)" by zebragrrl
+  https://freesound.org/s/632226/
+  Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+  Based on "Door Chime 3" by Taira Komori: https://freesound.org/people/Taira%20Komori/sounds/212114/
+  Used unchanged (renamed to doorbell.wav).

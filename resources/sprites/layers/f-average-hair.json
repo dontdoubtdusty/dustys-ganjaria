@@ -1,0 +1,13 @@
+{
+  "baseName": "f-average",
+  "layer": "hair",
+  "format": "part mask (hair = id 4)",
+  "hairKey": [
+    139,
+    88,
+    40
+  ],
+  "x": 34,
+  "y": 35,
+  "source": "art/sprites/candidates/edit-f-average-hair/nb-1795716389451.jpg"
+}

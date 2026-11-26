@@ -75,6 +75,8 @@ sealed class PackStation
     Container? onMat;
     // The strain in the bag (for its colours).
     Strain strain = Strains.All[0];
+    // The nugs sealed in the bag at the weigh station (null in a staged shot with no weighing).
+    BagFill? fill;
     Container carried;
     Vector2 carryPos;
 
@@ -142,12 +144,14 @@ sealed class PackStation
         Add(TrayRect.X + TrayRect.Width, TrayRect.Y, TrayRect.X + TrayRect.Width, FloorY);
     }
 
-    // Starts a ticket: the container the customer needs, and their sealed bag waiting in the IN tray.
-    public void Start(Customer c)
+    // Starts a ticket: the container the customer needs, and their sealed bag (with the nugs weighed into it) waiting
+    // in the IN tray.
+    public void Start(Customer c, BagFill? bagFill)
     {
         Reset();
         wanted = Containers.For(c);
         strain = c.Strain;
+        fill = bagFill;
         bagSize = Bag.SizeFor(c.Grams) * Bag.SealedScale;
         bagPos = BagHome;
         bagSettled = true;
@@ -544,7 +548,7 @@ sealed class PackStation
         {
             var inside = MatInside(c);
             Art.DrawContainerBack(inside, c);
-            if (showBag) Art.DrawSealedBag(BagRect, false, strain);
+            if (showBag) Art.DrawSealedBag(BagRect, false, strain, fill);
             float shake = Math.Clamp((twistDanger - TwistShakeFrom) / (1f - TwistShakeFrom), 0f, 1f);
             var jitter = new Vector2(MathF.Sin(clock * 90f), MathF.Cos(clock * 77f)) * shake * 4f;
             bool closing = phase == Phase.Close || phase == Phase.Done;
@@ -561,7 +565,7 @@ sealed class PackStation
             if (closing && c.Kind == ContainerKind.Pouch)
                 Art.DrawSealStrip(inside.X, inside.X + inside.Width, StripY, heat, sealedSeg, SealHold, hot);
         }
-        else if (showBag) Art.DrawSealedBag(BagRect, false, strain);
+        else if (showBag) Art.DrawSealedBag(BagRect, false, strain, fill);
 
         Art.DrawTrayFront(TrayRect);
         if (drag == Drag.Container)
@@ -571,7 +575,7 @@ sealed class PackStation
             Art.DrawContainerBack(r, carried);
             Art.DrawContainerFront(r, carried, true, false);
         }
-        if (drag == Drag.Bag) Art.DrawSealedBag(BagRect, true, strain);
+        if (drag == Drag.Bag) Art.DrawSealedBag(BagRect, true, strain, fill);
 
         if (CanRestart)
             Art.DrawButton(RestartButton, $"Start over +{Scoring.RestartSeconds:0}s", Raylib.CheckCollisionPointRec(mouse, RestartButton), true);

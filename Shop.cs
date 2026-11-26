@@ -156,12 +156,24 @@ sealed class Shop
     // True if someone in line or waiting is close to walking out (lights the tab orange).
     static bool AnyUrgent(IEnumerable<Customer> people) => people.Any(c => c.PatienceFraction < 0.3f);
 
+    // Weighs and seals a bag for a customer on the weigh station and clears it again, so staged shots of the later
+    // stations show a real pile of nugs.
+    BagFill? StagedFill(Customer c)
+    {
+        weigh.Start(c.Grams, c.Strain);
+        weigh.StageForScreenshot(true);
+        var fill = weigh.Fill;
+        weigh.Clear();
+        return fill;
+    }
+
     // Sets up a scene for the --shot flags. All but the day-end ones have one order already taken.
     // --shot-counter: two in line and one waiting, shop view. --shot-order: the order shot mid-way. --shot-id: the
     // order shot on its ID check, with an under-21 card. --shot-handover and --shot-results include an ID fine.
-    // --shot and --shot-throw: one ticket on the weigh station and another on the rail. --shot-pack (a pouch) and
+    // --shot, --shot-throw and --shot-pour: one ticket on the weigh station and another on the rail. The first customer
+    // asks for big nugs, so tickets, the order shot and the hand-over show a looks request. --shot-pack (a pouch) and
     // --shot-pack-jar: one weighed order half closed on the pack station and another ticket on the rail.
-    // --shot-handover: the end of a hand-over; --shot-check: its bag check. --shot-results and --shot-tipjar: the two
+    // --shot-handover: the end of a hand-over (a jar, so its nugs show); --shot-check: its bag check. --shot-results and --shot-tipjar: the two
     // day-end screens. --shot-label: a packed jar on the label station with its label stuck on loosely. --shot-intro:
     // the day card, at a rank with all five strains open (a menu of three, and no next strain).
     public void StageForScreenshot(string mode)
@@ -182,11 +194,11 @@ sealed class Shop
                                slip ? new Vector2(0.06f, -0.04f) : new Vector2(0.02f, 0f));
         if (mode == "--shot-results" || mode == "--shot-tipjar")
         {
-            var w = Scoring.Score(3.5f, Scoring.BandFor(3.5f), 3.55f, 13f, 0, 1);
+            var w = Scoring.Score(3.5f, Scoring.RoomFor(3.5f), 3.55f, 13f, 0, 1);
             day.Orders.Add(Scoring.ScoreOrder(w, Packed(new(ContainerKind.Jar, false), true), Labeled(day.Menu[0], true), 3.5f, 40f,
                                               IdFlaw.Expired));
             day.IdsCaught = 1;
-            day.Orders.Add(Scoring.ScoreOrder(Scoring.Score(1f, Scoring.BandFor(1f), 1.02f, 9f, 0, 0),
+            day.Orders.Add(Scoring.ScoreOrder(Scoring.Score(1f, Scoring.RoomFor(1f), 1.02f, 9f, 0, 0),
                                               Packed(new(ContainerKind.Pouch, false), false), Labeled(day.Menu[1], false), 1f, 70f));
             day.Walkouts = 1;
             progress.RankPoints = 180;
@@ -197,6 +209,7 @@ sealed class Shop
         }
 
         var first = Arrive();
+        first.Request = Looks.BigNugs;
         first.Pos = first.Goal;
         first.Reached = true;
         TakeOrder();
@@ -206,12 +219,14 @@ sealed class Shop
         if (mode == "--shot-handover" || mode == "--shot-check")
         {
             first.Waited = 50f;
-            var w = Scoring.Score(first.Grams, Scoring.BandFor(first.Grams), first.Grams + 0.02f, 12f, 0, 0);
+            first.Wants = ContainerKind.Jar;
+            var w = Scoring.Score(first.Grams, Scoring.RoomFor(first.Grams), first.Grams + 0.02f, 12f, 0, 0, bigShare: 0.8f);
             var t = rail.For(first)!;
             rail.Remove(t);
+            t.Fill = StagedFill(first);
             waiting.Remove(first);
             handOver = new HandOver(t, Scoring.ScoreOrder(w, Packed(Containers.For(first), false), Labeled(first.Strain, true),
-                                                          first.Grams, first.Waited, IdFlaw.Underage));
+                                                          first.Grams, first.Waited, IdFlaw.Underage, first.Request));
             if (mode == "--shot-check") handOver.HoldAtCheck();
             else handOver.HoldAt(true);
             return;
@@ -229,8 +244,9 @@ sealed class Shop
             screen = Screen.Counter;
             if (mode == "--shot-order")
             {
+                line[0].Request = Looks.NoShake;
                 TakeOrder();
-                shot!.HoldAt(2);
+                shot!.HoldAt(4);
             }
             if (mode == "--shot-id")
             {
@@ -253,7 +269,8 @@ sealed class Shop
             first.Wants = mode == "--shot-pack-jar" ? ContainerKind.Jar : ContainerKind.Pouch;
             var t = rail.For(first)!;
             t.Next = Stage.Pack;
-            t.Weighed = Scoring.Score(first.Grams, Scoring.BandFor(first.Grams), first.Grams, 11f, 0, 0);
+            t.Weighed = Scoring.Score(first.Grams, Scoring.RoomFor(first.Grams), first.Grams, 11f, 0, 0);
+            t.Fill = StagedFill(first);
             screen = Screen.Pack;
             PutOnPack(t);
             pack.StageForScreenshot();
@@ -265,7 +282,8 @@ sealed class Shop
             first.Wants = ContainerKind.Jar;
             var t = rail.For(first)!;
             t.Next = Stage.Label;
-            t.Weighed = Scoring.Score(first.Grams, Scoring.BandFor(first.Grams), first.Grams, 11f, 0, 0);
+            t.Weighed = Scoring.Score(first.Grams, Scoring.RoomFor(first.Grams), first.Grams, 11f, 0, 0);
+            t.Fill = StagedFill(first);
             t.Packed = Packed(Containers.For(first), false);
             rail.For(second)!.Next = Stage.Label;
             screen = Screen.Label;
@@ -276,7 +294,8 @@ sealed class Shop
 
         screen = Screen.Weigh;
         PutOnWeigh(rail.For(first)!);
-        weigh.StageForScreenshot(mode == "--shot-throw");
+        if (mode == "--shot-pour") weigh.StagePour();
+        else weigh.StageForScreenshot(mode == "--shot-throw");
     }
 
     // Runs one frame: the intro card or day end if showing, otherwise the shots, tabs, the clock, arrivals,
@@ -442,7 +461,7 @@ sealed class Shop
     {
         rail.Remove(t);
         onLabel = t;
-        label.Start(t.Customer, t.Packed!.Value.Used, day.Menu);
+        label.Start(t.Customer, t.Packed!.Value.Used, day.Menu, t.Weighed!.Value.Weight, t.Fill);
         Learn("label");
     }
 
@@ -451,7 +470,7 @@ sealed class Shop
     {
         rail.Remove(t);
         onPack = t;
-        pack.Start(t.Customer);
+        pack.Start(t.Customer, t.Fill);
         Learn("pack");
     }
 
@@ -482,11 +501,18 @@ sealed class Shop
     // from day BadIdsFromDay some are bad (never two in a row), with one flaw picked at random.
     Customer Arrive()
     {
-        var c = new Customer(rng, DoorSpot, day.Menu);
+        var c = new Customer(rng, DoorSpot, day.Menu, line.Concat(waiting).Concat(leaving).ToList());
         bool bad = day.Number >= Scoring.BadIdsFromDay && !lastIdBad && rng.NextDouble() < Scoring.BadIdChance;
-        var flaw = bad ? (IdFlaw)rng.Next(1, 4) : IdFlaw.None;
+        // Underage only for someone who looks young enough to be.
+        var flaws = Art.CouldBeUnder21(c.Body)
+            ? new[] { IdFlaw.Underage, IdFlaw.Expired, IdFlaw.Photo }
+            : new[] { IdFlaw.Expired, IdFlaw.Photo };
+        var flaw = bad ? flaws[rng.Next(flaws.Length)] : IdFlaw.None;
         c.Id = Ids.Make(c, day.Date, flaw, rng);
         lastIdBad = bad;
+        // From RequestsFromDay some customers ask how the bag should look.
+        if (day.Number >= Scoring.RequestsFromDay && rng.NextDouble() < Scoring.RequestChance)
+            c.Request = rng.Next(2) == 0 ? Looks.BigNugs : Looks.NoShake;
         line.Add(c);
         c.Goal = LineSpot(line.Count - 1);
         Audio.Play(Audio.Doorbell);
@@ -612,6 +638,7 @@ sealed class Shop
     void ToPack(Ticket t, WeighResult weighResult)
     {
         t.Weighed = weighResult;
+        t.Fill = weigh.Fill;
         t.Next = Stage.Pack;
         onWeigh = null;
         weigh.Clear();
@@ -634,7 +661,7 @@ sealed class Shop
     void Finish(Ticket t, LabelResult labelResult)
     {
         var c = t.Customer;
-        var result = Scoring.ScoreOrder(t.Weighed!.Value, t.Packed!.Value, labelResult, c.Grams, c.Waited, c.Id.Flaw);
+        var result = Scoring.ScoreOrder(t.Weighed!.Value, t.Packed!.Value, labelResult, c.Grams, c.Waited, c.Id.Flaw, c.Request);
         day.Orders.Add(result);
         PlayLog.Served(day, Progress.RankOf(progress.RankPoints), t, result);
         waiting.Remove(c);
@@ -792,13 +819,13 @@ sealed class Shop
         Art.DrawBench(WaitingSpot(0).X - 60, WaitingSpot(MaxWaiting - 1).X + 60, BackY);
 
         foreach (var c in line.Concat(waiting).Concat(leaving).OrderBy(c => c.Pos.Y))
-            Art.DrawCustomer(c, c.Pos, DepthScale(c.Pos.Y), c.Now != Customer.State.Leaving);
+            Art.DrawCustomer(c, c.Pos, DepthScale(c.Pos.Y), c.Now != Customer.State.Leaving, faceLeft: c.Goal.X < c.Pos.X - 1);
 
         Art.DrawBudtender(BudtenderFeet);
         Art.DrawCounterSide(CounterRect);
 
         var front = AtCounter;
-        if (front != null) Art.DrawSpeech(Art.HeadOf(front.Pos, DepthScale(front.Pos.Y)), "Ready!");
+        if (front != null) Art.DrawSpeech(Art.SpeechAnchor(front, front.Pos, DepthScale(front.Pos.Y)), "Ready!");
         bool canTake = front != null && TakenOrders < MaxWaiting;
         Art.DrawButton(TakeButton, "Take order", canTake && Raylib.CheckCollisionPointRec(mouse, TakeButton), canTake);
 

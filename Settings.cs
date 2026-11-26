@@ -8,6 +8,8 @@ sealed class Settings
 {
     // Master volume, 0 to 1.
     public float Volume { get; set; } = 0.8f;
+    // Full screen (borderless, the monitor's size) instead of a 1280 x 720 window.
+    public bool Fullscreen { get; set; }
 
     static string FilePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DustysGanjaria", "settings.json");

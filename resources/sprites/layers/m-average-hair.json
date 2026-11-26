@@ -1,0 +1,13 @@
+{
+  "baseName": "m-average",
+  "layer": "hair",
+  "format": "part mask (hair = id 4)",
+  "hairKey": [
+    121,
+    82,
+    47
+  ],
+  "x": 47,
+  "y": 7,
+  "source": "art/sprites/candidates/edit-m-average-hair/nb-1795716368363.jpg"
+}

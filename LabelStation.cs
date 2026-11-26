@@ -37,7 +37,11 @@ sealed class LabelStation
     Hold hold;
     Strain wantedStrain = Strains.All[0];
     Container container;
+    // The nugs sealed in the bag inside it (they show through a jar's glass).
+    BagFill? fill;
     Strain[] menu = Array.Empty<Strain>();
+    // The bag's weight as the label prints it, like "3.62 g".
+    string netText = "";
 
     // The label in play (null for none): its strain, centre and tilt (degrees, clockwise), and whether it is stuck
     // on loosely or pressed down.
@@ -86,12 +90,15 @@ sealed class LabelStation
 
     static Rectangle PadRect(int i) => new(RackX, RackTop + i * (PadH + PadGap), PadW, PadH);
 
-    // Starts a ticket: the closed container from Pack on the mat, and a label pad for each strain on the menu.
-    public void Start(Customer c, Container used, Strain[] dayMenu)
+    // Starts a ticket: the closed container from Pack on the mat, and a label pad for each strain on the menu. grams
+    // is what the bag weighed; the label prints it. bagFill is the nugs in the bag.
+    public void Start(Customer c, Container used, Strain[] dayMenu, float grams, BagFill? bagFill)
     {
         Reset();
+        netText = $"{grams:0.00} g";
         wantedStrain = c.Strain;
         container = used;
+        fill = bagFill;
         menu = dayMenu;
         phase = Phase.Work;
     }
@@ -130,7 +137,7 @@ sealed class LabelStation
             float off = (labelPos - Guide).Length();
             int place = Scoring.PlacementFor(off, angle);
             float target = Math.Clamp(mouseVel.X * TiltPerSpeed, -MaxTilt, MaxTilt);
-            lines.Add(new($"Tilt {angle:0.0} deg (swinging toward {target:0.0}), full marks within {Scoring.AngleFull:0}",
+            lines.Add(new($"Tilt {angle:0.0} deg (swinging toward {target:0.0}), full marks within {Scoring.AngleFull:0.0}",
                           MathF.Abs(angle) > Scoring.AngleFull));
             lines.Add(new($"Off the guide {off:0} px, full marks within {Scoring.OffFull:0}", off > Scoring.OffFull));
             lines.Add(new($"Placement if pressed now: {place}", place < 90));
@@ -335,13 +342,13 @@ sealed class LabelStation
         Art.DrawMat(MatX, FloorY, false, phase == Phase.Idle, "LABEL HERE");
         if (phase != Phase.Idle)
         {
-            Art.DrawPackedContainer(Front, container, wantedStrain, true);
+            Art.DrawPackedContainer(Front, container, wantedStrain, true, fill);
             if (!pressed) Art.DrawLabelGuide(Guide, LabelSize);
             if (label != null)
             {
                 bool hover = loose && hold == Hold.None && OnLabel(mouse);
                 float press = hold == Hold.Press ? pressTime / PressHold : 0f;
-                Art.DrawStrainLabel(labelPos, LabelSize, angle, label, hold == Hold.Carry, loose, press, hover);
+                Art.DrawStrainLabel(labelPos, LabelSize, angle, label, hold == Hold.Carry, loose, press, hover, netText);
             }
         }
 

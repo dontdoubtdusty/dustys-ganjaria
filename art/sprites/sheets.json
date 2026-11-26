@@ -1,0 +1,625 @@
+{
+  "about": "Prompt guide for sprite sheets made with Gemini (tools/gen-sprites.js). Each prompt is built from style, colour, background and layout, plus one sheet's subject. Items are drawn in grayscale with orange hairs so the game can recolour them per strain; the magenta background is removed by the cutter. 'cell' is the sprite size in the packed sheet; 'grid' is what the prompt asks for (the cutter finds the items wherever they are).",
+  "style": "A sprite sheet for a cartoony 2D game, in the style of clean Flash-era vector game art: smooth bold shapes, soft cel shading in three or four tones, a thin dark outline, slightly chunky and readable at small sizes.",
+  "colour": "Draw every item in neutral grayscale only: white, light and dark grays and near-black, with no green, no purple and no tint of any kind, so the game can recolour it. The only colour allowed anywhere on the items is the pistil hairs: thin, short, curly bright orange hairs on the surface. Keep the hairs sparse.",
+  "background": "The background is one flat, solid, pure magenta (#FF00FF) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing magenta or pink on the items themselves.",
+  "layout": "Exactly {count} separate items in a loose grid of {grid}, all seen from the same angle (a slight top-down three-quarter view), each centred in its own space, with a wide margin of empty magenta between items and around the picture's edges. Each item is one single connected piece with no loose crumbs, flecks or motion marks beside it. Nothing touches, overlaps or is cut off. No grid lines, no text, no numbers, no labels, no border, no signature.",
+  "sheets": {
+    "customer-base": {
+      "aspect": "9:16",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "resources/art-reference/base.jpg"
+      ],
+      "subject": "Redraw the attached figure in the art style above, keeping its exact pose, proportions and framing: a plain adult customer for a cartoon shop game, front view, standing straight, arms relaxed at the sides with a small gap between arms and body, feet slightly apart. Bald, with a completely blank face (no eyes, brows, nose or mouth: those are added later as separate layers), ears visible, head about a third of the figure's height (chunky cartoon proportions). Plain crew-neck t-shirt, plain straight trousers, simple shoes. A neutral build that could be anyone.",
+      "colour": "One flat colour per part so the game can recolour each one, with cel shading only as a slightly darker and a slightly lighter tone of that same colour: skin warm peach, t-shirt medium blue, trousers mid gray, shoes near-black, outline dark brown-black. No other colours, no patterns, no logos.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "One full-body figure, centred, filling about 85% of the picture's height, with empty green all around; nothing cut off. No text, no labels, no border, no signature."
+    },
+    "customer-mouth-test": {
+      "aspect": "9:16",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/customer-base.jpg"
+      ],
+      "edit": "Edit this image: add a small, friendly closed-mouth smile to the face, drawn in the same outline and colour style. Change nothing else: same outline, same colours, same shading, same pose, same position and size, same green background."
+    },
+    "budtender": {
+      "aspect": "1:1",
+      "mode": "color",
+      "cell": 512,
+      "subject": "The budtender of a small, friendly cannabis dispensary: the player character of a cartoon shop game. A young adult with short, slightly messy dark hair, a light cream t-shirt and a rust-orange canvas work apron with a front pocket, dark trousers and sneakers. Relaxed, friendly look, chunky cartoon proportions (head about a third of the height), the same character in both views.",
+      "colour": "Full colour, warm and readable. Nothing green and nothing on the character in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette.",
+      "layout": "A character sheet with exactly 2 full-body views of the same character side by side, the same height, with a wide gap between them and empty green all around: on the left, a side view facing right, standing, arms relaxed; on the right, a back view, standing. Nothing touches or is cut off. No text, no labels, no arrows, no border, no signature."
+    },
+    "nugs-large": {
+      "count": 9,
+      "grid": "3 rows of 3",
+      "cell": 128,
+      "subject": "Large, dense cannabis flower buds (nugs) as sold from a dispensary jar, each a different shape: some round and chunky, some tall and conical, some lumpy with two or three clustered lobes, one a little flattened. Each nug is built from overlapping rounded calyx clusters with a few small sugar leaves tucked in. No stems sticking out, no fan leaves."
+    },
+    "nugs-small": {
+      "count": 12,
+      "grid": "3 rows of 4",
+      "cell": 96,
+      "subject": "Small popcorn cannabis buds, each a different compact shape: round, oval, slightly pointed, a pair of tiny joined lobes. Simpler detail than a big nug, readable when drawn about 30 pixels wide. No stems, no fan leaves."
+    },
+    "shake": {
+      "count": 16,
+      "grid": "4 rows of 4",
+      "cell": 64,
+      "merge": 40,
+      "subject": "Shake: the small loose crumbs and broken bits of cannabis flower at the bottom of a jar. Tiny irregular clumps, a few with a sugar leaf fragment, some with a single orange hair. Very simple shapes, readable when drawn about 16 pixels wide."
+    },
+    "style-chunky": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Clean Flash-era vector cartoon game art pushed further: very big heads (about 40% of the height), squash-and-stretch rubbery bodies, exaggerated simple shapes, bold smooth outlines, soft cel shading in two or three tones, bright appealing colours, like a classic browser time-management shop game.",
+      "subject": "Four different adult customers for a cartoon dispensary shop game, standing side by side in a lineup, full body, facing the viewer, each in a relaxed natural stance with personality (weight on one leg, a slight lean, one hand in a pocket or scratching the head), never stiff or symmetrical. Make the body types very different: 1) a big, heavy-set bearded guy in a hoodie; 2) a tall, lanky young woman in a crop jacket and wide trousers; 3) a short, round older woman with a cardigan and a tote bag; 4) a wiry middle-aged man in a work shirt and cap. Simple friendly faces and hair so the style can be judged.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "style-indie": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Modern indie cartoon: thick, slightly wobbly hand-drawn dark outlines, flat colour fills with a single hard shadow tone, quirky stylised proportions (noodly limbs, blobby or lanky bodies, small dot eyes), a muted but punchy palette, like a current indie management game.",
+      "subject": "Four different adult customers for a cartoon dispensary shop game, standing side by side in a lineup, full body, facing the viewer, each in a relaxed natural stance with personality (weight on one leg, a slight lean, one hand in a pocket or scratching the head), never stiff or symmetrical. Make the body types very different: 1) a big, heavy-set bearded guy in a hoodie; 2) a tall, lanky young woman in a crop jacket and wide trousers; 3) a short, round older woman with a cardigan and a tote bag; 4) a wiry middle-aged man in a work shirt and cap. Simple friendly faces and hair so the style can be judged.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "style-storybook": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Painterly storybook illustration for a cozy game: soft textured brush shading, warm muted colours, rounded gentle shapes, thin coloured line work instead of black outlines, a hand-painted feel, still clean and readable at small size.",
+      "subject": "Four different adult customers for a cartoon dispensary shop game, standing side by side in a lineup, full body, facing the viewer, each in a relaxed natural stance with personality (weight on one leg, a slight lean, one hand in a pocket or scratching the head), never stiff or symmetrical. Make the body types very different: 1) a big, heavy-set bearded guy in a hoodie; 2) a tall, lanky young woman in a crop jacket and wide trousers; 3) a short, round older woman with a cardigan and a tote bag; 4) a wiry middle-aged man in a work shirt and cap. Simple friendly faces and hair so the style can be judged.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "style-flash-1": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "2000s Flash browser-game cartoon, drawn as clean vector art: thick, smooth, uniform near-black outlines of the same width everywhere (no wobble, no sketchy lines). Each part is one flat colour with a single hard-edged darker shadow shape, no gradients, no texture, no stains or seams. Quirky stylised proportions: big heads about 40% of the height, noodly limbs, blobby or lanky bodies, mitten hands. Small black dot eyes, no nose or a tiny bump, a single-line mouth. Muted but punchy palette.",
+      "subject": "Four different adult customers for a cartoon dispensary shop game, standing side by side, full body, facing the viewer, each in a relaxed stance with personality (weight on one leg, a lean, a hand in a pocket or scratching the head). Body types described as shapes: 1) a wide, round, bean-shaped guy with a big blocky beard and a plain hoodie; 2) a tall, thin, noodle-limbed young woman in a short jacket and wide trousers; 3) a short, squat, almost round older woman in a cardigan with a tote bag; 4) a skinny, stick-like man in a plain shirt and a cap. Keep clothes as simple coloured shapes: no pockets, seams, patterns, laces, wrinkles or dirt.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "style-flash-2": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Classic 2000s Flash time-management game character art: crisp vector shapes with a bold, even dark outline. Each part is one flat colour plus one hard shadow tone and occasionally one small highlight shape. Huge round heads (about 45% of the height) on short, simple bodies; tube arms, rounded blob shoes, simple fist or mitten hands. Eyes are white ovals with black dot pupils, no iris detail, no eyelashes; a small simple nose shape; a big expressive mouth. Clothes are plain coloured shapes with one or two lines at most. Bright, saturated, cheerful colours.",
+      "subject": "Four different adult customers for a cartoon dispensary shop game, standing side by side, full body, facing the viewer, each in a relaxed stance with personality (weight on one leg, a lean, a hand in a pocket or scratching the head). Body types described as shapes: 1) a wide, round, bean-shaped guy with a big blocky beard and a plain hoodie; 2) a tall, thin, noodle-limbed young woman in a short jacket and wide trousers; 3) a short, squat, almost round older woman in a cardigan with a tote bag; 4) a skinny, stick-like man in a plain shirt and a cap. Keep clothes as simple coloured shapes: no pockets, seams, patterns, laces, wrinkles or dirt.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "style-flash-3": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Mid-2000s Newgrounds-era Flash animation style: very simple vector characters with thick uniform black outlines and flat fills, almost no shading (one hard shadow at most). Exaggerated cartoon proportions: an oversized oval head, a tiny or bean-shaped body, long thin noodle arms and legs, oversized hands and feet. Faces are just two black dots or two short vertical lines for eyes and a simple line mouth, with no nose and no detail. Goofy, bouncy, rubbery poses with clear silhouettes. Plain bright colours, no texture of any kind.",
+      "subject": "Four different adult customers for a cartoon dispensary shop game, standing side by side, full body, facing the viewer, each in a relaxed stance with personality (weight on one leg, a lean, a hand in a pocket or scratching the head). Body types described as shapes: 1) a wide, round, bean-shaped guy with a big blocky beard and a plain hoodie; 2) a tall, thin, noodle-limbed young woman in a short jacket and wide trousers; 3) a short, squat, almost round older woman in a cardigan with a tote bag; 4) a skinny, stick-like man in a plain shirt and a cap. Keep clothes as simple coloured shapes: no pockets, seams, patterns, laces, wrinkles or dirt.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "style-flash-4": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "2000s Flash online-game mascot style: every character is built from big, soft, rounded geometric shapes (bean, egg, pill, ball) with a thick, smooth dark outline. Flat colour fills with one hard-edged shadow shape along one side and one small white shine shape, no gradients or texture. Very big head merged into or sitting on a squat, rounded body; stubby limbs, round mitten hands, no fingers or only a thumb. Large simple eyes (white ovals, black pupils), a simple open-or-closed mouth, no nose. Bright, clean, toy-like colours.",
+      "subject": "Four different adult customers for a cartoon dispensary shop game, standing side by side, full body, facing the viewer, each in a relaxed stance with personality (weight on one leg, a lean, a hand in a pocket or scratching the head). Body types described as shapes: 1) a wide, round, bean-shaped guy with a big blocky beard and a plain hoodie; 2) a tall, thin, noodle-limbed young woman in a short jacket and wide trousers; 3) a short, squat, almost round older woman in a cardigan with a tote bag; 4) a skinny, stick-like man in a plain shirt and a cap. Keep clothes as simple coloured shapes: no pockets, seams, patterns, laces, wrinkles or dirt.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "style-flash-34": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "2000s Flash browser-game cartoon drawn as clean vector art. Thick, bold, smooth near-black outlines of one even width everywhere. Flat colour fills with almost no shading: at most one hard-edged darker shadow shape on one side of a big form (a belly, a sleeve); no shine spots, no highlights, no gloss, no gradients, no texture. Bodies are soft, rounded masses (round bellies, bean torsos, heavy rounded shoulders) on long thin noodle arms and legs, with big chunky rounded shoes and simple mitten-like hands. Big heads: each head is at least as wide as the shoulders. Faces stay minimal but expressive: small solid black oval eyes with no whites or irises, simple eyebrow strokes, no nose or a tiny bump, a single-line mouth or a simple open mouth. Goofy, bouncy, rubbery poses with clear silhouettes and a gesture each. Bright, saturated, plain colours.",
+      "subject": "Four different adult customers for a cartoon dispensary shop game, standing side by side, full body, facing the viewer, each in a relaxed stance with personality (weight on one leg, a lean, a hand in a pocket or scratching the head). Body types described as shapes: 1) a wide, round, bean-shaped guy with a big blocky beard and a plain hoodie; 2) a tall, thin, noodle-limbed young woman in a short jacket and wide trousers; 3) a short, squat, almost round older woman in a cardigan with a tote bag; 4) a skinny, stick-like man in a plain shirt and a cap. Keep clothes as simple coloured shapes: no pockets, seams, patterns, laces, wrinkles or dirt.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "customer-base-round": {
+      "aspect": "9:16",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/style-flash-34.jpg"
+      ],
+      "style": "2000s Flash browser-game cartoon drawn as clean vector art. Thick, bold, smooth near-black outlines of one even width everywhere. Completely flat colour fills with no shading at all: no shadow shapes, no shine spots, no highlights, no gloss, no gradients, no texture. Bodies are soft, rounded masses (round bellies, bean torsos, heavy rounded shoulders) on long thin noodle arms and legs, with big chunky rounded shoes and simple mitten-like hands. Big heads: each head is at least as wide as the shoulders. Faces stay minimal but expressive: small solid black oval eyes with no whites or irises, simple eyebrow strokes, no nose or a tiny bump, a single-line mouth or a simple open mouth. Goofy, bouncy, rubbery poses with clear silhouettes and a gesture each. Bright, saturated, plain colours.",
+      "subject": "Redraw ONE figure from the attached lineup, in exactly the same art style, line weight and body shape: the 1st figure from the left: the wide, round, heavy-set man with the big round belly (drop his beard and his hood: plain crew-neck top). A plain adult customer base for a cartoon shop game, full body, facing the viewer. Keep a relaxed, natural stance with personality (weight on one leg, a slight lean), but both arms hang down beside the body with a small gap between arms and body, and no hand touches or covers the head, face or torso. Completely bald, with a completely blank face (no eyes, brows, nose or mouth: those are added later as separate layers), ears visible. Simple shoes in the same chunky style.",
+      "colour": "Completely flat colour: exactly one solid colour per part, with no shading, no shadow shapes, no highlights and no darker or lighter tones anywhere, so the game can recolour each part (skin included) by its key colour: skin warm peach, top medium blue, trousers mid gray, shoes near-black, outline near-black. No other colours, no patterns, no logos.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "One full-body figure, centred, filling about 85% of the picture's height, with empty green all around; nothing cut off. No text, no labels, no border, no signature."
+    },
+    "customer-base-lanky": {
+      "aspect": "9:16",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/style-flash-34.jpg"
+      ],
+      "style": "2000s Flash browser-game cartoon drawn as clean vector art. Thick, bold, smooth near-black outlines of one even width everywhere. Completely flat colour fills with no shading at all: no shadow shapes, no shine spots, no highlights, no gloss, no gradients, no texture. Bodies are soft, rounded masses (round bellies, bean torsos, heavy rounded shoulders) on long thin noodle arms and legs, with big chunky rounded shoes and simple mitten-like hands. Big heads: each head is at least as wide as the shoulders. Faces stay minimal but expressive: small solid black oval eyes with no whites or irises, simple eyebrow strokes, no nose or a tiny bump, a single-line mouth or a simple open mouth. Goofy, bouncy, rubbery poses with clear silhouettes and a gesture each. Bright, saturated, plain colours.",
+      "subject": "Redraw ONE figure from the attached lineup, in exactly the same art style, line weight and body shape: the 2nd figure from the left: the tall, thin, noodle-limbed young woman (plain short-sleeved top, wide trousers, no jacket). A plain adult customer base for a cartoon shop game, full body, facing the viewer. Keep a relaxed, natural stance with personality (weight on one leg, a slight lean), but both arms hang down beside the body with a small gap between arms and body, and no hand touches or covers the head, face or torso. Completely bald, with a completely blank face (no eyes, brows, nose or mouth: those are added later as separate layers), ears visible. Simple shoes in the same chunky style.",
+      "colour": "Completely flat colour: exactly one solid colour per part, with no shading, no shadow shapes, no highlights and no darker or lighter tones anywhere, so the game can recolour each part (skin included) by its key colour: skin warm peach, top medium blue, trousers mid gray, shoes near-black, outline near-black. No other colours, no patterns, no logos.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "One full-body figure, centred, filling about 85% of the picture's height, with empty green all around; nothing cut off. No text, no labels, no border, no signature."
+    },
+    "customer-base-squat": {
+      "aspect": "9:16",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/style-flash-34.jpg"
+      ],
+      "style": "2000s Flash browser-game cartoon drawn as clean vector art. Thick, bold, smooth near-black outlines of one even width everywhere. Completely flat colour fills with no shading at all: no shadow shapes, no shine spots, no highlights, no gloss, no gradients, no texture. Bodies are soft, rounded masses (round bellies, bean torsos, heavy rounded shoulders) on long thin noodle arms and legs, with big chunky rounded shoes and simple mitten-like hands. Big heads: each head is at least as wide as the shoulders. Faces stay minimal but expressive: small solid black oval eyes with no whites or irises, simple eyebrow strokes, no nose or a tiny bump, a single-line mouth or a simple open mouth. Goofy, bouncy, rubbery poses with clear silhouettes and a gesture each. Bright, saturated, plain colours.",
+      "subject": "Redraw ONE figure from the attached lineup, in exactly the same art style, line weight and body shape: the 3rd figure from the left: the short, squat, round older woman: clearly a woman (narrower shoulders, a wide pear-shaped body that is widest at the hips, short stubby legs), much shorter and stouter than the others, so her silhouette is nothing like the round man’s (plain long-sleeved top, straight trousers, no cardigan, no bag). A plain adult customer base for a cartoon shop game, full body, facing the viewer. Keep a relaxed, natural stance with personality (weight on one leg, a slight lean), but both arms hang down beside the body with a small gap between arms and body, and no hand touches or covers the head, face or torso. Completely bald, with a completely blank face (no eyes, brows, nose or mouth: those are added later as separate layers), ears visible. Simple shoes in the same chunky style.",
+      "colour": "Completely flat colour: exactly one solid colour per part, with no shading, no shadow shapes, no highlights and no darker or lighter tones anywhere, so the game can recolour each part (skin included) by its key colour: skin warm peach, top medium blue, trousers mid gray, shoes near-black, outline near-black. No other colours, no patterns, no logos.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "One full-body figure, centred, filling about 85% of the picture's height, with empty green all around; nothing cut off. No text, no labels, no border, no signature."
+    },
+    "customer-base-skinny": {
+      "aspect": "9:16",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/style-flash-34.jpg"
+      ],
+      "style": "2000s Flash browser-game cartoon drawn as clean vector art. Thick, bold, smooth near-black outlines of one even width everywhere. Completely flat colour fills with no shading at all: no shadow shapes, no shine spots, no highlights, no gloss, no gradients, no texture. Bodies are soft, rounded masses (round bellies, bean torsos, heavy rounded shoulders) on long thin noodle arms and legs, with big chunky rounded shoes and simple mitten-like hands. Big heads: each head is at least as wide as the shoulders. Faces stay minimal but expressive: small solid black oval eyes with no whites or irises, simple eyebrow strokes, no nose or a tiny bump, a single-line mouth or a simple open mouth. Goofy, bouncy, rubbery poses with clear silhouettes and a gesture each. Bright, saturated, plain colours.",
+      "subject": "Redraw ONE figure from the attached lineup, in exactly the same art style, line weight and body shape: the 4th figure from the left: the skinny, stick-like young man with very long thin legs (plain t-shirt, straight trousers, no cap). A plain adult customer base for a cartoon shop game, full body, facing the viewer. Keep a relaxed, natural stance with personality (weight on one leg, a slight lean), but both arms hang down beside the body with a small gap between arms and body, and no hand touches or covers the head, face or torso. Completely bald, with a completely blank face (no eyes, brows, nose or mouth: those are added later as separate layers), ears visible. Simple shoes in the same chunky style.",
+      "colour": "Completely flat colour: exactly one solid colour per part, with no shading, no shadow shapes, no highlights and no darker or lighter tones anywhere, so the game can recolour each part (skin included) by its key colour: skin warm peach, top medium blue, trousers mid gray, shoes near-black, outline near-black. No other colours, no patterns, no logos.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "One full-body figure, centred, filling about 85% of the picture's height, with empty green all around; nothing cut off. No text, no labels, no border, no signature."
+    },
+    "bodies-flash-3": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/style-flash-3.jpg"
+      ],
+      "style": "Mid-2000s Newgrounds-era Flash animation style: very simple vector characters with thick uniform black outlines and flat fills, no shading at all (no shadow shapes, highlights or tones). Exaggerated cartoon proportions: an oversized oval head, a tiny or bean-shaped body, long thin noodle arms and legs, oversized hands and feet. Faces are just two black dots or two short vertical lines for eyes and a simple line mouth, with no nose and no detail. Goofy, bouncy, rubbery poses with clear silhouettes. Plain bright colours, no texture of any kind. Match the art style, line weight and proportions of the attached picture exactly.",
+      "subject": "A body-type lineup of six blank customer bases for a cartoon shop game, all in the same neutral outfit, so different hair, faces and accessories can be layered on later. Every figure: full body, facing the viewer straight on (not turned), standing in a relaxed but simple pose with both arms hanging down beside the body and a clear gap between arms and body, hands open and not touching anything, feet slightly apart. Completely bald with a completely blank face (no eyes, brows, nose, mouth or facial hair), both ears visible. Plain crew-neck t-shirt, plain straight trousers, simple chunky shoes; no pockets, seams, wrinkles, logos, jewellery, hats or bags. Body types, left to right: 1) average build, medium height; 2) heavy, round belly, wide; 3) tall and very thin, noodle limbs; 4) short and stout, wide hips, short legs; 5) broad-shouldered and stocky, thick arms; 6) small and slight, short and thin. Each figure is gender-neutral enough to become a man or a woman with hair and face layers.",
+      "colour": "Completely flat colour: exactly one solid colour per part, the same on every figure, with no shading, shadows, highlights or tones, so the game can recolour each part (skin included): skin warm peach, t-shirt medium blue, trousers mid gray, shoes near-black, outline near-black. No other colours.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "Exactly 6 full-body figures in one row, drawn at one shared scale so their heights differ by body type, standing on the same ground line, with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "bodies-fm-3": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/style-flash-3.jpg"
+      ],
+      "style": "Mid-2000s Newgrounds-era Flash animation style: very simple vector characters with thick uniform black outlines and flat fills, no shading at all (no shadow shapes, highlights or tones). Exaggerated cartoon proportions: an oversized oval head, a tiny or bean-shaped body, long thin noodle arms and legs, oversized hands and feet. Faces are just two black dots or two short vertical lines for eyes and a simple line mouth, with no nose and no detail. Goofy, bouncy, rubbery poses with clear silhouettes. Plain bright colours, no texture of any kind. Match the art style, line weight and proportions of the attached picture exactly.",
+      "subject": "A body-type lineup of six blank customer bases for a cartoon shop game, all in the same neutral outfit, so different hair, faces and accessories can be layered on later. Every figure faces the viewer exactly straight on, all in the same direction: the head, shoulders, hips and feet all point straight at the viewer, nothing turned or angled, the head perfectly symmetrical with both ears showing equally on each side. Each stands in the same simple pose: both arms hanging straight down beside the body with a clear gap between arms and body, hands open and not touching anything, feet slightly apart and pointing forward. Completely bald with a completely blank face (no eyes, brows, nose, mouth, chin line or facial hair). Plain crew-neck t-shirt, plain straight trousers, simple chunky shoes; no pockets, seams, wrinkles, logos, jewellery, hats or bags. Body types, left to right: three masculine bodies (broader shoulders, straighter waist, slightly larger hands and feet): 1) average build, medium height; 2) heavy, with a round belly, wide; 3) tall and thin, noodle limbs. Then three feminine bodies (narrower shoulders, a defined waist, wider hips, a subtle bust): 4) average build, medium height, a little shorter than figure 1; 5) curvy and plus-size, pear-shaped, widest at the hips; 6) petite, short and slim.",
+      "colour": "Completely flat colour: exactly one solid colour per part, the same on every figure, with no shading, shadows, highlights or tones, so the game can recolour each part (skin included): skin warm peach, t-shirt medium blue, trousers mid gray, shoes near-black, outline near-black. No other colours.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "Exactly 6 full-body figures in one row, drawn at one shared scale so their heights differ by body type, standing on the same ground line, with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "bodies-fm-3-pro": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/bodies-fm-3-nb.jpg"
+      ],
+      "style": "Mid-2000s Newgrounds-era Flash animation style: very simple vector characters with thick uniform black outlines and flat fills, no shading at all (no shadow shapes, highlights or tones). Exaggerated cartoon proportions: an oversized oval head, a tiny or bean-shaped body, long thin noodle arms and legs, oversized hands and feet. Faces are just two black dots or two short vertical lines for eyes and a simple line mouth, with no nose and no detail. Goofy, bouncy, rubbery poses with clear silhouettes. Plain bright colours, no texture of any kind. Redraw the attached lineup cleanly at higher quality, keeping exactly the same six figures, the same order, the same body shapes, proportions, heights, spacing, poses and colours: only make the outlines smoother and more even and every colour fill perfectly flat and solid.",
+      "subject": "A body-type lineup of six blank customer bases for a cartoon shop game, all in the same neutral outfit, so different hair, faces and accessories can be layered on later. Every figure faces the viewer exactly straight on, all in the same direction: the head, shoulders, hips and feet all point straight at the viewer, nothing turned or angled, the head perfectly symmetrical with both ears showing equally on each side. Each stands in the same simple pose: both arms hanging straight down beside the body with a clear gap between arms and body, hands open and not touching anything, feet slightly apart and pointing forward. Completely bald with a completely blank face (no eyes, brows, nose, mouth, chin line or facial hair). Plain crew-neck t-shirt, plain straight trousers, simple chunky shoes; no pockets, seams, wrinkles, logos, jewellery, hats or bags. Body types, left to right: three masculine bodies (broader shoulders, straighter waist, slightly larger hands and feet): 1) average build, medium height; 2) heavy, with a round belly, wide; 3) tall and thin, noodle limbs. Then three feminine bodies (narrower shoulders, a defined waist, wider hips, a subtle bust): 4) average build, medium height, a little shorter than figure 1; 5) curvy and plus-size, pear-shaped, widest at the hips; 6) petite, short and slim. Fix only these: the 5th figure wears the same chunky shoes as the others (no bare ankles, no flats); every outline is one even near-black width; every face is perfectly blank.",
+      "colour": "Completely flat colour: exactly one solid colour per part, the same on every figure, with no shading, shadows, highlights or tones, so the game can recolour each part (skin included): skin warm peach, t-shirt medium blue, trousers mid gray, shoes near-black, outline near-black. No other colours.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "Exactly 6 full-body figures in one row, drawn at one shared scale so their heights differ by body type, standing on the same ground line, with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "bodies-fm-3-tq": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/bodies-fm-3-nb.jpg"
+      ],
+      "style": "Mid-2000s Newgrounds-era Flash animation style: very simple vector characters with thick uniform black outlines and flat fills, no shading at all (no shadow shapes, highlights or tones). Exaggerated cartoon proportions: an oversized oval head, a tiny or bean-shaped body, long thin noodle arms and legs, oversized hands and feet. Faces are just two black dots or two short vertical lines for eyes and a simple line mouth, with no nose and no detail. Goofy, bouncy, rubbery poses with clear silhouettes. Plain bright colours, no texture of any kind. Match the art style, line weight, colours and body shapes of the attached lineup exactly, but turn every figure to a three-quarter view.",
+      "subject": "Redraw the six figures of the attached lineup, in the same order, with the same body shapes, heights and outfit, but every figure turned to the same three-quarter view facing the RIGHT side of the picture: all six turned the same amount (about 35 degrees) in the same direction, as if standing in a queue looking toward a shop counter on the right. Head, shoulders, hips and feet all turned the same way; the face area still mostly visible (only the left ear shows), so eyes and a mouth can be added later. Each stands in a simple relaxed pose: both arms hanging down beside the body with a clear gap between arms and body, hands open and not touching anything. Completely bald with a completely blank face (no eyes, brows, nose, mouth, chin line or facial hair). Plain crew-neck t-shirt, plain straight trousers, the same chunky shoes on every figure (no flats, no bare ankles); no pockets, seams, wrinkles, logos, jewellery, hats or bags. Left to right: three masculine bodies 1) average, 2) heavy with a round belly, 3) tall and thin; then three feminine bodies 4) average, 5) curvy and pear-shaped, 6) petite.",
+      "colour": "Completely flat colour: exactly one solid colour per part, the same on every figure, with no shading, shadows, highlights or tones, so the game can recolour each part (skin included): skin warm peach, t-shirt medium blue, trousers mid gray, shoes near-black, outline near-black. No other colours.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "Exactly 6 full-body figures in one row, drawn at one shared scale so their heights differ by body type, standing on the same ground line, with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "bodies-fm-3-tq2": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/style-flash-3.jpg"
+      ],
+      "style": "Mid-2000s Newgrounds-era Flash animation style: very simple vector characters with thick uniform black outlines and flat fills, no shading at all (no shadow shapes, highlights or tones). Exaggerated cartoon proportions: an oversized oval head, a tiny or bean-shaped body, long thin noodle arms and legs, oversized hands and feet. Faces are just two black dots or two short vertical lines for eyes and a simple line mouth, with no nose and no detail. Goofy, bouncy, rubbery poses with clear silhouettes. Plain bright colours, no texture of any kind. Match the art style and line weight of the attached picture (style only: do not copy its people, poses or clothes).",
+      "subject": "A body-type lineup of six blank customer bases for a cartoon shop game, standing in a queue, all in the same neutral outfit so different hair, faces and accessories can be layered on later. Every figure has its WHOLE BODY turned to a three-quarter view facing the RIGHT side of the picture, about 40 degrees, all turned exactly the same way, as if queuing at a shop counter off to the right: the near (left) shoulder is closer to the viewer and the far (right) shoulder is narrower and partly hidden; the far arm is mostly hidden behind the torso and the near arm is in full view, hanging down with a gap from the body; the side of the chest and belly shows, so bellies, busts and hips read partly in profile; both feet point toward the right edge of the picture, the far foot slightly behind the near one; the head turned the same way as the body, the face area pointing right, the near (left) ear showing and the far ear hidden. Hands open, not touching anything. Completely bald with a completely blank face (no eyes, brows, nose, mouth, chin line or facial hair). Plain crew-neck t-shirt, plain straight trousers, the same chunky shoes on every figure (no flats, no bare ankles); no pockets, seams, wrinkles, logos, jewellery, hats or bags. Left to right: three masculine bodies (broader shoulders, straighter waist): 1) average build, medium height; 2) heavy, with a big round belly that sticks out in front; 3) tall and thin, noodle limbs. Then three feminine bodies (narrower shoulders, a defined waist, wider hips, a subtle bust): 4) average build, a little shorter than figure 1; 5) curvy and plus-size, pear-shaped, widest at the hips; 6) petite, short and slim.",
+      "colour": "Completely flat colour: exactly one solid colour per part, the same on every figure, with no shading, shadows, highlights or tones, so the game can recolour each part (skin included): skin warm peach, t-shirt medium blue, trousers mid gray, shoes near-black, outline near-black. No other colours.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "Exactly 6 full-body figures in one row, drawn at one shared scale so their heights differ by body type, standing on the same ground line, with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "bodies-fm-3-tq2-pro": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/bodies-fm-3-tq2-nb.jpg"
+      ],
+      "style": "Mid-2000s Newgrounds-era Flash animation style: very simple vector characters with thick uniform black outlines and flat fills, no shading at all (no shadow shapes, highlights or tones). Exaggerated cartoon proportions: an oversized oval head, a tiny or bean-shaped body, long thin noodle arms and legs, oversized hands and feet. Faces are just two black dots or two short vertical lines for eyes and a simple line mouth, with no nose and no detail. Goofy, bouncy, rubbery poses with clear silhouettes. Plain bright colours, no texture of any kind. Redraw the attached lineup cleanly at higher quality, keeping exactly the same six figures, the same order, body shapes, proportions, heights, spacing, poses, turn angle and colours: only make the outlines smoother and more even and every colour fill perfectly flat and solid.",
+      "subject": "A body-type lineup of six blank customer bases for a cartoon shop game, standing in a queue, all in the same neutral outfit so different hair, faces and accessories can be layered on later. Every figure has its WHOLE BODY turned to a three-quarter view facing the RIGHT side of the picture, about 40 degrees, all turned exactly the same way, as if queuing at a shop counter off to the right: the near (left) shoulder is closer to the viewer and the far (right) shoulder is narrower and partly hidden; the far arm is mostly hidden behind the torso and the near arm is in full view, hanging down with a gap from the body; the side of the chest and belly shows, so bellies, busts and hips read partly in profile; both feet point toward the right edge of the picture, the far foot slightly behind the near one; the head turned the same way as the body, the face area pointing right, the near (left) ear showing and the far ear hidden. Hands open, not touching anything. Completely bald with a completely blank face (no eyes, brows, nose, mouth, chin line or facial hair). Plain crew-neck t-shirt, plain straight trousers, the same chunky shoes on every figure (no flats, no bare ankles); no pockets, seams, wrinkles, logos, jewellery, hats or bags. Left to right: three masculine bodies (broader shoulders, straighter waist): 1) average build, medium height; 2) heavy, with a big round belly that sticks out in front; 3) tall and thin, noodle limbs. Then three feminine bodies (narrower shoulders, a defined waist, wider hips, a subtle bust): 4) average build, a little shorter than figure 1; 5) curvy and plus-size, pear-shaped, widest at the hips; 6) petite, short and slim. Keep every figure turned exactly as in the attached picture; do not turn any head or body further toward or away from the viewer. Fix only these: the 5th figure wears the same chunky shoes as the others (no flats, no bare ankles); the 6th figure is turned the same amount as the others (face not in profile); the 2nd figure has no chin line; every outline is one even near-black width; every face is perfectly blank.",
+      "colour": "Completely flat colour: exactly one solid colour per part, the same on every figure, with no shading, shadows, highlights or tones, so the game can recolour each part (skin included): skin warm peach, t-shirt medium blue, trousers mid gray, shoes near-black, outline near-black. No other colours.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figure.",
+      "layout": "Exactly 6 full-body figures in one row, drawn at one shared scale so their heights differ by body type, standing on the same ground line, with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "edit-m-average-hair": {
+      "aspect": "9:16",
+      "mode": "color",
+      "refs": [
+        "art/sprites/picked/bases/m-average.png"
+      ],
+      "edit": "Edit this image: give the person short messy hair, drawn in the same thick black outline as the rest of the figure and filled with ONE flat solid medium brown colour (no highlights, no strands of other colours, no shading). Leave the face blank: no eyes, no mouth. Change nothing else: same outline thickness, same flat colours with no shading, same body, same clothes, same pose, same position and size in the frame, same pure green background. No shadows, no gradients."
+    },
+    "edit-m-average-face": {
+      "aspect": "9:16",
+      "mode": "color",
+      "refs": [
+        "art/sprites/picked/bases/m-average.png"
+      ],
+      "edit": "Edit this image: draw a simple cartoon face on the blank head, seen in the same three-quarter view facing right: two small black oval eyes, short black eyebrows, a small nose drawn as a single black line, and a small friendly closed-mouth smile drawn as a single black line. Use only black lines and black fills in the same outline style; no colour, no blush, no lips. Do not add hair. Change nothing else: same outline thickness, same flat colours with no shading, same body, same clothes, same pose, same position and size in the frame, same pure green background. No shadows, no gradients."
+    },
+    "edit-f-average-hair": {
+      "aspect": "9:16",
+      "mode": "color",
+      "refs": [
+        "art/sprites/picked/bases/f-average.png"
+      ],
+      "edit": "Edit this image: give the person shoulder-length hair, drawn in the same thick black outline as the rest of the figure and filled with ONE flat solid medium brown colour (no highlights, no strands of other colours, no shading). Leave the face blank: no eyes, no mouth. Change nothing else: same outline thickness, same flat colours with no shading, same body, same clothes, same pose, same position and size in the frame, same pure green background. No shadows, no gradients."
+    },
+    "edit-f-average-face": {
+      "aspect": "9:16",
+      "mode": "color",
+      "refs": [
+        "art/sprites/picked/bases/f-average.png"
+      ],
+      "edit": "Edit this image: draw a simple cartoon face on the blank head, seen in the same three-quarter view facing right: two small black oval eyes, short black eyebrows, a small nose drawn as a single black line, and a small friendly closed-mouth smile drawn as a single black line. Use only black lines and black fills in the same outline style; no colour, no blush, no lips. Do not add hair. Change nothing else: same outline thickness, same flat colours with no shading, same body, same clothes, same pose, same position and size in the frame, same pure green background. No shadows, no gradients."
+    },
+    "style4-tq-same": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/style-flash-4.jpg"
+      ],
+      "style": "Match the attached picture's art style exactly: 2000s Flash online-game cartoon, big soft rounded shapes (bean, egg, pill), a thick smooth dark outline of even weight, simple faces with white oval eyes and black pupils, a simple mouth, a small nose line at most, relaxed rubbery poses with personality. One change from the picture: completely FLAT fills, exactly one solid colour per area, with NO shadow shapes, NO white shine or highlight shapes, no tones, gradients or texture anywhere (shading is added later by the game). Style only from the picture: draw the people described below.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours, every area one flat colour. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, at one shared scale (heights differ by body type), standing on the same ground line, with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature.",
+      "subject": "The same four customers as in the attached picture (same people, outfits and colours), redrawn turned. Every figure has its WHOLE BODY turned to a three-quarter view facing the RIGHT side of the picture, about 40 degrees, all turned the same way, as if waiting in line at a shop counter off to the right: the near (left) shoulder closer to the viewer, the far shoulder narrower and partly hidden; the side of the chest and belly shows, so bellies, busts and hips read partly in profile; both feet point toward the right edge, the far foot slightly behind the near one; the head and face turned the same way as the body (near ear showing, far ear hidden), eyes looking right. Relaxed waiting poses with personality (weight on one leg, a hand in a pocket, holding a phone or a bag strap, arms crossed), but hands never cover the face. Left to right: 1) the wide, round bearded bald man in the orange hoodie; 2) the tall thin woman with long dark hair, purple shirt and wide maroon trousers; 3) the short round grandma with grey hair in a bun, glasses, pink cardigan, brown skirt and tote bag; 4) the skinny young man in the orange cap, yellow t-shirt and jeans. Keep clothes as simple coloured shapes: no pockets, seams, patterns, laces or wrinkles."
+    },
+    "style4-tq-new": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/style-flash-4.jpg"
+      ],
+      "style": "Match the attached picture's art style exactly: 2000s Flash online-game cartoon, big soft rounded shapes (bean, egg, pill), a thick smooth dark outline of even weight, simple faces with white oval eyes and black pupils, a simple mouth, a small nose line at most, relaxed rubbery poses with personality. One change from the picture: completely FLAT fills, exactly one solid colour per area, with NO shadow shapes, NO white shine or highlight shapes, no tones, gradients or texture anywhere (shading is added later by the game). Style only from the picture: draw the people described below.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours, every area one flat colour. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, at one shared scale (heights differ by body type), standing on the same ground line, with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature.",
+      "subject": "Four NEW different adult customers for a cartoon dispensary shop game. Every figure has its WHOLE BODY turned to a three-quarter view facing the RIGHT side of the picture, about 40 degrees, all turned the same way, as if waiting in line at a shop counter off to the right: the near (left) shoulder closer to the viewer, the far shoulder narrower and partly hidden; the side of the chest and belly shows, so bellies, busts and hips read partly in profile; both feet point toward the right edge, the far foot slightly behind the near one; the head and face turned the same way as the body (near ear showing, far ear hidden), eyes looking right. Relaxed waiting poses with personality (weight on one leg, a hand in a pocket, holding a phone or a bag strap, arms crossed), but hands never cover the face. Left to right: 1) a stocky middle-aged man with a moustache, short hair and a plain work jacket; 2) a petite young woman with a big curly afro, a crop jacket and leggings; 3) a tall lanky older man with a grey ponytail, a loose shirt and baggy trousers; 4) a curvy woman with short dyed hair, a long cardigan and a skirt. Keep clothes as simple coloured shapes: no pockets, seams, patterns, logos, laces or wrinkles."
+    },
+    "style-midcentury": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Mid-century modern flat graphic illustration, like 1950s-60s limited-animation cartoons and vintage print ads: bodies built from bold angular geometric shapes (trapezoids, triangles, long rectangles), NO outlines at all, every shape defined by flat colour alone, tiny simple features (dot eyes, a short line mouth, a wedge nose), long thin stick legs, a little dry-brush grain inside the fills, a limited sophisticated palette of mustard, teal, burnt orange, cream, charcoal and dusty pink.",
+      "subject": "Four different adult customers for a dispensary shop game, side by side in one row, full body, each turned three-quarter toward the viewer's right (the way they would face a shop counter), each caught in a lively, characterful moment, never stiff, symmetrical or posing: 1) a big, heavy-set bearded guy in a hoodie, mid-laugh, one hand patting his belly; 2) a tall, lanky young woman in a crop jacket and wide trousers, thumbing her phone, hip cocked; 3) a short, round older woman in a cardigan with a tote bag, leaning forward and peering with curiosity; 4) a wiry middle-aged man in a work shirt and cap, rubbing the back of his neck with a sheepish grin. Expressive faces and hands so the style can be judged.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "style-pixel": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Detailed hi-bit pixel art like a modern indie management game: each character about 96 art pixels tall on a visible pixel grid, crisp hard pixel edges with no anti-aliasing or blur, a limited palette of about 24 colours, two or three hand-placed shade steps per material, a dark coloured (not black) one-pixel outline, readable expressive faces. The whole image is upscaled nearest-neighbour so every art pixel is a sharp square block.",
+      "subject": "Four different adult customers for a dispensary shop game, side by side in one row, full body, each turned three-quarter toward the viewer's right (the way they would face a shop counter), each caught in a lively, characterful moment, never stiff, symmetrical or posing: 1) a big, heavy-set bearded guy in a hoodie, mid-laugh, one hand patting his belly; 2) a tall, lanky young woman in a crop jacket and wide trousers, thumbing her phone, hip cocked; 3) a short, round older woman in a cardigan with a tote bag, leaning forward and peering with curiosity; 4) a wiry middle-aged man in a work shirt and cap, rubbing the back of his neck with a sheepish grin. Expressive faces and hands so the style can be judged.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "style-clay": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Stop-motion claymation: every character is a handmade plasticine puppet photographed in a studio, soft rounded sculpted forms, visible fingerprints and tool marks in the clay, charming hand-made lumpiness, glossy bead eyes with tiny highlights, wide expressive sculpted mouths, small fabric and felt details on the clothes, soft even studio lighting with gentle form shading, no cast shadow on the background.",
+      "subject": "Four different adult customers for a dispensary shop game, side by side in one row, full body, each turned three-quarter toward the viewer's right (the way they would face a shop counter), each caught in a lively, characterful moment, never stiff, symmetrical or posing: 1) a big, heavy-set bearded guy in a hoodie, mid-laugh, one hand patting his belly; 2) a tall, lanky young woman in a crop jacket and wide trousers, thumbing her phone, hip cocked; 3) a short, round older woman in a cardigan with a tote bag, leaning forward and peering with curiosity; 4) a wiry middle-aged man in a work shirt and cap, rubbing the back of his neck with a sheepish grin. Expressive faces and hands so the style can be judged.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "style-70s": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "1970s head-shop poster and underground comix style: confident flowing brush-ink outlines that swell and taper, rounded bulbous forms, big hair, big shoes, ink hatching and stippling for shade, printed on paper with a soft risograph grain and slight colour misregistration, a warm 70s palette of burnt orange, mustard yellow, chocolate brown, rust, cream and faded teal.",
+      "subject": "Four different adult customers for a dispensary shop game, side by side in one row, full body, each turned three-quarter toward the viewer's right (the way they would face a shop counter), each caught in a lively, characterful moment, never stiff, symmetrical or posing: 1) a big, heavy-set bearded guy in a hoodie, mid-laugh, one hand patting his belly; 2) a tall, lanky young woman in a crop jacket and wide trousers, thumbing her phone, hip cocked; 3) a short, round older woman in a cardigan with a tote bag, leaning forward and peering with curiosity; 4) a wiry middle-aged man in a work shirt and cap, rubbing the back of his neck with a sheepish grin. Expressive faces and hands so the style can be judged.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "nugs-midcentury": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 256,
+      "count": 6,
+      "grid": "2 rows of 3",
+      "style": "Mid-century modern flat graphic illustration, like 1950s-60s limited-animation cartoons and vintage print ads: each bud simplified into bold overlapping flat shapes, NO outlines at all, every shape defined by flat colour alone, a little dry-brush grain inside the fills, a limited sophisticated palette.",
+      "subject": "A sample sheet of cannabis flower for a dispensary shop game: 3 large dense buds (nugs) of different shapes (one round and chunky, one tall and conical, one lumpy with two or three clustered lobes), 2 small buds, and 1 small pinch of loose shake drawn as one little connected heap of crumbled bits. Each bud is built from overlapping rounded calyx clusters with a few small sugar leaves tucked in. No stems sticking out, no fan leaves.",
+      "colour": "Full colour: cannabis greens from pale sage to deep forest green, one large nug with deep purple tones (purple, never pink), a frosty sprinkle of pale trichome specks, and sparse, short, curly bright orange pistil hairs. Nothing magenta or pink."
+    },
+    "nugs-pixel": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 256,
+      "count": 6,
+      "grid": "2 rows of 3",
+      "style": "Detailed hi-bit pixel art like a modern indie management game: each large bud about 32 art pixels wide on a visible pixel grid, crisp hard pixel edges with no anti-aliasing or blur, a limited palette, two or three hand-placed shade steps, a dark coloured (not black) one-pixel outline. The whole image is upscaled nearest-neighbour so every art pixel is a sharp square block.",
+      "subject": "A sample sheet of cannabis flower for a dispensary shop game: 3 large dense buds (nugs) of different shapes (one round and chunky, one tall and conical, one lumpy with two or three clustered lobes), 2 small buds, and 1 small pinch of loose shake drawn as one little connected heap of crumbled bits. Each bud is built from overlapping rounded calyx clusters with a few small sugar leaves tucked in. No stems sticking out, no fan leaves.",
+      "colour": "Full colour: cannabis greens from pale sage to deep forest green, one large nug with deep purple tones (purple, never pink), a frosty sprinkle of pale trichome specks, and sparse, short, curly bright orange pistil hairs. Nothing magenta or pink."
+    },
+    "nugs-clay": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 256,
+      "count": 6,
+      "grid": "2 rows of 3",
+      "style": "Stop-motion claymation: each bud is a handmade plasticine sculpture photographed in a studio, lumpy sculpted calyx blobs, visible fingerprints and tool marks, tiny rolled clay threads for the hairs, soft even studio lighting with gentle form shading, no cast shadow on the background.",
+      "subject": "A sample sheet of cannabis flower for a dispensary shop game: 3 large dense buds (nugs) of different shapes (one round and chunky, one tall and conical, one lumpy with two or three clustered lobes), 2 small buds, and 1 small pinch of loose shake drawn as one little connected heap of crumbled bits. Each bud is built from overlapping rounded calyx clusters with a few small sugar leaves tucked in. No stems sticking out, no fan leaves.",
+      "colour": "Full colour: cannabis greens from pale sage to deep forest green, one large nug with deep purple tones (purple, never pink), a frosty sprinkle of pale trichome specks, and sparse, short, curly bright orange pistil hairs. Nothing magenta or pink."
+    },
+    "nugs-70s": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 256,
+      "count": 6,
+      "grid": "2 rows of 3",
+      "style": "1970s head-shop poster and underground comix style: confident flowing brush-ink outlines that swell and taper, ink hatching and stippling for shade, printed on paper with a soft risograph grain and slight colour misregistration, warm, slightly faded print colours.",
+      "subject": "A sample sheet of cannabis flower for a dispensary shop game: 3 large dense buds (nugs) of different shapes (one round and chunky, one tall and conical, one lumpy with two or three clustered lobes), 2 small buds, and 1 small pinch of loose shake drawn as one little connected heap of crumbled bits. Each bud is built from overlapping rounded calyx clusters with a few small sugar leaves tucked in. No stems sticking out, no fan leaves.",
+      "colour": "Full colour: cannabis greens from pale sage to deep forest green, one large nug with deep purple tones (purple, never pink), a frosty sprinkle of pale trichome specks, and sparse, short, curly bright orange pistil hairs. Nothing magenta or pink."
+    },
+    "nugs-indie": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 256,
+      "count": 6,
+      "grid": "2 rows of 3",
+      "style": "Modern indie cartoon: thick, slightly wobbly hand-drawn dark outlines, flat colour fills with a single hard shadow tone, quirky stylised shapes, a muted but punchy palette, like a current indie management game.",
+      "subject": "A sample sheet of cannabis flower for a dispensary shop game: 3 large dense buds (nugs) of different shapes (one round and chunky, one tall and conical, one lumpy with two or three clustered lobes), 2 small buds, and 1 small pinch of loose shake drawn as one little connected heap of crumbled bits. Each bud is built from overlapping rounded calyx clusters with a few small sugar leaves tucked in. No stems sticking out, no fan leaves.",
+      "colour": "Full colour: cannabis greens from pale sage to deep forest green, one large nug with deep purple tones (purple, never pink), a frosty sprinkle of pale trichome specks, and sparse, short, curly bright orange pistil hairs. Nothing magenta or pink."
+    },
+    "style-70s-indie": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "1970s head-shop poster and underground comix line work: confident flowing brush-ink outlines that swell and taper, rounded bulbous forms, ink hatching and stippling for shade, a light risograph grain. Colour it like a modern indie management game: clean, saturated, punchy flat fills with a single hard shadow tone, bright and readable, NOT faded, muddy or sepia; the ink and grain sit on top of fresh, vivid colour.",
+      "subject": "Four different adult customers for a dispensary shop game, side by side in one row, full body, each turned three-quarter toward the viewer's right (the way they would face a shop counter), each caught in a lively, characterful moment, never stiff, symmetrical or posing: 1) a big, heavy-set bearded guy in a hoodie, mid-laugh, one hand patting his belly; 2) a tall, lanky young woman in a crop jacket and wide trousers, thumbing her phone, hip cocked; 3) a short, round older woman in a cardigan with a tote bag, leaning forward and peering with curiosity; 4) a wiry middle-aged man in a work shirt and cap, rubbing the back of his neck with a sheepish grin. Expressive faces and hands so the style can be judged.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature."
+    },
+    "nugs-70s-indie": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 256,
+      "count": 6,
+      "grid": "2 rows of 3",
+      "style": "1970s head-shop poster and underground comix line work: confident flowing brush-ink outlines that swell and taper, rounded bulbous forms, ink hatching and stippling for shade, a light risograph grain. Colour it like a modern indie management game: clean, saturated, punchy flat fills with a single hard shadow tone, bright and readable, NOT faded, muddy or sepia; the ink and grain sit on top of fresh, vivid colour.",
+      "subject": "A sample sheet of cannabis flower for a dispensary shop game: 3 large dense buds (nugs) of different shapes (one round and chunky, one tall and conical, one lumpy with two or three clustered lobes), 2 small buds, and 1 small pinch of loose shake drawn as one little connected heap of crumbled bits. Each bud is built from overlapping rounded calyx clusters with a few small sugar leaves tucked in. No stems sticking out, no fan leaves.",
+      "colour": "Full colour, punchy and saturated: bright fresh greens from lime-leaning sage to rich forest green, one large nug in vivid deep purple (purple, never pink), a frosty sprinkle of pale trichome specks, and sparse, short, curly bright orange pistil hairs. Nothing magenta or pink."
+    },
+    "style-midcentury-b": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Mid-century modern flat graphic illustration, like 1950s-60s limited-animation cartoons and vintage print ads: bodies built from bold angular geometric shapes (trapezoids, triangles, long rectangles), NO outlines at all, every shape defined by flat colour alone, tiny simple features (dot eyes, a short line mouth, a wedge nose), long thin stick legs, a little dry-brush grain inside the fills, a limited sophisticated palette of mustard, teal, burnt orange, cream, charcoal and dusty pink. Match the attached picture exactly: the same shape language, no outlines, the same grain, the same head-to-body proportions and the same scale. Use only this palette, as flat fills: charcoal #383E40, near-black #2A2A25, burnt orange #C25628, teal #367E7A, mustard #CF9F25, dusty pink #C48075, cream #E9E2B6, olive #A8923B, slate blue #4F6D8F, plum #6E3B55, brick red #9E3B2E, white #EDEBE0, warm gray #9A948A; skin tones pale #E8C3A0, tan #D1995C, brown #A86B3C, deep brown #6B3F22; hair dark brown #4D2C17, mid brown #86582C.",
+      "subject": "Four NEW adult customers for a dispensary shop game (not the people in the attached picture), side by side in one row, full body, each turned three-quarter toward the viewer's right, each caught in a lively moment, never stiff or posing: 1) a stocky middle-aged South Asian man in a sweater vest and glasses, frowning down as he counts cash from his wallet; 2) a tall, thin elderly Black man with a white goatee, flat cap and corduroy jacket, leaning on a cane and tipping his cap with a grin; 3) a young plus-size woman with a shaved side cut and denim overalls, mid-yawn with both arms stretched up; 4) a petite East Asian woman in her thirties in nurse scrubs, glancing at her wristwatch and tapping one foot impatiently. Four clearly different silhouettes, faces and hair.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature.",
+      "refs": [
+        "art/sprites/candidates/style-midcentury/nb-1795730560355.jpg"
+      ]
+    },
+    "edit-mc-f-phone-annoyed": {
+      "aspect": "9:16",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/picked/midcentury/f-phone.png"
+      ],
+      "edit": "Edit this image: change only her face to annoyed and impatient: eyebrows pulled down and together, eyes narrowed, mouth a flat, tight line turned down at the corners. Keep her looking toward the right. Change nothing else: same art style, same hair, same head shape and position, same body, pose, phone, clothes and colours, same flat pure green background."
+    },
+    "mc-calm-a": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Mid-century modern flat graphic illustration, like 1950s-60s limited-animation cartoons and vintage print ads: bodies built from bold angular geometric shapes (trapezoids, triangles, long rectangles), NO outlines at all, every shape defined by flat colour alone, tiny simple features (dot eyes, a short line mouth, a wedge nose), long thin stick legs, a little dry-brush grain inside the fills, a limited sophisticated palette of mustard, teal, burnt orange, cream, charcoal and dusty pink. Match the attached picture exactly: the same shape language, no outlines, the same grain, the same head-to-body proportions and the same scale. Use only this palette, as flat fills: charcoal #383E40, near-black #2A2A25, burnt orange #C25628, teal #367E7A, mustard #CF9F25, dusty pink #C48075, cream #E9E2B6, olive #A8923B, slate blue #4F6D8F, plum #6E3B55, brick red #9E3B2E, white #EDEBE0, warm gray #9A948A; skin tones pale #E8C3A0, tan #D1995C, brown #A86B3C, deep brown #6B3F22; hair dark brown #4D2C17, mid brown #86582C.",
+      "subject": "Redraw the SAME four people from the attached picture, in the same left-to-right order, keeping each one's face, hair, body shape, clothes, colours and accessories exactly (the bearded man in the orange hoodie, the woman in the pink cropped jacket and mustard trousers, the old woman in the teal cardigan with the cream shoulder bag, the man in the teal work shirt and cap), but in a new pose. Each stands calmly upright in a relaxed, natural standing pose with a little personality (weight on one leg, a slight lean, a hand in a pocket or resting on a bag strap), the whole body turned three-quarter toward the viewer's right, head up and looking toward the right at the height of a shop counter, face neutral and pleasant with the mouth closed, both arms down near the body, nothing held up or raised above the shoulders, nothing in front of the face. The phone goes in the young woman's pocket. Same art style as the attached picture: no outlines, the same shapes, grain, palette, proportions and scale.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature.",
+      "refs": [
+        "art/sprites/candidates/style-midcentury/nb-1795730560355.jpg"
+      ]
+    },
+    "mc-calm-b": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Mid-century modern flat graphic illustration, like 1950s-60s limited-animation cartoons and vintage print ads: bodies built from bold angular geometric shapes (trapezoids, triangles, long rectangles), NO outlines at all, every shape defined by flat colour alone, tiny simple features (dot eyes, a short line mouth, a wedge nose), long thin stick legs, a little dry-brush grain inside the fills, a limited sophisticated palette of mustard, teal, burnt orange, cream, charcoal and dusty pink. Match the attached picture exactly: the same shape language, no outlines, the same grain, the same head-to-body proportions and the same scale. Use only this palette, as flat fills: charcoal #383E40, near-black #2A2A25, burnt orange #C25628, teal #367E7A, mustard #CF9F25, dusty pink #C48075, cream #E9E2B6, olive #A8923B, slate blue #4F6D8F, plum #6E3B55, brick red #9E3B2E, white #EDEBE0, warm gray #9A948A; skin tones pale #E8C3A0, tan #D1995C, brown #A86B3C, deep brown #6B3F22; hair dark brown #4D2C17, mid brown #86582C.",
+      "subject": "Redraw the SAME four people from the attached picture, in the same left-to-right order, keeping each one's face, hair, glasses, body shape, clothes, colours and accessories exactly (the man in glasses and teal sweater vest, the old man in flat cap and orange jacket with his cane, the young woman in denim overalls, the woman in blue nurse scrubs), but in a new pose. Each stands calmly upright in a relaxed, natural standing pose with a little personality (weight on one leg, a slight lean, a hand in a pocket or resting on a bag strap), the whole body turned three-quarter toward the viewer's right, head up and looking toward the right at the height of a shop counter, face neutral and pleasant with the mouth closed, both arms down near the body, nothing held up or raised above the shoulders, nothing in front of the face. The wallet is put away; the old man keeps his cane, standing on it lightly. Same art style as the attached picture: no outlines, the same shapes, grain, palette, proportions and scale.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature.",
+      "refs": [
+        "art/sprites/candidates/style-midcentury-b/nb-1795731281965.jpg"
+      ]
+    },
+    "mc-calm-c": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Mid-century modern flat graphic illustration, like 1950s-60s limited-animation cartoons and vintage print ads: bodies built from bold angular geometric shapes (trapezoids, triangles, long rectangles), NO outlines at all, every shape defined by flat colour alone, tiny simple features (dot eyes, a short line mouth, a wedge nose), long thin stick legs, a little dry-brush grain inside the fills, a limited sophisticated palette of mustard, teal, burnt orange, cream, charcoal and dusty pink. Match the attached picture exactly: the same shape language, no outlines, the same grain, the same head-to-body proportions and the same scale. Use only this palette, as flat fills: charcoal #383E40, near-black #2A2A25, burnt orange #C25628, teal #367E7A, mustard #CF9F25, dusty pink #C48075, cream #E9E2B6, olive #A8923B, slate blue #4F6D8F, plum #6E3B55, brick red #9E3B2E, white #EDEBE0, warm gray #9A948A; skin tones pale #E8C3A0, tan #D1995C, brown #A86B3C, deep brown #6B3F22; hair dark brown #4D2C17, mid brown #86582C.",
+      "subject": "Four NEW adult customers for a dispensary shop game, not the people in the attached picture, side by side in one row, full body: 1) a skinny young white man with long scruffy blond hair, a knit beanie, a loose graphic tee and baggy shorts; 2) a tall, broad-shouldered Latina woman in her forties with a high ponytail and a two-tone track suit; 3) a middle-aged Middle Eastern man with a big bushy moustache, a rumpled grey suit and a loosened tie; 4) a freckled red-haired woman in her fifties in a long flowing patterned dress, a fringed shawl and stacks of bracelets. Each stands calmly upright in a relaxed, natural standing pose with a little personality (weight on one leg, a slight lean, a hand in a pocket or resting on a bag strap), the whole body turned three-quarter toward the viewer's right, head up and looking toward the right at the height of a shop counter, face neutral and pleasant with the mouth closed, both arms down near the body, nothing held up or raised above the shoulders, nothing in front of the face. Four clearly different silhouettes, faces and hair. Same art style as the attached picture: no outlines, the same shapes, grain, palette, proportions and scale.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature.",
+      "refs": [
+        "art/sprites/candidates/style-midcentury/nb-1795730560355.jpg"
+      ]
+    },
+    "mc-face-a-happy": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/candidates/mc-calm-a/nb-1795731649424.jpg"
+      ],
+      "edit": "Edit this image: change only the facial expressions of all four people to delighted: a big open smile, eyes squeezed into happy curves, eyebrows lifted. Keep each face looking the same way it does now. Change nothing else: the same four people with the same face shapes, hair, beards, glasses and hats, the same head positions and sizes, the same bodies, poses, hands, clothes and colours, the same art style, the same flat pure green background."
+    },
+    "mc-face-a-cross": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/candidates/mc-calm-a/nb-1795731649424.jpg"
+      ],
+      "edit": "Edit this image: change only the facial expressions of all four people to annoyed and impatient: eyebrows pulled down and together, eyes narrowed, mouth a tight flat line turned down at the corners. Keep each face looking the same way it does now. Change nothing else: the same four people with the same face shapes, hair, beards, glasses and hats, the same head positions and sizes, the same bodies, poses, hands, clothes and colours, the same art style, the same flat pure green background."
+    },
+    "mc-face-a-hmm": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/candidates/mc-calm-a/nb-1795731649424.jpg"
+      ],
+      "edit": "Edit this image: change only the facial expressions of all four people to thoughtful and appraising, giving nothing away: one eyebrow raised, the other level, eyes looking slightly down, mouth pursed to one side. Keep each face looking the same way it does now. Change nothing else: the same four people with the same face shapes, hair, beards, glasses and hats, the same head positions and sizes, the same bodies, poses, hands, clothes and colours, the same art style, the same flat pure green background."
+    },
+    "mc-face-b-happy": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/candidates/mc-calm-b/nb-1795731665992.jpg"
+      ],
+      "edit": "Edit this image: change only the facial expressions of all four people to delighted: a big open smile, eyes squeezed into happy curves, eyebrows lifted. Keep each face looking the same way it does now. Change nothing else: the same four people with the same face shapes, hair, beards, glasses and hats, the same head positions and sizes, the same bodies, poses, hands, clothes and colours, the same art style, the same flat pure green background."
+    },
+    "mc-face-b-cross": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/candidates/mc-calm-b/nb-1795731665992.jpg"
+      ],
+      "edit": "Edit this image: change only the facial expressions of all four people to annoyed and impatient: eyebrows pulled down and together, eyes narrowed, mouth a tight flat line turned down at the corners. Keep each face looking the same way it does now. Change nothing else: the same four people with the same face shapes, hair, beards, glasses and hats, the same head positions and sizes, the same bodies, poses, hands, clothes and colours, the same art style, the same flat pure green background."
+    },
+    "mc-face-b-hmm": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/candidates/mc-calm-b/nb-1795731665992.jpg"
+      ],
+      "edit": "Edit this image: change only the facial expressions of all four people to thoughtful and appraising, giving nothing away: one eyebrow raised, the other level, eyes looking slightly down, mouth pursed to one side. Keep each face looking the same way it does now. Change nothing else: the same four people with the same face shapes, hair, beards, glasses and hats, the same head positions and sizes, the same bodies, poses, hands, clothes and colours, the same art style, the same flat pure green background."
+    },
+    "mc-face-c-happy": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/candidates/mc-calm-c/nb-1795731685432.jpg"
+      ],
+      "edit": "Edit this image: change only the facial expressions of all four people to delighted: a big open smile, eyes squeezed into happy curves, eyebrows lifted. Keep each face looking the same way it does now. Change nothing else: the same four people with the same face shapes, hair, beards, glasses and hats, the same head positions and sizes, the same bodies, poses, hands, clothes and colours, the same art style, the same flat pure green background."
+    },
+    "mc-face-c-cross": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/candidates/mc-calm-c/nb-1795731685432.jpg"
+      ],
+      "edit": "Edit this image: change only the facial expressions of all four people to annoyed and impatient: eyebrows pulled down and together, eyes narrowed, mouth a tight flat line turned down at the corners. Keep each face looking the same way it does now. Change nothing else: the same four people with the same face shapes, hair, beards, glasses and hats, the same head positions and sizes, the same bodies, poses, hands, clothes and colours, the same art style, the same flat pure green background."
+    },
+    "mc-face-c-hmm": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "refs": [
+        "art/sprites/candidates/mc-calm-c/nb-1795731685432.jpg"
+      ],
+      "edit": "Edit this image: change only the facial expressions of all four people to thoughtful and appraising, giving nothing away: one eyebrow raised, the other level, eyes looking slightly down, mouth pursed to one side. Keep each face looking the same way it does now. Change nothing else: the same four people with the same face shapes, hair, beards, glasses and hats, the same head positions and sizes, the same bodies, poses, hands, clothes and colours, the same art style, the same flat pure green background."
+    },
+    "mc-action-c": {
+      "aspect": "16:9",
+      "mode": "color",
+      "cell": 512,
+      "style": "Mid-century modern flat graphic illustration, like 1950s-60s limited-animation cartoons and vintage print ads: bodies built from bold angular geometric shapes (trapezoids, triangles, long rectangles), NO outlines at all, every shape defined by flat colour alone, tiny simple features (dot eyes, a short line mouth, a wedge nose), long thin stick legs, a little dry-brush grain inside the fills, a limited sophisticated palette of mustard, teal, burnt orange, cream, charcoal and dusty pink. Match the attached picture exactly: the same shape language, no outlines, the same grain, the same head-to-body proportions and the same scale. Use only this palette, as flat fills: charcoal #383E40, near-black #2A2A25, burnt orange #C25628, teal #367E7A, mustard #CF9F25, dusty pink #C48075, cream #E9E2B6, olive #A8923B, slate blue #4F6D8F, plum #6E3B55, brick red #9E3B2E, white #EDEBE0, warm gray #9A948A; skin tones pale #E8C3A0, tan #D1995C, brown #A86B3C, deep brown #6B3F22; hair dark brown #4D2C17, mid brown #86582C.",
+      "subject": "Redraw the SAME four people from the attached picture, in the same left-to-right order, keeping each one's face, hair, body shape, clothes, colours and accessories exactly, but each caught in a lively moment while they wait, still turned three-quarter toward the viewer's right: 1) the skater bobbing his head to music in his earbuds, eyes shut, one foot tapping; 2) the woman in the track suit doing a standing quad stretch, holding one foot up behind her; 3) the man in the suit mopping his brow with a handkerchief, looking flustered; 4) the red-haired woman swaying dreamily with her eyes closed, jingling the bracelets on one raised wrist. Same art style as the attached picture: no outlines, the same shapes, grain, palette, proportions and scale.",
+      "colour": "Full colour, warm and readable, a varied mix of skin tones and clothing colours. Nothing in pure green.",
+      "background": "The background is one flat, solid, pure green (#00FF00) everywhere, with no gradient, texture, floor, shadow, glow or vignette. Nothing green on the figures.",
+      "layout": "Exactly 4 full-body figures in one row, roughly the same scale (heights differ by body type), with a clear gap of empty green between them and around the edges; nothing touches or is cut off. No text, no labels, no numbers, no border, no signature.",
+      "refs": [
+        "art/sprites/candidates/mc-calm-c/nb-1795731685432.jpg"
+      ]
+    },
+    "mc-nugs-large": {
+      "count": 9,
+      "grid": "3 rows of 3",
+      "cell": 128,
+      "subject": "Large, dense cannabis flower buds (nugs) as sold from a dispensary jar, each a different shape: some round and chunky, some tall and conical, some lumpy with two or three clustered lobes, one a little flattened. Each nug is built from overlapping rounded calyx clusters with a few small sugar leaves tucked in. No stems sticking out, no fan leaves. None of them a perfect circle: every nug is a little longer than it is wide, or lopsided.",
+      "style": "Mid-century modern flat graphic illustration, like 1950s-60s limited-animation cartoons and vintage print ads: each bud simplified into bold overlapping flat leaf-like and rounded shapes, NO outlines at all, every shape defined by flat tone alone, a little dry-brush grain inside the fills. Match the attached picture exactly: the same shape language, the same overlapping calyx shapes, the same grain, the same pale trichome specks and the same curly orange hairs, only in grayscale.",
+      "colour": "Draw every item in neutral grayscale only, three or four flat tones of gray from a dark charcoal gray (never pure black) to a pale gray, with pale near-white trichome specks, and no green, no purple and no tint of any kind, so the game can recolour it. The only colour allowed anywhere on the items is the pistil hairs: thin, short, curly bright orange hairs on the surface. Keep the hairs sparse. Ignore the green and purple of the attached picture; copy only its style.",
+      "refs": [
+        "art/sprites/picked/midcentury/nugs-sample.jpg"
+      ]
+    },
+    "mc-nugs-small": {
+      "count": 12,
+      "grid": "3 rows of 4",
+      "cell": 96,
+      "subject": "Small popcorn cannabis buds, each a different compact shape: round, oval, slightly pointed, a pair of tiny joined lobes. Simpler detail than a big nug, readable when drawn about 30 pixels wide. No stems, no fan leaves.",
+      "style": "Mid-century modern flat graphic illustration, like 1950s-60s limited-animation cartoons and vintage print ads: each bud simplified into bold overlapping flat leaf-like and rounded shapes, NO outlines at all, every shape defined by flat tone alone, a little dry-brush grain inside the fills. Match the attached picture exactly: the same shape language, the same overlapping calyx shapes, the same grain, the same pale trichome specks and the same curly orange hairs, only in grayscale.",
+      "colour": "Draw every item in neutral grayscale only, three or four flat tones of gray from a dark charcoal gray (never pure black) to a pale gray, with pale near-white trichome specks, and no green, no purple and no tint of any kind, so the game can recolour it. The only colour allowed anywhere on the items is the pistil hairs: thin, short, curly bright orange hairs on the surface. Keep the hairs sparse. Ignore the green and purple of the attached picture; copy only its style.",
+      "refs": [
+        "art/sprites/picked/midcentury/nugs-sample.jpg"
+      ]
+    },
+    "mc-shake": {
+      "count": 16,
+      "grid": "4 rows of 4",
+      "cell": 64,
+      "merge": 12,
+      "subject": "Shake, like the little heap of crumbled bits at the bottom right of the attached picture: NOT buds and NOT nugs. Each item is a small flat irregular crumb: a jagged broken fragment of flower, a torn scrap of sugar leaf, a flat flake, or two or three tiny bits stuck together. Wider than tall, low and flat, ragged edges, no rounded calyx layers, no cone or bud shape. A few have a single orange hair. Very simple, readable when drawn about 16 pixels wide.",
+      "style": "Mid-century modern flat graphic illustration, like 1950s-60s limited-animation cartoons and vintage print ads: each bud simplified into bold overlapping flat leaf-like and rounded shapes, NO outlines at all, every shape defined by flat tone alone, a little dry-brush grain inside the fills. Match the attached picture exactly: the same shape language, the same overlapping calyx shapes, the same grain, the same pale trichome specks and the same curly orange hairs, only in grayscale.",
+      "colour": "Draw every item in neutral grayscale only, three or four flat tones of gray from a dark charcoal gray (never pure black) to a pale gray, with pale near-white trichome specks, and no green, no purple and no tint of any kind, so the game can recolour it. The only colour allowed anywhere on the items is the pistil hairs: thin, short, curly bright orange hairs on the surface. Keep the hairs sparse. Ignore the green and purple of the attached picture; copy only its style.",
+      "refs": [
+        "art/sprites/picked/midcentury/nugs-sample.jpg"
+      ]
+    }
+  }
+}

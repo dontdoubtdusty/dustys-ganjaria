@@ -4,3 +4,5 @@ obj/
 *.user
 __pycache__/
 *.blend1
+# Sprite candidates and spend log (tools/gen-sprites.js); picked sources live in art/sprites/picked/
+art/sprites/candidates/

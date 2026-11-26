@@ -159,7 +159,7 @@ static partial class Art
 
         var feet = new Vector2(900, counterY + 300);
         float s = 2.3f;
-        DrawCustomer(c, feet, s, false);
+        DrawCustomer(c, feet, s, false, faceLeft: true, inShot: true);
         var head = HeadOf(feet, s);
 
         Raylib.DrawRectangle(0, (int)counterY, Program.Width, Program.Height - (int)counterY, Wood);
@@ -179,10 +179,10 @@ static partial class Art
         var lifted = new Vector2(head.X + 145 - (bag.X + bag.Width / 2), head.Y + 60 - (bag.Y + bag.Height / 2));
         bag.X += lifted.X * lift + sway;
         bag.Y += lifted.Y * lift;
-        DrawPackedContainer(bag, r.Pack.Used, c.Strain, true);
+        DrawPackedContainer(bag, r.Pack.Used, c.Strain, true, t.Fill);
         // The label where it actually went: off the guide and as crooked as it was pressed on.
         var (labelAt, labelSize) = LabelStation.LabelOn(bag, r.Label.At);
-        DrawStrainLabel(labelAt, labelSize, r.Label.Angle, r.Label.Used, false, false, 0, false);
+        DrawStrainLabel(labelAt, labelSize, r.Label.Angle, r.Label.Used, false, false, 0, false, $"{r.Weigh.Weight:0.00} g");
 
         // The budtender from behind, arm out across the counter; it draws back once the customer has the bag.
         float reach = 300 + 200 * eased * (1f - MathF.Min(1f, check * 3f));
@@ -275,7 +275,7 @@ static partial class Art
     public static void DrawDayResults(Rectangle panel, int day, int served, int walkouts, float shownServed,
                                       int quality, float shownQuality,
                                       (string Name, int? Value, bool Built, float Shown)[] metrics,
-                                      string? ids = null, bool idsWarn = false)
+                                      string? ids = null, bool idsWarn = false, string? giveaway = null)
     {
         Raylib.DrawRectangle(0, 0, Program.Width, Program.Height, new Color(0, 0, 0, 150));
         DrawPanel(panel);
@@ -319,7 +319,9 @@ static partial class Art
             DrawScoreBar(new Rectangle(x + 260, y + 19, 200, 16), v, m.Shown);
             Label($"{(int)MathF.Round(v * m.Shown)}%", x + 480, y + 10, 32, Text);
         }
-        if (ids != null) LabelCentered(ids, cx, panel.Y + 466, 22, idsWarn ? Warn : Accent);
+        // The flower given away (heavy bags and crumbs), then the ID line under it.
+        if (giveaway != null) LabelCentered(giveaway, cx, panel.Y + 462, 22, Faint);
+        if (ids != null) LabelCentered(ids, cx, panel.Y + (giveaway != null ? 488 : 466), 22, idsWarn ? Warn : Accent);
     }
 
     // ---------- Tip jar ----------

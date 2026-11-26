@@ -19,6 +19,13 @@
     <None Include="resources\icon.png" CopyToOutputDirectory="PreserveNewest" />
     <!-- Optional sounds: resources\sounds\doorbell.wav replaces the chime made in code (see Audio.cs) -->
     <None Include="resources\sounds\*.*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Sprite sheets cut by tools/gen-sprites.js and tools/Cutter (png plus its json); a missing one leaves the placeholder -->
+    <None Include="resources\sprites\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Tools are their own projects (tools/Cutter); keep their code out of the game -->
+    <Compile Remove="tools/**" />
   </ItemGroup>
 
   <ItemGroup>

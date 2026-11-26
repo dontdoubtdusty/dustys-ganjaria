@@ -6,7 +6,8 @@ namespace DustysGanjaria;
 readonly record struct Segment(Vector2 A, Vector2 B);
 
 // Small 2D physics for buds: gravity, buds pushing each other, and fixed walls.
-// The held bud follows the mouse and counts as immovable, so it shoves the others.
+// The held bud follows the mouse and counts as immovable, so it shoves the others. Sealed buds and buds riding the
+// carried weigh tray are left out.
 sealed class Physics
 {
     public const float Gravity = 1800f;
@@ -24,7 +25,7 @@ sealed class Physics
         {
             foreach (var b in buds)
             {
-                if (b == held || b.Sealed) continue;
+                if (b == held || b.Sealed || b.Riding) continue;
                 b.Vel.Y += Gravity * h;
                 if (b.Vel.LengthSquared() > MaxSpeed * MaxSpeed)
                     b.Vel = Vector2.Normalize(b.Vel) * MaxSpeed;
@@ -41,7 +42,7 @@ sealed class Physics
 
                 foreach (var b in buds)
                 {
-                    if (b == held || b.Sealed) continue;
+                    if (b == held || b.Sealed || b.Riding) continue;
                     foreach (var w in walls)
                         CollideWall(b, w);
                 }
@@ -111,7 +112,7 @@ sealed class Physics
     // Pushes two overlapping buds apart and bounces them off each other.
     static void Collide(Bud a, Bud b, Bud? held)
     {
-        if (a.Sealed || b.Sealed) return;
+        if (a.Sealed || b.Sealed || a.Riding || b.Riding) return;
         float ia = a == held ? 0f : a.InvMass;
         float ib = b == held ? 0f : b.InvMass;
         if (ia + ib == 0f) return;

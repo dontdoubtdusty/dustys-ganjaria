@@ -29,19 +29,22 @@ static partial class Art
         Raylib.DrawRectangleRec(new Rectangle(r.X, r.Y + 24, r.Width, 16), CardBlue);
         Label("IDENTIFICATION CARD", r.X + 16, r.Y + 9, 22, new Color(240, 244, 250, 255));
 
-        // The photo: a head and shoulders in the card's shirt and hair.
+        // The photo: the cast member's head and shoulders, or a placeholder head in the card's shirt and hair.
         var photo = new Rectangle(r.X + 16, r.Y + 54, 110, 136);
         Raylib.DrawRectangleRec(photo, new Color(190, 205, 220, 255));
-        Raylib.BeginScissorMode((int)photo.X, (int)photo.Y, (int)photo.Width, (int)photo.Height);
-        var head = new Vector2(photo.X + photo.Width / 2, photo.Y + 58);
-        Raylib.DrawRectangleRounded(new Rectangle(head.X - 46, head.Y + 30, 92, 90), 0.35f, 8, id.PhotoShirt);
-        Raylib.DrawCircleV(head, HeadRadius * 1.1f, Skin);
-        DrawHair(head, 1.1f, id.PhotoHair);
-        var eye = new Color(40, 34, 30, 255);
-        Raylib.DrawCircleV(head + new Vector2(-11, -5), 4, eye);
-        Raylib.DrawCircleV(head + new Vector2(11, -5), 4, eye);
-        Raylib.DrawLineEx(head + new Vector2(-9, 15), head + new Vector2(9, 15), 3, new Color(90, 40, 40, 255));
-        Raylib.EndScissorMode();
+        if (!DrawIdPhotoSprite(photo, id.PhotoBody))
+        {
+            View.BeginScissor(photo);
+            var head = new Vector2(photo.X + photo.Width / 2, photo.Y + 58);
+            Raylib.DrawRectangleRounded(new Rectangle(head.X - 46, head.Y + 30, 92, 90), 0.35f, 8, id.PhotoShirt);
+            Raylib.DrawCircleV(head, HeadRadius * 1.1f, Skin);
+            DrawHair(head, 1.1f, id.PhotoHair);
+            var eye = new Color(40, 34, 30, 255);
+            Raylib.DrawCircleV(head + new Vector2(-11, -5), 4, eye);
+            Raylib.DrawCircleV(head + new Vector2(11, -5), 4, eye);
+            Raylib.DrawLineEx(head + new Vector2(-9, 15), head + new Vector2(9, 15), 3, new Color(90, 40, 40, 255));
+            Raylib.EndScissorMode();
+        }
         Raylib.DrawRectangleLinesEx(photo, 2, new Color(150, 165, 185, 255));
 
         float x = photo.X + photo.Width + 18, y = r.Y + 52;

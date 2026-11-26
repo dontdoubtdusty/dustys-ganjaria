@@ -81,9 +81,12 @@ sealed class Day
     // ---------- Tally ----------
 
     public int Served => Orders.Count;
-    // Tips less ID fines; can be below zero on a bad day.
-    public int TipsCents => Orders.Sum(o => o.TipCents - o.FineCents);
+    // Tips less ID fines and the cost of flower given away; can be below zero on a bad day.
+    public int TipsCents => Orders.Sum(o => o.TipCents - o.FineCents - o.GiveawayCents);
     public int FinesCents => Orders.Sum(o => o.FineCents);
+    // Flower given away (bag overage plus crumbs) and what it cost.
+    public float GivenAwayGrams => Orders.Sum(o => o.Weigh.GivenAway);
+    public int GiveawayCents => Orders.Sum(o => o.GiveawayCents);
     public int IdsMissed => Orders.Count(o => o.FineCents > 0);
     // Rank points earned: each served order's score plus a bonus per bad ID caught; walkouts earn nothing.
     public int Points => Orders.Sum(o => o.Total) + IdsCaught * Scoring.IdCatchPoints;

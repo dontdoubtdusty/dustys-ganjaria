@@ -6,9 +6,10 @@ namespace DustysGanjaria;
 // What is wrong with an ID, if anything. A bad card has exactly one flaw, so every call is clear-cut.
 enum IdFlaw { None, Underage, Expired, Photo }
 
-// The ID a customer holds out at the order shot: their name, birth date, expiry date, and the photo's look (shirt
-// and hair colours; null hair is bald). A Photo flaw means the photo shows a different look from the person.
-sealed record IdCard(string Name, DateOnly Born, DateOnly Expires, Color PhotoShirt, Color? PhotoHair, IdFlaw Flaw);
+// The ID a customer holds out at the order shot: their name, birth date, expiry date, and the photo: the cast member
+// shown (PhotoBody, an index into the customer sprites; -1 for placeholder customers) or, for placeholders, the look (shirt
+// and hair colours; null hair is bald). A Photo flaw means the photo shows a different person or look.
+sealed record IdCard(string Name, DateOnly Born, DateOnly Expires, int PhotoBody, Color PhotoShirt, Color? PhotoHair, IdFlaw Flaw);
 
 static class Ids
 {
@@ -46,21 +47,35 @@ static class Ids
         var cutoff = Cutoff(today);
         bool close = rng.NextDouble() < 0.4;
 
-        var born = flaw == IdFlaw.Underage
-            ? cutoff.AddDays(close ? rng.Next(1, 60) : rng.Next(60, 3 * 365))
-            : cutoff.AddDays(-(close ? rng.Next(0, 60) : rng.Next(60, 45 * 365)));
+        DateOnly born;
+        if (flaw == IdFlaw.Underage) born = cutoff.AddDays(close ? rng.Next(1, 60) : rng.Next(60, 3 * 365));
+        else if (Art.AgeRange(c.Body) is { } ages)
+        {
+            // An age that fits how the cast member looks; "just turned 21" only for those who look that young.
+            int lo = Math.Max(ages.Min, LegalAge);
+            if (close && lo == LegalAge) born = cutoff.AddDays(-rng.Next(0, 60));
+            else
+            {
+                var b = today.AddYears(-rng.Next(lo, Math.Max(lo, ages.Max) + 1)).AddDays(-rng.Next(0, 365));
+                born = b < cutoff ? b : cutoff;
+            }
+        }
+        else born = cutoff.AddDays(-(close ? rng.Next(0, 60) : rng.Next(60, 45 * 365)));
         var expires = flaw == IdFlaw.Expired
             ? today.AddDays(-(close ? rng.Next(1, 45) : rng.Next(45, 2 * 365)))
             : today.AddDays(close ? rng.Next(3, 45) : rng.Next(45, 6 * 365));
 
         var shirt = c.Shirt;
         var hair = c.Hair;
+        int body = c.Body;
         if (flaw == IdFlaw.Photo)
         {
-            // Change one thing about the look, chosen so the difference can be seen.
-            if (rng.Next(2) == 0) shirt = Customer.FarShirt(c.Shirt, rng);
+            // A sprite customer's photo shows someone else. A placeholder's changes one thing about the look, chosen
+            // so the difference can be seen.
+            if (body >= 0) body = Art.OtherBody(body, rng);
+            else if (rng.Next(2) == 0) shirt = Customer.FarShirt(c.Shirt, rng);
             else hair = Customer.OtherHair(c.Hair, rng);
         }
-        return new IdCard(c.Name, born, expires, shirt, hair, flaw);
+        return new IdCard(c.Name, born, expires, body, shirt, hair, flaw);
     }
 }

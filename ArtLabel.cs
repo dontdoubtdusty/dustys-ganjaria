@@ -38,9 +38,10 @@ static partial class Art
 
     // Draws a strain label centred on a point, turned by degrees (clockwise): a paper label with a band in the
     // strain's colour and its name. lifted (carried) casts a deep shadow and loose (stuck on, not pressed) a thin
-    // one; hover outlines it. press (0-1) fills a ring while it is being pressed down.
+    // one; hover outlines it. press (0-1) fills a ring while it is being pressed down. net, when given, is the
+    // weight printed at the bottom (deli labels carry the weight the scale showed).
     public static void DrawStrainLabel(Vector2 center, Vector2 size, float degrees, Strain s, bool lifted, bool loose,
-                                       float press, bool hover)
+                                       float press, bool hover, string? net = null)
     {
         float a = degrees * MathF.PI / 180f;
         Vector2 Turn(Vector2 v) => new(v.X * MathF.Cos(a) - v.Y * MathF.Sin(a), v.X * MathF.Sin(a) + v.Y * MathF.Cos(a));
@@ -60,9 +61,15 @@ static partial class Art
 
         int small = (int)Math.Clamp(band * 0.62f, 7f, 20f);
         LabelTurned("DUSTY'S GANJARIA", center, new Vector2(0, -size.Y / 2 + band / 2), degrees, small, new Color(250, 248, 240, 255));
-        int big = (int)Math.Clamp(size.Y * 0.36f, 8f, 30f);
+        int big = (int)Math.Clamp(size.Y * (net == null ? 0.36f : 0.3f), 8f, 30f);
         while (big > 8 && Measure(s.Name, big) > size.X * 0.9f) big--;
-        LabelTurned(s.Name, center, new Vector2(0, band / 2), degrees, big, Ink);
+        float nameY = net == null ? band / 2 : band / 2 - size.Y * 0.1f;
+        LabelTurned(s.Name, center, new Vector2(0, nameY), degrees, big, Ink);
+        if (net != null)
+        {
+            int tiny = (int)Math.Clamp(size.Y * 0.2f, 7f, 18f);
+            LabelTurned($"NET WT {net}", center, new Vector2(0, size.Y / 2 - size.Y * 0.15f), degrees, tiny, Ink);
+        }
 
         if (hover || press > 0)
         {

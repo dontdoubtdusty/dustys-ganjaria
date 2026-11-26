@@ -15,6 +15,8 @@ sealed class Ticket
     public Stage Next = Stage.Weigh;
     // The weigh station's result, once the bag is weighed, sealed and in the OUT bin.
     public WeighResult? Weighed;
+    // The nugs sealed in its bag, as they lay (Pack, Label and the hand-over draw them).
+    public BagFill? Fill;
     // The pack station's result, once the container is closed (its Used container goes on to Label).
     public PackResult? Packed;
     // Where the card is drawn on the rail; it eases toward its slot.

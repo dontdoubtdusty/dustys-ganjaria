@@ -76,18 +76,27 @@ static partial class Art
     }
 
     // Draws a bud from its lobes, turned by its angle. Hovered, it lifts a little with an outline; held, it casts a
-    // shadow; after a hard landing it squashes flat and wide for a moment.
+    // shadow; after a hard landing it squashes flat and wide for a moment. Uses the bud's sprite (ArtSprites.cs) when
+    // its sheet is loaded, else the placeholder lobes.
     public static void DrawBud(Bud bud, bool highlight, bool lifted)
     {
         float k = bud.Scale * (highlight ? 1.08f : 1f);
-        if (lifted || highlight)
-            Raylib.DrawCircleV(bud.Pos + new Vector2(5, 7), bud.Radius * k, new Color(0, 0, 0, lifted ? 70 : 45));
-
-        float cos = MathF.Cos(bud.Angle), sin = MathF.Sin(bud.Angle);
         float q = bud.Squash * bud.Squash;
         var squash = new Vector2(1f + 0.25f * q, 1f - 0.3f * q);
         // Squash about the bottom of the bud, so it flattens onto what it hit.
         var center = bud.Pos + new Vector2(0, bud.Radius * k * 0.3f * q);
+
+        if (DrawBudSprite(bud, center, squash, k, lifted, highlight))
+        {
+            if (highlight)
+                Raylib.DrawCircleLines((int)bud.Pos.X, (int)bud.Pos.Y, bud.Radius * k + 3, Text);
+            return;
+        }
+
+        if (lifted || highlight)
+            Raylib.DrawCircleV(bud.Pos + new Vector2(5, 7), bud.Radius * k, new Color(0, 0, 0, lifted ? 70 : 45));
+
+        float cos = MathF.Cos(bud.Angle), sin = MathF.Sin(bud.Angle);
         Vector2 Turn(Vector2 v) => new Vector2(v.X * cos - v.Y * sin, v.X * sin + v.Y * cos) * k * squash;
 
         foreach (var lobe in bud.Lobes)
@@ -101,6 +110,19 @@ static partial class Art
 
         if (highlight)
             Raylib.DrawCircleLines((int)bud.Pos.X, (int)bud.Pos.Y, bud.Radius * k + 3, Text);
+    }
+
+    // Draws a bud at a point and drawing size, unsquashed and unlit (a sealed bag's nugs at the later stations).
+    public static void DrawBudAt(Bud bud, Vector2 center, float k)
+    {
+        if (DrawBudSprite(bud, center, Vector2.One, k, false, false)) return;
+        float cos = MathF.Cos(bud.Angle), sin = MathF.Sin(bud.Angle);
+        Vector2 Turn(Vector2 v) => new Vector2(v.X * cos - v.Y * sin, v.X * sin + v.Y * cos) * k;
+        foreach (var lobe in bud.Lobes)
+            Raylib.DrawCircleV(center + Turn(lobe.Offset), lobe.Radius * k, bud.Strain.Shades[lobe.Shade]);
+        if (!bud.IsShake)
+            foreach (var lobe in bud.Lobes)
+                Raylib.DrawCircleV(center + Turn(lobe.Offset * 1.3f), 1.6f * k / Bag.SealedScale, bud.Strain.Hair);
     }
 
     // Draws the glass behind the jar's contents.
@@ -126,10 +148,12 @@ static partial class Art
         LabelCentered(strain.Name, centerX, y + 4, size, new Color(250, 248, 240, 255));
     }
 
-    // Draws the scale: body, plate, and a dial with a green band around the target and a needle.
+    // Draws the scale: body, plate, and a dial with a needle. A green band runs from the order weight (target) up
+    // to the weigh-heavy cap (target + room); a thin red arc below the target marks "under", which is never right.
     // glow (0-1) brightens the band and lights a halo around the dial while the needle sits in the green.
+    // grams is the running total (bag plus tray); poured, the part already in the bag, gets a blue marker.
     public static void DrawScale(Rectangle body, Rectangle plate, Vector2 dial, float radius,
-                                 float grams, float target, float band, float max, float glow)
+                                 float grams, float target, float room, float max, float glow, float poured = 0)
     {
         Raylib.DrawRectangleRounded(body, 0.06f, 8, new Color(200, 200, 205, 255));
         Raylib.DrawRectangleRec(plate, new Color(150, 152, 160, 255));
@@ -144,7 +168,8 @@ static partial class Art
         {
             var bandColor = new Color(90 + (int)(40 * glow), 200 + (int)(40 * glow), 90 + (int)(30 * glow), 255);
             float grow = 4f * glow;
-            Raylib.DrawRing(dial, radius - 34 - grow, radius + grow, Deg(target - band), Deg(target + band), 16, bandColor);
+            Raylib.DrawRing(dial, radius - 6, radius, Deg(0), Deg(target), 32, new Color(220, 90, 80, 200));
+            Raylib.DrawRing(dial, radius - 34 - grow, radius + grow, Deg(target), Deg(target + room), 16, bandColor);
         }
 
         for (int i = 0; i <= 8; i++)
@@ -152,6 +177,21 @@ static partial class Art
             float a = (180f + 22.5f * i) * MathF.PI / 180f;
             var dir = new Vector2(MathF.Cos(a), MathF.Sin(a));
             Raylib.DrawLineEx(dial + dir * (radius - 6), dial + dir * (radius + 4), 2, new Color(90, 90, 95, 255));
+        }
+
+        // What is already in the bag: a blue arc from zero and a marker at its end, so the player can see how much
+        // the earlier scoops came to and how much the tray is adding.
+        if (poured > 0.005f)
+        {
+            var bagBlue = new Color(70, 120, 200, 255);
+            Raylib.DrawRing(dial, radius - 46, radius - 38, Deg(0), Deg(poured), 32, bagBlue);
+            float p = Deg(poured) * MathF.PI / 180f;
+            var dir = new Vector2(MathF.Cos(p), MathF.Sin(p));
+            var side = new Vector2(-dir.Y, dir.X) * 7f;
+            var point = dial + dir * (radius + 2);
+            var back = dial + dir * (radius + 16);
+            Raylib.DrawTriangle(point, back + side, back - side, bagBlue);
+            Raylib.DrawTriangle(point, back - side, back + side, bagBlue);
         }
 
         float n = Deg(grams) * MathF.PI / 180f;
@@ -163,18 +203,40 @@ static partial class Art
             LabelCentered($"{target:0.0#} g", dial.X, dial.Y - radius - 42, 26, new Color(60, 60, 65, 255));
     }
 
-    // Draws the stack of empty bags; it glows when it is the next thing to grab.
-    public static void DrawBagStack(Rectangle rect, bool glow)
+    static readonly Color Steel = new(196, 200, 208, 255);
+    static readonly Color SteelDark = new(120, 124, 134, 255);
+
+    // Draws the inside of the weigh tray behind its nugs. dish is rim left, bottom left, bottom right, rim right.
+    public static void DrawTrayBack(Vector2[] dish)
     {
-        if (glow) Raylib.DrawRectangleRounded(Grow(rect, 6), 0.2f, 8, new Color(120, 200, 110, 60));
-        for (int i = 2; i >= 0; i--)
-        {
-            var r = new Rectangle(rect.X + i * 6, rect.Y + i * 6, rect.Width - 12, rect.Height - 12);
-            Raylib.DrawRectangleRec(r, new Color(230, 236, 242, 120));
-            Raylib.DrawRectangleLinesEx(r, 2, Plastic);
-            Raylib.DrawLineEx(new(r.X, r.Y + 6), new(r.X + r.Width, r.Y + 6), 3, new Color(110, 150, 210, 255));
-        }
-        LabelCentered("BAGS", rect.X + rect.Width / 2, rect.Y - 26, 20, Faint);
+        var fill = new Color(225, 228, 234, 90);
+        Raylib.DrawTriangle(dish[0], dish[1], dish[2], fill);
+        Raylib.DrawTriangle(dish[0], dish[2], dish[3], fill);
+    }
+
+    // Draws the weigh tray's sides, bottom and handle in front of its nugs; glow outlines it when it is ready to pour.
+    public static void DrawTrayFront(Vector2[] dish, Vector2[] handle, bool glow)
+    {
+        if (glow)
+            for (int i = 0; i < 3; i++) Raylib.DrawLineEx(dish[i], dish[i + 1], 10, new Color(120, 200, 110, 110));
+        Raylib.DrawTriangle(handle[0], handle[1], handle[2], SteelDark);
+        Raylib.DrawTriangle(handle[0], handle[2], handle[3], SteelDark);
+        for (int i = 0; i < 3; i++) Raylib.DrawLineEx(dish[i], dish[i + 1], 4, Steel);
+    }
+
+    // Draws the steel tongs with their tips at a point: two arms from a hinge up and to the right; close (0-1)
+    // squeezes the tips together.
+    public static void DrawTongs(Vector2 tip, float close)
+    {
+        var hinge = tip + new Vector2(70, -120);
+        float gap = 16f * (1f - close) + 3f;
+        var left = tip + new Vector2(-gap, 2);
+        var right = tip + new Vector2(gap, -2);
+        Raylib.DrawLineEx(hinge, left, 6, SteelDark);
+        Raylib.DrawLineEx(hinge, right, 6, Steel);
+        Raylib.DrawCircleV(left, 4, SteelDark);
+        Raylib.DrawCircleV(right, 4, Steel);
+        Raylib.DrawCircleV(hinge, 7, SteelDark);
     }
 
     // Draws the see-through back of the bag, behind its contents.
@@ -249,6 +311,13 @@ static partial class Art
               new Color(60, 70, 120, 255));
         Label(customer.OrderText, rect.X + 16, rect.Y + 40, 34, Ink);
         DrawStrainTag(customer.Strain, rect.X + 112 + (Measure(customer.Strain.Name, 22) + 22) / 2, rect.Y + 44, 22);
+        if (customer.RequestText is { } ask)
+        {
+            float askX = rect.X + rect.Width - 16 - Measure(ask.ToUpperInvariant(), 18);
+            Label(ask.ToUpperInvariant(), askX, rect.Y + 74, 18, RequestInk);
+            // "No shake" shows the piece it means, crossed out, so a small bud is never mistaken for shake.
+            if (customer.Request == Looks.NoShake) DrawNoShakeSample(new Vector2(askX - 16, rect.Y + 80), 19, customer.Strain);
+        }
         DrawPatienceBar(new Rectangle(rect.X + 16, rect.Y + rect.Height - 20, rect.Width - 32, 8), customer.PatienceFraction);
     }
 
@@ -256,6 +325,8 @@ static partial class Art
 
     static readonly Color Paper = new(245, 240, 225, 255);
     static readonly Color Ink = new(50, 45, 40, 255);
+    // A looks request ("BIG NUGS", "NO SHAKE") on a ticket.
+    static readonly Color RequestInk = new(190, 90, 40, 255);
 
     // Draws the rail strip across the top of the screen, with the bar the tickets hang from.
     public static void DrawRail(float height)
@@ -286,6 +357,12 @@ static partial class Art
         Raylib.DrawRectangleRounded(chip, 0.4f, 6, strain.Tag);
         LabelCentered(strain.Short, chip.X + sw / 2, chip.Y + 2, 14, new Color(250, 248, 240, 255));
         Label(t.Customer.ContainerShort, r.X + 8, r.Y + 50, 16, new Color(60, 70, 120, 255));
+        // A looks request matters only while the order still needs weighing.
+        if (t.Next == Stage.Weigh && t.Customer.Request != Looks.None)
+        {
+            string ask = t.Customer.RequestText!.ToUpperInvariant();
+            Label(ask, r.X + r.Width - 8 - Measure(ask, 14), r.Y + 53, 14, RequestInk);
+        }
         if (t.Next != Stage.Weigh)
         {
             var (word, ink) = t.Next == Stage.Pack ? ("WEIGHED", new Color(60, 150, 70, 255)) : ("PACKED", new Color(130, 80, 170, 255));
@@ -384,11 +461,19 @@ static partial class Art
         Raylib.DrawRectangleRec(new Rectangle(till.X + 10, till.Y + 8, 46, 18), new Color(120, 200, 110, 255));
     }
 
-    // Draws a placeholder customer standing at feet: shoes, trousers, shirt, a head with a face that follows their
-    // patience, and (with showBar) their name and a patience bar above the head.
-    public static void DrawCustomer(Customer c, Vector2 feet, float s, bool showBar)
+    // Draws a customer standing at feet, facing right (toward the counter) or left, and (with showBar) their name and
+    // a patience bar above the head. Customers with a sprite (see ArtCustomers.cs) are drawn from it; the rest as a
+    // placeholder: shoes, trousers, shirt, a head with a face that follows their patience. inShot is for the order and
+    // hand-over shots (see DrawCustomerSprite).
+    public static void DrawCustomer(Customer c, Vector2 feet, float s, bool showBar, bool faceLeft = false, bool inShot = false)
     {
         var head = HeadOf(feet, s);
+        float? spriteTop = DrawCustomerSprite(c, feet, s, faceLeft, inShot);
+        if (spriteTop != null)
+        {
+            if (showBar) DrawNameAndBar(c, head.X, spriteTop.Value);
+            return;
+        }
         float mood = c.Mood ?? c.Now switch
         {
             Customer.State.Leaving => c.Served ? 1f : 0f,
@@ -421,10 +506,14 @@ static partial class Art
         else if (mood > 0.25f) Raylib.DrawLineEx(head + new Vector2(-10, 14) * s, head + new Vector2(10, 14) * s, 3 * s, mouth);
         else Raylib.DrawRing(head + new Vector2(0, 28) * s, 12 * s, 15 * s, 210, 330, 12, mouth);
 
-        if (!showBar) return;
-        float top = head.Y - HeadRadius * s;
-        DrawPatienceBar(new Rectangle(head.X - 34, top - 16, 68, 8), c.PatienceFraction);
-        LabelCentered(c.Name, head.X, top - 42, 20, Text);
+        if (showBar) DrawNameAndBar(c, head.X, head.Y - HeadRadius * s);
+    }
+
+    // A customer's patience bar and name above the top of their head.
+    static void DrawNameAndBar(Customer c, float x, float top)
+    {
+        DrawPatienceBar(new Rectangle(x - 34, top - 16, 68, 8), c.PatienceFraction);
+        LabelCentered(c.Name, x, top - 42, 20, Text);
     }
 
     // Draws a small speech bubble above a head.
@@ -455,9 +544,9 @@ static partial class Art
             Raylib.DrawRectangleRounded(new Rectangle(975 + i * 52, 366, 38, 54), 0.3f, 6, new Color(150, 190, 210, 70));
 
         // The customer, big; the counter hides everything below the chest.
-        var feet = new Vector2(780, counterY + 300);
+        var feet = new Vector2(815, counterY + 300);
         float s = 2.3f;
-        DrawCustomer(c, feet, s, false);
+        DrawCustomer(c, feet, s, false, faceLeft: true, inShot: true);
         var head = HeadOf(feet, s);
 
         Raylib.DrawRectangle(0, (int)counterY, Program.Width, Program.Height - (int)counterY, Wood);
@@ -490,7 +579,8 @@ static partial class Art
         {
             float y = pad.Y + 120 + i * 52;
             Raylib.DrawLineEx(new(pad.X + 16, y), new(pad.X + pad.Width - 16, y), 2, new Color(170, 190, 215, 255));
-            if (i < written.Length) Label(written[i], pad.X + 22, y - 38, 34, new Color(60, 70, 120, 255));
+            // The fourth line (a looks request) starts past the thumb holding the pad.
+            if (i < written.Length) Label(written[i], pad.X + (i >= 3 ? 62 : 22), y - 38, 34, new Color(60, 70, 120, 255));
         }
         Raylib.DrawCircleV(new(pad.X + 20, pad.Y + pad.Height - 30), 30, Skin);
 

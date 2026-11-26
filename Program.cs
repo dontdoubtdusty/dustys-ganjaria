@@ -5,7 +5,7 @@ namespace DustysGanjaria;
 // Opens the window and runs the game loop around the shop.
 static class Program
 {
-    public const string Version = "0.15.0";
+    public const string Version = "0.19.0";
     public const int Width = 1280;
     public const int Height = 720;
 
@@ -20,9 +20,10 @@ static class Program
     }
 
     // Normal start opens the game on the saved day. Screenshot flags set up a scene, save one frame and quit (for
-    // checking the layout): "--shot <file.png>" a mid-order weigh station, "--shot-throw <file.png>" a bag sealed and
+    // checking the layout): "--shot <file.png>" a mid-order weigh station (half the order in the bag, half on the tray), "--shot-pour" the tray tipping into the bag,
+    // "--shot-throw <file.png>" a bag sealed and
     // thrown at the bin (ends as the hand-over's bag slides over), "--shot-counter <file.png>" the shop view with
-    // a line and a waiting customer, "--shot-order <file.png>" the order shot half way through, "--shot-handover"
+    // a line and a waiting customer, "--shot-order <file.png>" the order shot at its last line (a no-shake request), "--shot-handover"
     // the end of a hand-over, "--shot-check" the customer's bag check half way, "--shot-results" and "--shot-tipjar" the two day-end screens,
     // "--shot-pack" and "--shot-pack-jar" a weighed order half closed on the pack station (pouch strip, jar lid),
     // "--shot-label" a packed jar on the label station with a label stuck on loosely, a little crooked, "--shot-intro"
@@ -35,6 +36,7 @@ static class Program
         {
             "--shot", "--shot-throw", "--shot-counter", "--shot-order", "--shot-handover", "--shot-check", "--shot-results",
             "--shot-tipjar", "--shot-pack", "--shot-pack-jar", "--shot-label", "--shot-intro", "--shot-pause", "--shot-id",
+            "--shot-pour",
         };
         string? mode = args.Length >= 2 && shotModes.Contains(args[0]) ? args[0] : null;
         string? shotPath = mode != null ? args[1] : null;
@@ -44,6 +46,7 @@ static class Program
         SetWindowIcon();
         Raylib.SetTargetFPS(60);
         Art.LoadFont();
+        Art.LoadSprites();
         // Esc opens the pause menu instead of closing the window (closing the window still quits).
         Raylib.SetExitKey(KeyboardKey.Null);
         // Screenshot runs load the sounds too (so a broken one shows up) but play them muted.
@@ -51,8 +54,12 @@ static class Program
         var settings = mode == null ? Settings.Load() : new Settings();
         Raylib.SetMasterVolume(mode == null ? settings.Volume : 0f);
         PlayLog.Enabled = mode == null;
+        if (mode == null && settings.Fullscreen) Raylib.ToggleBorderlessWindowed();
         var pause = new PauseMenu(settings);
 
+        // "--body <character>" makes every customer that cast member (shots only).
+        int bodyArg = Array.IndexOf(args, "--body");
+        if (mode != null && bodyArg >= 0 && bodyArg + 1 < args.Length) Art.ForceBody = args[bodyArg + 1];
         var shop = mode == null
             ? new Shop(new Random(Environment.TickCount), Progress.Load(), persistent: true)
             : new Shop(new Random(7), new Progress(), persistent: false);
@@ -70,6 +77,9 @@ static class Program
                 Raylib.UnloadImage(image);
                 break;
             }
+
+            if (mode == null && View.TogglePressed()) View.ToggleFullscreen(settings);
+            View.Update();
 
             // While paused the shop does not update at all: clock, patience and physics all stand still.
             if (pause.IsOpen)
@@ -89,15 +99,21 @@ static class Program
                 if (shop.QuitRequested) break;
             }
 
+            // The game draws in 1280 x 720 units; the camera scales them to the window, with black bars around.
             Raylib.BeginDrawing();
-            Raylib.ClearBackground(Art.Background);
+            Raylib.ClearBackground(Color.Black);
+            Raylib.BeginMode2D(View.Camera);
+            Raylib.DrawRectangle(0, 0, Width, Height, Art.Background);
             shop.Draw();
             pause.Draw();
             Art.Label($"Dusty's Ganjaria {Version}", 12, Height - 26, 18, Art.Faint);
+            Raylib.EndMode2D();
+            View.DrawBars();
             Raylib.EndDrawing();
         }
 
         Art.UnloadFont();
+        Art.UnloadSprites();
         Audio.Unload();
         Raylib.CloseWindow();
     }

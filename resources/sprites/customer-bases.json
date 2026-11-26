@@ -1,0 +1,103 @@
+{
+  "source": "art/sprites/picked/bodies-fm-3-tq2-nb.jpg",
+  "format": "part mask: R = part id * 40, G = ink mix, A = coverage",
+  "parts": [
+    "skin",
+    "top",
+    "trousers",
+    "shoes",
+    "hair"
+  ],
+  "keyColours": [
+    [
+      255,
+      180,
+      122
+    ],
+    [
+      64,
+      114,
+      173
+    ],
+    [
+      128,
+      127,
+      125
+    ],
+    [
+      46,
+      44,
+      53
+    ]
+  ],
+  "ink": [
+    4,
+    8,
+    0
+  ],
+  "cellW": 272,
+  "cellH": 702,
+  "count": 6,
+  "bases": [
+    {
+      "name": "m-average",
+      "feetX": 136,
+      "feetY": 693,
+      "headTop": 40,
+      "editToCell": [
+        -80,
+        -36
+      ]
+    },
+    {
+      "name": "m-heavy",
+      "feetX": 136,
+      "feetY": 693,
+      "headTop": 63,
+      "editToCell": [
+        -80,
+        -36
+      ]
+    },
+    {
+      "name": "m-tall",
+      "feetX": 136,
+      "feetY": 693,
+      "headTop": 8,
+      "editToCell": [
+        -80,
+        -36
+      ]
+    },
+    {
+      "name": "f-average",
+      "feetX": 136,
+      "feetY": 693,
+      "headTop": 62,
+      "editToCell": [
+        -80,
+        -36
+      ]
+    },
+    {
+      "name": "f-curvy",
+      "feetX": 136,
+      "feetY": 693,
+      "headTop": 74,
+      "editToCell": [
+        -80,
+        -36
+      ]
+    },
+    {
+      "name": "f-petite",
+      "feetX": 136,
+      "feetY": 693,
+      "headTop": 98,
+      "editToCell": [
+        -80,
+        -36
+      ]
+    }
+  ]
+}

@@ -23,11 +23,12 @@ static class PlayLog
         "version", "session", "time", "day", "rank", "ticket", "customer", "outcome", "stage",
         "grams", "strain", "wanted", "id", "id_call",
         "waited_s", "wait_par_s", "waiting",
-        "w_target", "w_band", "w_weight", "w_wrong_buds", "w_s", "w_par_s", "w_slips", "w_spilled",
+        "w_target", "w_room", "w_weight", "w_wrong_buds", "w_s", "w_par_s", "w_slips", "w_spilled",
+        "w_crumbs", "w_crumb_g", "w_over_g", "w_shake_pieces", "w_big_share",
         "w_accuracy", "w_speed", "w_handling", "weighing",
         "p_used", "p_s", "p_par_s", "p_cross_threads", "p_drops", "p_restarts", "p_fit", "p_speed", "p_handling", "packing",
         "l_used", "l_s", "l_par_s", "l_off_px", "l_angle", "l_peels", "l_match", "l_placement", "l_speed", "labeling",
-        "total", "tip_cents", "fine_cents",
+        "total", "tip_cents", "fine_cents", "giveaway_cents", "request", "request_met",
     };
 
     // Logs a served order with every part score.
@@ -37,7 +38,8 @@ static class PlayLog
         Write(Base(day, rank, t.Number, c, "served", "done", r.Waited, "accepted")
             .Concat(new[] { F(Scoring.WaitPar(c.Grams)), I(r.Waiting) })
             .Concat(WeighCells(r.Weigh)).Concat(PackCells(r.Pack)).Concat(LabelCells(r.Label))
-            .Concat(new[] { I(r.Total), I(r.TipCents), I(r.FineCents) }));
+            .Concat(new[] { I(r.Total), I(r.TipCents), I(r.FineCents), I(r.GiveawayCents), Request(c),
+                            c.Request == Looks.None ? "" : (r.RequestMet ? "yes" : "no") }));
     }
 
     // Logs a walkout: where they were (stage: line, or where their order had got to) and any station work already
@@ -47,10 +49,10 @@ static class PlayLog
         var empty = (int n) => Enumerable.Repeat("", n);
         Write(Base(day, rank, t?.Number ?? 0, c, "walkout", stage, c.Waited, stage == "line" ? "" : "accepted")
             .Concat(new[] { F(Scoring.WaitPar(c.Grams)), "0" })
-            .Concat(t?.Weighed is { } w ? WeighCells(w) : empty(12))
+            .Concat(t?.Weighed is { } w ? WeighCells(w) : empty(17))
             .Concat(t?.Packed is { } p ? PackCells(p) : empty(10))
             .Concat(empty(10))
-            .Concat(new[] { "", "0", "0" }));
+            .Concat(new[] { "", "0", "0", "0", Request(c), "" }));
     }
 
     // Logs a customer whose ID was refused: outcome "caught" for a bad ID, "refused good id" for a good one (that
@@ -60,8 +62,8 @@ static class PlayLog
         bool caught = c.Id.Flaw != IdFlaw.None;
         Write(Base(day, rank, 0, c, caught ? "caught" : "refused good id", "counter", c.Waited, "refused")
             .Concat(new[] { F(Scoring.WaitPar(c.Grams)), caught ? "" : "0" })
-            .Concat(Enumerable.Repeat("", 32))
-            .Concat(new[] { "", "0", "0" }));
+            .Concat(Enumerable.Repeat("", 37))
+            .Concat(new[] { "", "0", "0", "0", Request(c), "" }));
     }
 
     // The columns every row starts with, up to and including seconds waited.
@@ -77,7 +79,8 @@ static class PlayLog
 
     static IEnumerable<string> WeighCells(WeighResult w) => new[]
     {
-        F(w.Target), F(w.Band), F(w.Weight), I(w.WrongBuds), F(w.Seconds), F(Scoring.WeighPar(w.Target)), I(w.Slips), I(w.Spilled),
+        F(w.Target), F(w.Room), F(w.Weight), I(w.WrongBuds), F(w.Seconds), F(Scoring.WeighPar(w.Target)), I(w.Slips), I(w.Spilled),
+        I(w.Crumbs), F(w.CrumbGrams), F(w.Over), I(w.ShakePieces), F(w.BigShare),
         I(w.Accuracy), I(w.Speed), I(w.Handling), I(w.Total),
     };
 
@@ -92,6 +95,9 @@ static class PlayLog
         l.Used.Name, F(l.Seconds), F(Scoring.LabelPar), F(l.Off), F(l.Angle), I(l.Peels),
         I(l.Match), I(l.Placement), I(l.Speed), I(l.Total),
     };
+
+    // The looks request as the log writes it: "big nugs", "no shake" or empty.
+    static string Request(Customer c) => c.RequestText?.ToLowerInvariant() ?? "";
 
     // Numbers always with a dot, whatever the PC's region settings.
     static string F(float v) => v.ToString("0.###", CultureInfo.InvariantCulture);

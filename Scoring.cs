@@ -1,10 +1,18 @@
 namespace DustysGanjaria;
 
-// The outcome of one bagged order, with its part scores (0-100 each). Weight is what the scale read; WrongBuds
-// counts buds of another strain sealed in with it.
+// The outcome of one bagged order, with its part scores (0-100 each). Room is how far over the order weight the
+// weigh-heavy cap allows; Weight is what was sealed in the bag; WrongBuds counts buds of another strain in it.
+// Crumbs were chipped off nugs by hard landings (CrumbGrams in all); Over is the bag's weight above the order.
+// ShakePieces and BigShare (share of the weight in the strain's large nugs) are what "No shake" and "Big nugs"
+// requests are checked against.
 readonly record struct WeighResult(
-    float Target, float Band, float Weight, float Seconds, int Slips, int Spilled,
-    int Accuracy, int Speed, int Handling, int Total, string Grade, int WrongBuds = 0);
+    float Target, float Room, float Weight, float Seconds, int Slips, int Spilled,
+    int Accuracy, int Speed, int Handling, int Total, string Grade, int WrongBuds = 0,
+    int Crumbs = 0, float CrumbGrams = 0, float Over = 0, int ShakePieces = 0, float BigShare = 0)
+{
+    // Grams the shop gave away on this order: the bag's overage plus the crumbs.
+    public float GivenAway => Over + CrumbGrams;
+}
 
 // The outcome of one labeled order: the strain asked for and the label used, how far off and how crooked it went
 // on, peels, and the part scores (0-100 each). At (offset over the container's size) and Angle let the hand-over
@@ -21,9 +29,11 @@ readonly record struct PackResult(
 // The outcome of one served customer: a score (0-100) for each of the four things every order is judged on,
 // the order score, grade, tip in cents, and seconds waited.
 // FineCents is taken off the tip when a bad ID was accepted (Flaw says what was wrong with it).
+// GiveawayCents is what the given-away grams cost the shop (taken off the day's tips). Request is what the customer
+// asked about the bag's looks, and RequestMet whether the bag delivered it (both change only the tip).
 readonly record struct OrderResult(
     WeighResult Weigh, PackResult Pack, LabelResult Label, int Waiting, int Total, string Grade, int TipCents, float Waited,
-    int FineCents = 0, IdFlaw Flaw = IdFlaw.None)
+    int FineCents = 0, IdFlaw Flaw = IdFlaw.None, int GiveawayCents = 0, Looks Request = Looks.None, bool RequestMet = true)
 {
     // The four scores in station order, matching Scoring.MetricNames (nullable so a future unbuilt station can show
     // as not built).
@@ -38,15 +48,19 @@ static class Scoring
 
     // Seconds allowed before speed starts dropping: a base plus some per gram.
     const float ParBase = 10f, ParPerGram = 2f;
-    // How far outside the green band (in band widths) accuracy reaches zero.
+    // Over the cap: how many room widths past it accuracy reaches zero.
     const float BandsToZero = 4f;
-    // Points lost per slipped zip and per bud left lying outside the jar.
-    const int SlipCost = 25, SpillCost = 10;
+    // Under the order weight is a fail: accuracy is at most this, and reaches zero one room width below.
+    const float UnderMax = 50f;
+    // Points lost per slipped zip, per bud left lying on the counter, and per crumb chipped off by a hard landing.
+    const int SlipCost = 25, SpillCost = 10, CrumbCost = 5;
     // Share of the total for accuracy and speed; handling gets the rest.
     const float AccuracyShare = 0.5f, SpeedShare = 0.3f;
 
-    // How wide the green band is either side of the target, in grams.
-    public static float BandFor(float target) => 0.08f + 0.03f * target;
+    // The weigh-heavy cap: how far over the order weight a bag may go and still score full accuracy. 6% of the
+    // order or 0.15 g, whichever is more (1 g: up to 1.15 g, 3.5 g: up to 3.71 g, 7 g: up to 7.42 g). Under the
+    // order weight is never right; see vision.md, "Weigh station redesign".
+    public static float RoomFor(float target) => MathF.Max(0.06f * target, 0.15f);
 
     // Points lost per bud of the wrong strain sealed in the bag.
     const int WrongBudCost = 15;
@@ -54,24 +68,55 @@ static class Scoring
     // Seconds a bag of this many grams may take before weigh speed starts dropping.
     public static float WeighPar(float target) => ParBase + ParPerGram * target;
 
-    // Scores a bag from target, sealed weight, time taken, zip slips and spilled buds. Buds of the wrong strain
-    // (wrongBuds of them, wrongGrams in all) weigh on the scale but do not count toward the order's weight, and each
-    // one costs handling: a bag of the wrong strain scores no accuracy at all.
-    public static WeighResult Score(float target, float band, float weight, float seconds, int slips, int spilled,
-                                    float wrongGrams = 0, int wrongBuds = 0)
+    // Scores a bag from target, sealed weight, time taken, zip slips, spilled buds and crumbs. Buds of the wrong
+    // strain (wrongBuds of them, wrongGrams in all) do not count toward the order's weight, and each one costs
+    // handling: a bag of the wrong strain scores no accuracy at all. The tiny allowance keeps a bag of exactly the
+    // order weight from failing on float rounding.
+    public static WeighResult Score(float target, float room, float weight, float seconds, int slips, int spilled,
+                                    float wrongGrams = 0, int wrongBuds = 0, int crumbs = 0, float crumbGrams = 0,
+                                    int shakePieces = 0, float bigShare = 0)
     {
-        float off = MathF.Abs(weight - wrongGrams - target);
-        float acc = off <= band ? 100f : 100f * (1f - (off - band) / (band * BandsToZero));
+        float counted = weight - wrongGrams;
+        float acc;
+        if (counted < target - 0.001f) acc = UnderMax * (1f - (target - counted) / room);
+        else if (counted <= target + room + 0.001f) acc = 100f;
+        else acc = 100f * (1f - (counted - target - room) / (room * BandsToZero));
 
         float par = WeighPar(target);
         float speed = seconds <= par ? 100f : 100f * (1f - (seconds - par) / (2f * par));
 
-        float handling = 100f - SlipCost * slips - SpillCost * spilled - WrongBudCost * wrongBuds;
+        float handling = 100f - SlipCost * slips - SpillCost * spilled - WrongBudCost * wrongBuds - CrumbCost * crumbs;
 
         int a = Clamp(acc), s = Clamp(speed), h = Clamp(handling);
         int total = (int)MathF.Round(AccuracyShare * a + SpeedShare * s + (1f - AccuracyShare - SpeedShare) * h);
-        return new WeighResult(target, band, weight, seconds, slips, spilled, a, s, h, total, GradeFor(total), wrongBuds);
+        float over = MathF.Max(0f, weight - target);
+        return new WeighResult(target, room, weight, seconds, slips, spilled, a, s, h, total, GradeFor(total), wrongBuds,
+                               crumbs, crumbGrams, over, shakePieces, bigShare);
     }
+
+    // ---------- Giveaway and looks requests ----------
+
+    // What a given-away gram costs the shop, in cents (a placeholder: the game has no prices yet).
+    public const int CentsPerGram = 1000;
+    // A heavy bag pleases the customer: their tip grows by this share of the overage's value (less than its cost,
+    // so landing heavy is quick but always costs a little).
+    const float HeavyTipShare = 0.25f;
+    // A looks request met adds this to the tip; missed, the tip is halved.
+    const int RequestBonusCents = 100;
+    // Requests start on this day, for about this share of customers.
+    public const int RequestsFromDay = 3;
+    public const float RequestChance = 0.2f;
+    // A "Big nugs" bag needs at least this share of its weight in the strain's large nugs; "No shake" allows no
+    // shake piece at all (shake is a kind of piece, `Bud.IsShake`: the flat leafy crumbs, never a bud).
+    public const float BigNugsShare = 0.7f;
+
+    // True if a bag met a looks request (always true with no request).
+    public static bool Meets(Looks request, WeighResult w) => request switch
+    {
+        Looks.BigNugs => w.BigShare >= BigNugsShare,
+        Looks.NoShake => w.ShakePieces == 0,
+        _ => true,
+    };
 
     // ---------- Packing ----------
 
@@ -106,12 +151,16 @@ static class Scoring
 
     // ---------- Labeling ----------
 
-    // Share of the Labeling score for the right strain and for placement; speed gets the rest.
-    const float MatchShare = 0.5f, PlaceShare = 0.3f;
+    // Share of the Labeling score for placement; speed gets the rest. The right strain is expected, not scored:
+    // a wrong one costs WrongStrainCost points off the total. (0.18.1: was strain 50, placement 30, speed 20, which
+    // gave 70 points away for free; the play log showed nearly every label at 100.)
+    const float PlaceShare = 0.65f, WrongStrainCost = 50f;
     // Placement: full marks within this many pixels of the guide and degrees of straight, zero at the far value.
-    public const float OffFull = 8f, OffZero = 60f, AngleFull = 2f, AngleZero = 15f;
-    // Seconds allowed before labeling speed starts dropping.
-    public const float LabelPar = 6f;
+    // (0.18.1: was 8 px / 2 deg full, 60 px / 15 deg zero; logged labels averaged 5.9 px and 1.8 deg.)
+    public const float OffFull = 2f, OffZero = 30f, AngleFull = 0.5f, AngleZero = 8f;
+    // Seconds allowed before labeling speed starts dropping, and how many more until it is zero.
+    // (0.18.1: was 6 s par, zero at 18 s; logged labels averaged 1.8 s.)
+    public const float LabelPar = 1.5f, LabelSpeedSpan = 3f;
 
     // Placement points (0-100) for a label this many pixels off the guide and this many degrees crooked.
     public static int PlacementFor(float off, float angle)
@@ -127,8 +176,8 @@ static class Scoring
     {
         int match = wanted == used ? 100 : 0;
         int place = PlacementFor(off, angle);
-        int s = Clamp(seconds <= LabelPar ? 100f : 100f * (1f - (seconds - LabelPar) / (2f * LabelPar)));
-        int total = (int)MathF.Round(MatchShare * match + PlaceShare * place + (1f - MatchShare - PlaceShare) * s);
+        int s = Clamp(seconds <= LabelPar ? 100f : 100f * (1f - (seconds - LabelPar) / LabelSpeedSpan));
+        int total = Clamp(PlaceShare * place + (1f - PlaceShare) * s - (match == 100 ? 0f : WrongStrainCost));
         return new LabelResult(wanted, used, seconds, off, angle, peels, at, match, place, s, total);
     }
 
@@ -159,16 +208,24 @@ static class Scoring
     public static float WaitPar(float grams) => LinePar + OrderParBase + OrderParPerGram * grams;
 
     // Scores a served order: the four metrics averaged, and the tip it earns. An accepted bad ID (flaw) adds the
-    // fine; it does not change the scores.
+    // fine; it does not change the scores. A heavy bag adds a little to the tip, a looks request met adds a bonus
+    // and one missed halves it; the grams given away are costed for the day's tally.
     public static OrderResult ScoreOrder(WeighResult weigh, PackResult pack, LabelResult label, float grams, float waited,
-                                         IdFlaw flaw = IdFlaw.None)
+                                         IdFlaw flaw = IdFlaw.None, Looks request = Looks.None)
     {
         float par = WaitPar(grams);
         int wait = Clamp(waited <= par ? 100f : 100f * (1f - (waited - par) / WaitZeroAfter));
         int total = (int)MathF.Round((wait + weigh.Total + pack.Total + label.Total) / 4f);
         int fine = flaw == IdFlaw.None ? 0 : IdFineCents;
-        return new OrderResult(weigh, pack, label, wait, total, GradeFor(total), TipFor(total), waited, fine, flaw);
+
+        int tip = TipFor(total) + RoundTo5(weigh.Over * CentsPerGram * HeavyTipShare);
+        bool met = Meets(request, weigh);
+        if (request != Looks.None) tip = met ? tip + RequestBonusCents : RoundTo5(tip / 2f);
+        int giveaway = (int)MathF.Round(weigh.GivenAway * CentsPerGram);
+        return new OrderResult(weigh, pack, label, wait, total, GradeFor(total), tip, waited, fine, flaw, giveaway, request, met);
     }
+
+    static int RoundTo5(float cents) => (int)MathF.Round(cents / 5f) * 5;
 
     // Tip in cents: nothing below 40, then rising faster toward the top, to $5.00 at 100; rounded to 5 cents.
     static int TipFor(int total)

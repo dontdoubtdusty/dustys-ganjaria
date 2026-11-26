@@ -28,10 +28,11 @@ static class Strains
         new("Copper Sun", "COPPER",
             new Color[] { new(176, 150, 72, 255), new(196, 164, 84, 255), new(140, 156, 70, 255) },
             new(230, 110, 50, 255), new(210, 120, 50, 255), 0.25f, 0.35f, 0.3f, 0.6f, 0.6f, 1.0f, 1),
-        // Frosty and tiny: a jar of small buds, slow to fill a big order.
+        // Frosty and small: the smallest buds and the most shake, but enough mid-size nugs that a 7 g order is about
+        // a dozen picks (it was about two dozen, which felt like a chore).
         new("Frost Mule", "FROST",
             new Color[] { new(172, 202, 172, 255), new(200, 222, 202, 255), new(150, 186, 152, 255) },
-            new(238, 242, 246, 255), new(110, 170, 196, 255), 0.35f, 0.55f, 0.15f, 0.35f, 0.35f, 0.6f, 3),
+            new(238, 242, 246, 255), new(110, 170, 196, 255), 0.3f, 0.4f, 0.2f, 0.4f, 0.5f, 0.8f, 3),
         // A wild mix: small buds and some very big ones.
         new("Dust Devil", "DUST",
             new Color[] { new(150, 140, 80, 255), new(172, 152, 92, 255), new(122, 132, 72, 255) },

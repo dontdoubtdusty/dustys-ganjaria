@@ -4,18 +4,19 @@ using Raylib_cs;
 namespace DustysGanjaria;
 
 // The pause menu, opened with Esc: the game freezes behind it. Resume (or Esc again) carries on; the volume slider
-// sets and saves the master volume; Restart day and Quit ask first while a day is being played, since the day is
+// sets and saves the master volume; Full screen switches to and from full screen (also F11, saved); Restart day and Quit ask first while a day is being played, since the day is
 // not saved until it ends.
 sealed class PauseMenu
 {
     public enum Choice { None, Resume, Restart, Quit }
     enum View { Closed, Main, ConfirmRestart, ConfirmQuit }
 
-    static readonly Rectangle Panel = new(440, 120, 400, 490);
-    static readonly Rectangle VolumeTrack = new(480, 290, 320, 14);
-    static readonly Rectangle ResumeButton = new(520, 345, 240, 56);
-    static readonly Rectangle RestartButton = new(520, 425, 240, 56);
-    static readonly Rectangle QuitButton = new(520, 505, 240, 56);
+    static readonly Rectangle Panel = new(440, 100, 400, 540);
+    static readonly Rectangle VolumeTrack = new(480, 260, 320, 14);
+    static readonly Rectangle ResumeButton = new(520, 305, 240, 56);
+    static readonly Rectangle FullscreenButton = new(520, 380, 240, 56);
+    static readonly Rectangle RestartButton = new(520, 455, 240, 56);
+    static readonly Rectangle QuitButton = new(520, 530, 240, 56);
     // The confirm view's two buttons.
     static readonly Rectangle YesButton = new(520, 360, 240, 56);
     static readonly Rectangle NoButton = new(520, 440, 240, 56);
@@ -56,6 +57,8 @@ sealed class PauseMenu
         if (draggingVolume) return Choice.None;
 
         if (Raylib.IsKeyPressed(KeyboardKey.Escape) || Clicked(ResumeButton)) { view = View.Closed; return Choice.Resume; }
+        // The menu's own View enum shadows the View class here, so the class is named in full.
+        if (Clicked(FullscreenButton)) DustysGanjaria.View.ToggleFullscreen(settings);
         if (Clicked(RestartButton) && dayInProgress) view = View.ConfirmRestart;
         if (Clicked(QuitButton))
         {
@@ -100,6 +103,7 @@ sealed class PauseMenu
         var grab = new Rectangle(VolumeTrack.X - 14, VolumeTrack.Y - 14, VolumeTrack.Width + 28, VolumeTrack.Height + 28);
         Art.DrawSlider(VolumeTrack, "Volume", settings.Volume, draggingVolume || Hover(grab));
         Art.DrawButton(ResumeButton, "Resume", Hover(ResumeButton), true);
+        Art.DrawButton(FullscreenButton, settings.Fullscreen ? "Windowed (F11)" : "Full screen (F11)", Hover(FullscreenButton), true);
         Art.DrawButton(RestartButton, "Restart day", dayInProgress && Hover(RestartButton), dayInProgress);
         Art.DrawButton(QuitButton, "Quit", Hover(QuitButton), true);
     }

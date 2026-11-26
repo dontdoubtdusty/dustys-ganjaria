@@ -1,0 +1,489 @@
+{
+  "format": "straight-alpha colour, one cell per character, row by row",
+  "cellW": 422,
+  "cellH": 705,
+  "columns": 6,
+  "count": 60,
+  "characters": [
+    {
+      "name": "m-beard-orange@calm",
+      "source": "art/sprites/candidates/mc-calm-a/nb-1795731649424.jpg",
+      "feetX": 155,
+      "feetY": 692,
+      "headTop": 42,
+      "headX": 205
+    },
+    {
+      "name": "f-phone-pink@calm",
+      "source": "art/sprites/candidates/mc-calm-a/nb-1795731649424.jpg",
+      "feetX": 115,
+      "feetY": 692,
+      "headTop": 34,
+      "headX": 246
+    },
+    {
+      "name": "f-granny-teal@calm",
+      "source": "art/sprites/candidates/mc-calm-a/nb-1795731649424.jpg",
+      "feetX": 197,
+      "feetY": 692,
+      "headTop": 149,
+      "headX": 288
+    },
+    {
+      "name": "m-cap-teal@calm",
+      "source": "art/sprites/candidates/mc-calm-a/nb-1795731649424.jpg",
+      "feetX": 196,
+      "feetY": 692,
+      "headTop": 43,
+      "headX": 178
+    },
+    {
+      "name": "m-wallet-vest@calm",
+      "source": "art/sprites/candidates/mc-calm-b/nb-1795731665992.jpg",
+      "feetX": 154,
+      "feetY": 692,
+      "headTop": 38,
+      "headX": 213
+    },
+    {
+      "name": "m-cane-cap@calm",
+      "source": "art/sprites/candidates/mc-calm-b/nb-1795731665992.jpg",
+      "feetX": 177,
+      "feetY": 692,
+      "headTop": 40,
+      "headX": 227
+    },
+    {
+      "name": "f-overalls-blue@calm",
+      "source": "art/sprites/candidates/mc-calm-b/nb-1795731665992.jpg",
+      "feetX": 141,
+      "feetY": 692,
+      "headTop": 76,
+      "headX": 209
+    },
+    {
+      "name": "f-scrubs-blue@calm",
+      "source": "art/sprites/candidates/mc-calm-b/nb-1795731665992.jpg",
+      "feetX": 189,
+      "feetY": 692,
+      "headTop": 59,
+      "headX": 215
+    },
+    {
+      "name": "m-skater-beanie@calm",
+      "source": "art/sprites/candidates/mc-calm-c/nb-1795731685432.jpg",
+      "feetX": 200,
+      "feetY": 692,
+      "headTop": 12,
+      "headX": 220
+    },
+    {
+      "name": "f-track-ponytail@calm",
+      "source": "art/sprites/candidates/mc-calm-c/nb-1795731685432.jpg",
+      "feetX": 165,
+      "feetY": 692,
+      "headTop": 21,
+      "headX": 205
+    },
+    {
+      "name": "m-suit-moustache@calm",
+      "source": "art/sprites/candidates/mc-calm-c/nb-1795731685432.jpg",
+      "feetX": 178,
+      "feetY": 692,
+      "headTop": 19,
+      "headX": 222
+    },
+    {
+      "name": "f-shawl-red@calm",
+      "source": "art/sprites/candidates/mc-calm-c/nb-1795731685432.jpg",
+      "feetX": 221,
+      "feetY": 692,
+      "headTop": 32,
+      "headX": 214
+    },
+    {
+      "name": "m-beard-orange@happy",
+      "source": "art/sprites/candidates/mc-face-a-happy/nb-1795731763713.jpg",
+      "feetX": 154,
+      "feetY": 692,
+      "headTop": 42,
+      "headX": 205
+    },
+    {
+      "name": "f-phone-pink@happy",
+      "source": "art/sprites/candidates/mc-face-a-happy/nb-1795731763713.jpg",
+      "feetX": 115,
+      "feetY": 692,
+      "headTop": 34,
+      "headX": 246
+    },
+    {
+      "name": "f-granny-teal@happy",
+      "source": "art/sprites/candidates/mc-face-a-happy/nb-1795731763713.jpg",
+      "feetX": 196,
+      "feetY": 692,
+      "headTop": 149,
+      "headX": 289
+    },
+    {
+      "name": "m-cap-teal@happy",
+      "source": "art/sprites/candidates/mc-face-a-happy/nb-1795731763713.jpg",
+      "feetX": 197,
+      "feetY": 692,
+      "headTop": 42,
+      "headX": 179
+    },
+    {
+      "name": "m-wallet-vest@happy",
+      "source": "art/sprites/candidates/mc-face-b-happy/nb-1795731726721.jpg",
+      "feetX": 152,
+      "feetY": 692,
+      "headTop": 40,
+      "headX": 213
+    },
+    {
+      "name": "m-cane-cap@happy",
+      "source": "art/sprites/candidates/mc-face-b-happy/nb-1795731726721.jpg",
+      "feetX": 175,
+      "feetY": 692,
+      "headTop": 39,
+      "headX": 228
+    },
+    {
+      "name": "f-overalls-blue@happy",
+      "source": "art/sprites/candidates/mc-face-b-happy/nb-1795731726721.jpg",
+      "feetX": 139,
+      "feetY": 692,
+      "headTop": 76,
+      "headX": 208
+    },
+    {
+      "name": "f-scrubs-blue@happy",
+      "source": "art/sprites/candidates/mc-face-b-happy/nb-1795731726721.jpg",
+      "feetX": 188,
+      "feetY": 692,
+      "headTop": 57,
+      "headX": 215
+    },
+    {
+      "name": "m-skater-beanie@happy",
+      "source": "art/sprites/candidates/mc-face-c-happy/nb-1795731829306.jpg",
+      "feetX": 200,
+      "feetY": 692,
+      "headTop": 12,
+      "headX": 221
+    },
+    {
+      "name": "f-track-ponytail@happy",
+      "source": "art/sprites/candidates/mc-face-c-happy/nb-1795731829306.jpg",
+      "feetX": 156,
+      "feetY": 692,
+      "headTop": 19,
+      "headX": 205
+    },
+    {
+      "name": "m-suit-moustache@happy",
+      "source": "art/sprites/candidates/mc-face-c-happy/nb-1795731829306.jpg",
+      "feetX": 176,
+      "feetY": 692,
+      "headTop": 19,
+      "headX": 222
+    },
+    {
+      "name": "f-shawl-red@happy",
+      "source": "art/sprites/candidates/mc-face-c-happy/nb-1795731829306.jpg",
+      "feetX": 220,
+      "feetY": 692,
+      "headTop": 32,
+      "headX": 213
+    },
+    {
+      "name": "m-beard-orange@cross",
+      "source": "art/sprites/candidates/mc-face-a-cross/nb-1795731778099.jpg",
+      "feetX": 154,
+      "feetY": 692,
+      "headTop": 42,
+      "headX": 205
+    },
+    {
+      "name": "f-phone-pink@cross",
+      "source": "art/sprites/candidates/mc-face-a-cross/nb-1795731778099.jpg",
+      "feetX": 116,
+      "feetY": 692,
+      "headTop": 35,
+      "headX": 246
+    },
+    {
+      "name": "f-granny-teal@cross",
+      "source": "art/sprites/candidates/mc-face-a-cross/nb-1795731778099.jpg",
+      "feetX": 196,
+      "feetY": 692,
+      "headTop": 149,
+      "headX": 289
+    },
+    {
+      "name": "m-cap-teal@cross",
+      "source": "art/sprites/candidates/mc-face-a-cross/nb-1795731778099.jpg",
+      "feetX": 198,
+      "feetY": 692,
+      "headTop": 44,
+      "headX": 178
+    },
+    {
+      "name": "m-wallet-vest@cross",
+      "source": "art/sprites/candidates/mc-face-b-cross/nb-1795731805496.jpg",
+      "feetX": 152,
+      "feetY": 692,
+      "headTop": 38,
+      "headX": 213
+    },
+    {
+      "name": "m-cane-cap@cross",
+      "source": "art/sprites/candidates/mc-face-b-cross/nb-1795731805496.jpg",
+      "feetX": 175,
+      "feetY": 692,
+      "headTop": 40,
+      "headX": 227
+    },
+    {
+      "name": "f-overalls-blue@cross",
+      "source": "art/sprites/candidates/mc-face-b-cross/nb-1795731805496.jpg",
+      "feetX": 139,
+      "feetY": 692,
+      "headTop": 77,
+      "headX": 208
+    },
+    {
+      "name": "f-scrubs-blue@cross",
+      "source": "art/sprites/candidates/mc-face-b-cross/nb-1795731805496.jpg",
+      "feetX": 188,
+      "feetY": 692,
+      "headTop": 59,
+      "headX": 215
+    },
+    {
+      "name": "m-skater-beanie@cross",
+      "source": "art/sprites/candidates/mc-face-c-cross/nb-1795731842443.jpg",
+      "feetX": 200,
+      "feetY": 692,
+      "headTop": 12,
+      "headX": 221
+    },
+    {
+      "name": "f-track-ponytail@cross",
+      "source": "art/sprites/candidates/mc-face-c-cross/nb-1795731842443.jpg",
+      "feetX": 157,
+      "feetY": 692,
+      "headTop": 19,
+      "headX": 206
+    },
+    {
+      "name": "m-suit-moustache@cross",
+      "source": "art/sprites/candidates/mc-face-c-cross/nb-1795731842443.jpg",
+      "feetX": 176,
+      "feetY": 692,
+      "headTop": 19,
+      "headX": 222
+    },
+    {
+      "name": "f-shawl-red@cross",
+      "source": "art/sprites/candidates/mc-face-c-cross/nb-1795731842443.jpg",
+      "feetX": 220,
+      "feetY": 692,
+      "headTop": 32,
+      "headX": 213
+    },
+    {
+      "name": "m-beard-orange@hmm",
+      "source": "art/sprites/candidates/mc-face-a-hmm/nb-1795731793656.jpg",
+      "feetX": 153,
+      "feetY": 692,
+      "headTop": 42,
+      "headX": 206
+    },
+    {
+      "name": "f-phone-pink@hmm",
+      "source": "art/sprites/candidates/mc-face-a-hmm/nb-1795731793656.jpg",
+      "feetX": 116,
+      "feetY": 692,
+      "headTop": 35,
+      "headX": 246
+    },
+    {
+      "name": "f-granny-teal@hmm",
+      "source": "art/sprites/candidates/mc-face-a-hmm/nb-1795731793656.jpg",
+      "feetX": 196,
+      "feetY": 692,
+      "headTop": 149,
+      "headX": 289
+    },
+    {
+      "name": "m-cap-teal@hmm",
+      "source": "art/sprites/candidates/mc-face-a-hmm/nb-1795731793656.jpg",
+      "feetX": 198,
+      "feetY": 692,
+      "headTop": 44,
+      "headX": 178
+    },
+    {
+      "name": "m-wallet-vest@hmm",
+      "source": "art/sprites/candidates/mc-face-b-hmm/nb-1795731816437.jpg",
+      "feetX": 152,
+      "feetY": 692,
+      "headTop": 38,
+      "headX": 213
+    },
+    {
+      "name": "m-cane-cap@hmm",
+      "source": "art/sprites/candidates/mc-face-b-hmm/nb-1795731816437.jpg",
+      "feetX": 176,
+      "feetY": 692,
+      "headTop": 39,
+      "headX": 228
+    },
+    {
+      "name": "f-overalls-blue@hmm",
+      "source": "art/sprites/candidates/mc-face-b-hmm/nb-1795731816437.jpg",
+      "feetX": 140,
+      "feetY": 692,
+      "headTop": 76,
+      "headX": 208
+    },
+    {
+      "name": "f-scrubs-blue@hmm",
+      "source": "art/sprites/candidates/mc-face-b-hmm/nb-1795731816437.jpg",
+      "feetX": 188,
+      "feetY": 692,
+      "headTop": 59,
+      "headX": 215
+    },
+    {
+      "name": "m-skater-beanie@hmm",
+      "source": "art/sprites/candidates/mc-face-c-hmm/nb-1795731856887.jpg",
+      "feetX": 200,
+      "feetY": 692,
+      "headTop": 12,
+      "headX": 221
+    },
+    {
+      "name": "f-track-ponytail@hmm",
+      "source": "art/sprites/candidates/mc-face-c-hmm/nb-1795731856887.jpg",
+      "feetX": 163,
+      "feetY": 692,
+      "headTop": 20,
+      "headX": 206
+    },
+    {
+      "name": "m-suit-moustache@hmm",
+      "source": "art/sprites/candidates/mc-face-c-hmm/nb-1795731856887.jpg",
+      "feetX": 177,
+      "feetY": 692,
+      "headTop": 19,
+      "headX": 222
+    },
+    {
+      "name": "f-shawl-red@hmm",
+      "source": "art/sprites/candidates/mc-face-c-hmm/nb-1795731856887.jpg",
+      "feetX": 220,
+      "feetY": 692,
+      "headTop": 32,
+      "headX": 213
+    },
+    {
+      "name": "m-beard-orange@action",
+      "source": "art/sprites/candidates/style-midcentury/nb-1795730560355.jpg",
+      "feetX": 134,
+      "feetY": 692,
+      "headTop": 41,
+      "headX": 184
+    },
+    {
+      "name": "f-phone-pink@action",
+      "source": "art/sprites/candidates/style-midcentury/nb-1795730560355.jpg",
+      "feetX": 90,
+      "feetY": 692,
+      "headTop": 30,
+      "headX": 227
+    },
+    {
+      "name": "f-granny-teal@action",
+      "source": "art/sprites/candidates/style-midcentury/nb-1795730560355.jpg",
+      "feetX": 198,
+      "feetY": 692,
+      "headTop": 149,
+      "headX": 288
+    },
+    {
+      "name": "m-cap-teal@action",
+      "source": "art/sprites/candidates/style-midcentury/nb-1795730560355.jpg",
+      "feetX": 228,
+      "feetY": 692,
+      "headTop": 44,
+      "headX": 202
+    },
+    {
+      "name": "m-wallet-vest@action",
+      "source": "art/sprites/candidates/style-midcentury-b/nb-1795731281965.jpg",
+      "feetX": 145,
+      "feetY": 692,
+      "headTop": 41,
+      "headX": 207
+    },
+    {
+      "name": "m-cane-cap@action",
+      "source": "art/sprites/candidates/style-midcentury-b/nb-1795731281965.jpg",
+      "feetX": 171,
+      "feetY": 692,
+      "headTop": 39,
+      "headX": 241
+    },
+    {
+      "name": "f-overalls-blue@action",
+      "source": "art/sprites/candidates/style-midcentury-b/nb-1795731281965.jpg",
+      "feetX": 157,
+      "feetY": 692,
+      "headTop": 13,
+      "headX": 209
+    },
+    {
+      "name": "f-scrubs-blue@action",
+      "source": "art/sprites/candidates/style-midcentury-b/nb-1795731281965.jpg",
+      "feetX": 209,
+      "feetY": 692,
+      "headTop": 69,
+      "headX": 213
+    },
+    {
+      "name": "m-skater-beanie@action",
+      "source": "art/sprites/candidates/mc-action-c/nb-1795731877056.jpg",
+      "feetX": 138,
+      "feetY": 692,
+      "headTop": 13,
+      "headX": 199
+    },
+    {
+      "name": "f-track-ponytail@action",
+      "source": "art/sprites/candidates/mc-action-c/nb-1795731877056.jpg",
+      "feetX": 303,
+      "feetY": 692,
+      "headTop": 40,
+      "headX": 213
+    },
+    {
+      "name": "m-suit-moustache@action",
+      "source": "art/sprites/candidates/mc-action-c/nb-1795731877056.jpg",
+      "feetX": 153,
+      "feetY": 692,
+      "headTop": 21,
+      "headX": 230
+    },
+    {
+      "name": "f-shawl-red@action",
+      "source": "art/sprites/candidates/mc-action-c/nb-1795731877056.jpg",
+      "feetX": 210,
+      "feetY": 692,
+      "headTop": 35,
+      "headX": 204
+    }
+  ]
+}

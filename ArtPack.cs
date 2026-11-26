@@ -134,9 +134,24 @@ static partial class Art
         LabelCentered("IN", r.X + r.Width / 2, r.Y - 34, 28, Faint);
     }
 
-    // Draws a sealed, pressed-flat bag of flower in a strain's colours; lifted casts a shadow.
-    public static void DrawSealedBag(Rectangle r, bool lifted, Strain strain)
+    // Draws a sealed, pressed-flat bag of flower; lifted casts a shadow. With a fill it shows the very nugs sealed at
+    // the weigh station, as they lay, the bag scaled to fit r (sitting on its bottom edge, centred); without one, a
+    // few stand-in buds in the strain's colours.
+    public static void DrawSealedBag(Rectangle r, bool lifted, Strain strain, BagFill? fill = null)
     {
+        if (fill != null)
+        {
+            float s = MathF.Min(r.Width / fill.Size.X, r.Height / fill.Size.Y);
+            var b = new Rectangle(r.X + (r.Width - fill.Size.X * s) / 2, r.Y + r.Height - fill.Size.Y * s,
+                                  fill.Size.X * s, fill.Size.Y * s);
+            if (lifted) Raylib.DrawRectangleRec(new Rectangle(b.X + 6, b.Y + 8, b.Width, b.Height), new Color(0, 0, 0, 70));
+            Raylib.DrawRectangleRec(b, new Color(230, 236, 242, 150));
+            foreach (var (bud, offset) in fill.Nugs)
+                DrawBudAt(bud, new Vector2(b.X, b.Y) + offset * s, Bag.SealedScale * s);
+            Raylib.DrawRectangleLinesEx(b, MathF.Max(1.5f, 3 * s), Plastic);
+            Raylib.DrawLineEx(new(b.X, b.Y + 3 * s), new(b.X + b.Width, b.Y + 3 * s), MathF.Max(2f, 6 * s), new Color(110, 150, 210, 255));
+            return;
+        }
         if (lifted) Raylib.DrawRectangleRec(new Rectangle(r.X + 6, r.Y + 8, r.Width, r.Height), new Color(0, 0, 0, 70));
         Raylib.DrawRectangleRec(r, new Color(230, 236, 242, 150));
         var shades = strain.Shades;
@@ -153,12 +168,13 @@ static partial class Art
     }
 
     // Draws a closed, packed container (label station and hand-over): the container, the flower showing through a
-    // jar's glass, and the lid on a jar. bare leaves its front unprinted for a strain label.
-    public static void DrawPackedContainer(Rectangle r, Container c, Strain strain, bool bare)
+    // jar's glass (the order's own nugs when its fill is known), and the lid on a jar. bare leaves its front
+    // unprinted for a strain label.
+    public static void DrawPackedContainer(Rectangle r, Container c, Strain strain, bool bare, BagFill? fill = null)
     {
         DrawContainerBack(r, c);
         if (c.Kind == ContainerKind.Jar)
-            DrawSealedBag(new Rectangle(r.X + 6, r.Y + r.Height * 0.35f, r.Width - 12, r.Height * 0.65f - 4), false, strain);
+            DrawSealedBag(new Rectangle(r.X + 6, r.Y + r.Height * 0.35f, r.Width - 12, r.Height * 0.65f - 4), false, strain, fill);
         DrawContainerFront(r, c, false, true, bare);
         float scale = r.Width / 116f;
         if (c.Kind == ContainerKind.Jar) DrawLid(new Vector2(r.X + r.Width / 2, r.Y - 10 * scale), r.Width + 14 * scale, 0, 0, false, 0, 0);

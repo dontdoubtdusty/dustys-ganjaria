@@ -124,8 +124,11 @@ sealed class DayEnd
         // The ID line, only on days with a bad ID.
         string? ids = day.IdsCaught + day.IdsMissed == 0 ? null
             : $"Bad IDs: {day.IdsCaught} caught, {day.IdsMissed} missed" + (day.FinesCents > 0 ? $" ({Scoring.Money(day.FinesCents)} in fines)" : "");
+        // The giveaway line, on days any flower went out free (heavy bags, crumbs); its cost comes off the tips.
+        string? giveaway = day.GiveawayCents <= 0 ? null
+            : $"Given away: {day.GivenAwayGrams:0.00} g ({Scoring.Money(day.GiveawayCents)} off the tips)";
         Art.DrawDayResults(ResultsPanel, day.Number, day.Served, day.Walkouts, Shown(0), day.Quality, Shown(1), metrics,
-                           t >= ResultsEnd ? ids : null, day.IdsMissed > 0);
+                           t >= ResultsEnd ? ids : null, day.IdsMissed > 0, t >= ResultsEnd ? giveaway : null);
         if (t >= ResultsEnd)
             Art.DrawButton(OkButton, "Count the tips", Raylib.CheckCollisionPointRec(mouse, OkButton), true);
     }

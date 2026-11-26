@@ -40,8 +40,16 @@ sealed class OrderShot
         Customer = ticket.Customer;
         this.today = today;
         string container = Customer.Wants == ContainerKind.Jar ? "In a jar, thanks." : "In a pouch, thanks.";
-        speech = new[] { "Hi there!", $"{Customer.Grams:0.0#} grams...", $"...of {Customer.Strain.Name}, please.", container };
-        items = new[] { $"{Customer.Grams:0.0#} g", Customer.Strain.Name, Customer.ContainerText };
+        var said = new List<string> { "Hi there!", $"{Customer.Grams:0.0#} grams...", $"...of {Customer.Strain.Name}, please.", container };
+        var written = new List<string> { $"{Customer.Grams:0.0#} g", Customer.Strain.Name, Customer.ContainerText };
+        // A looks request is said last and written at the bottom of the ticket.
+        if (Customer.Request != Looks.None)
+        {
+            said.Add(Customer.Request == Looks.BigNugs ? "Big nugs if you can!" : "And no shake, please.");
+            written.Add(Customer.RequestText!.ToUpperInvariant());
+        }
+        speech = said.ToArray();
+        items = written.ToArray();
     }
 
     // True once the order is written and the closing pause is over, or a refused customer has said their piece.

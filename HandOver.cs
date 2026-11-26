@@ -66,6 +66,9 @@ sealed class HandOver
         {
             reacted = true;
             Customer.Mood = Result.Total >= 70 ? 1f : Result.Total >= 50 ? 0.4f : 0.1f;
+            // A looks request they made lifts or sinks the face a step.
+            if (Result.Request != Looks.None)
+                Customer.Mood = Math.Clamp(Customer.Mood.Value + (Result.RequestMet ? 0.6f : -0.6f), 0.1f, 1f);
             Audio.Play(Audio.Ding, 0.6f, Result.Total >= 70 ? 1f : 0.7f);
         }
         if (!tipped && t >= ReactAt + CoinSeconds)
@@ -94,6 +97,16 @@ sealed class HandOver
         Customer.Inspecting = true;
     }
 
+    // What the customer says at the end: about their looks request if they made one, otherwise about the score.
+    string ReactionLine() => (Result.Request, Result.RequestMet) switch
+    {
+        (Looks.BigNugs, true) => "Big nugs! Love it.",
+        (Looks.BigNugs, false) => "I asked for big nugs...",
+        (Looks.NoShake, true) => "No shake. Perfect.",
+        (Looks.NoShake, false) => "Ugh, there's shake in here...",
+        _ => Scoring.ReactionFor(Result.Total),
+    };
+
     // Draws the shot: each row is drawn filled as far as the timeline has got.
     public void Draw(Vector2 mouse)
     {
@@ -104,7 +117,7 @@ sealed class HandOver
         float slide = Math.Clamp(t / SlideSeconds, 0f, 1f);
         float check = Math.Clamp((t - CheckStart) / CheckSeconds, 0f, 1f);
         float coin = t < ReactAt ? -1f : Math.Clamp((t - ReactAt) / CoinSeconds, 0f, 1f);
-        string? said = t >= ReactAt ? Scoring.ReactionFor(Result.Total) : null;
+        string? said = t >= ReactAt ? ReactionLine() : null;
 
         Art.DrawHandOverShot(Customer, Ticket, Result, slide, check, shown, t >= ReactAt, said, coin);
         if (Finished)

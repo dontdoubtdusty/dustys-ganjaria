@@ -29,13 +29,25 @@ in the Start menu. Start the game from that shortcut.
   out they walk out, and an order you were making for them is dropped. Taking an order and handing one over pause
   the whole shop.
 - Weigh: drag a ticket down from the rail onto the station to start it.
-- Drag a bag from the stack onto the scale.
-- There is a jar for each strain on the menu. Grab buds from the jar of the strain on the ticket and toss them into
-  the bag. They fall and tumble. Small shake is there for fine-tuning. Each strain has its own colour and bud sizes:
-  Prairie Haze is small and fluffy, Midnight Kush big and chunky, Copper Sun in between.
+- There is a jar for each strain on the menu, a scale with a weigh tray on it, and an open bag standing ready.
+  Each strain has its own colour and bud sizes: Prairie Haze is small and fluffy, Midnight Kush big and chunky,
+  Copper Sun in between. A bud's size is the only clue to its weight.
+- Pick buds out of the jar of the strain on the ticket with the tongs and set them on the tray. Heavy nugs lag
+  behind the tongs. Set them down gently: a nug dropped from high up, or flung, chips a crumb, which is flower
+  given away. A nug that ends up on the counter costs points.
 - Buds of the wrong strain weigh on the scale but do not count toward the order, and each one costs points.
-- Fill until the needle on the scale sits in the green band. Too much? Pull a bud back out.
+- Fill until the needle sits in the green band, which runs from the order weight up to a little over it. Under the
+  weight (red) is never right. Over is fine up to the end of the green, but the extra is given away for free:
+  the day's results list it and its cost comes off your tips (the customer tips a little more for a heavy bag).
+  Nugs are never broken; there is always some mix of whole pieces that lands in the green.
+- Grab the tray by its handle and carry it over the bag: it tips and the buds slide in. Swing it fast and they
+  fly past. Let go and the tray goes back onto the scale with whatever is left on it. Big orders take more than
+  one scoop: the needle counts what is already in the bag plus what is on the tray, and a blue marker on the
+  dial shows the bag's part.
 - Drag the zip tab along the top of the bag to seal it. Go too fast or stray off the line and it slips open.
+- Now and then (from day 3) a customer asks for "Big nugs" or "No shake"; it is on the ticket. Get it right for a
+  smile and a bigger tip; miss it and the tip is halved. Scores do not change. Shake is the flat, leafy crumbs in
+  the jar (the station ticket shows one, crossed out); anything shaped like a bud is not shake, however small.
 - Grab the sealed bag and throw it into the OUT bin. Missed? Pick it up and try again. Once it lands, its ticket
   goes back up on the rail, stamped WEIGHED.
 - Pack: drag the weighed ticket down onto the pack station. The bag is waiting in the IN tray.
@@ -60,8 +72,9 @@ in the Start menu. Start the game from that shortcut.
 - The game saves at the end of every day. To start over from day 1, delete
   `%APPDATA%\DustysGanjaria\save.json`.
 - Esc pauses: the whole shop stands still. The pause menu has Resume, the volume (remembered in
-  `%APPDATA%\DustysGanjaria\settings.json`, so starting over keeps it), Restart day and Quit. Restarting or quitting
+  `%APPDATA%\DustysGanjaria\settings.json`, so starting over keeps it), Full screen, Restart day and Quit. Restarting or quitting
   mid-day loses that day, so both ask first. Closing the window also quits.
+- F11 switches between full screen and a window (also in the pause menu); the game remembers which.
 - F1 shows or hides a tuning panel with the live numbers behind the current screen: patience and waiting times
   on the Counter, the exact weight and green band at Weigh, lid strokes or strip at Pack, tilt and distance to the
   guide at Label, and time against par everywhere. It is for tuning; play without it, or the game is easier than
@@ -76,3 +89,4 @@ in the Start menu. Start the game from that shortcut.
 
 ## Credits
 Font: Lilita One by Juan Montoreano, SIL Open Font License (`resources/fonts/OFL.txt`).
+Door chime: "Convenience Store Door Chime" by zebragrrl (https://freesound.org/s/632226/, based on "Door Chime 3" by Taira Komori), CC BY 4.0 (`resources/sounds/CREDITS.txt`).
