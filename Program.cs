@@ -5,7 +5,7 @@ namespace DustysGanjaria;
 // Opens the window and runs the game loop around the shop.
 static class Program
 {
-    public const string Version = "0.12.0";
+    public const string Version = "0.15.0";
     public const int Width = 1280;
     public const int Height = 720;
 
@@ -26,7 +26,7 @@ static class Program
     // the end of a hand-over, "--shot-check" the customer's bag check half way, "--shot-results" and "--shot-tipjar" the two day-end screens,
     // "--shot-pack" and "--shot-pack-jar" a weighed order half closed on the pack station (pouch strip, jar lid),
     // "--shot-label" a packed jar on the label station with a label stuck on loosely, a little crooked, "--shot-intro"
-    // the day card with a menu picked from all five strains, "--shot-pause" the pause menu over the shop view.
+    // the day card with a menu picked from all five strains, "--shot-pause" the pause menu over the shop view, "--shot-id" the order shot's ID check (an under-21 card).
     // A third argument "--tuning" shows the F1 tuning panel in the shot.
     // Screenshot runs make no sound, never read or write the save and never write the play log.
     static void Main(string[] args)
@@ -34,7 +34,7 @@ static class Program
         string[] shotModes =
         {
             "--shot", "--shot-throw", "--shot-counter", "--shot-order", "--shot-handover", "--shot-check", "--shot-results",
-            "--shot-tipjar", "--shot-pack", "--shot-pack-jar", "--shot-label", "--shot-intro", "--shot-pause",
+            "--shot-tipjar", "--shot-pack", "--shot-pack-jar", "--shot-label", "--shot-intro", "--shot-pause", "--shot-id",
         };
         string? mode = args.Length >= 2 && shotModes.Contains(args[0]) ? args[0] : null;
         string? shotPath = mode != null ? args[1] : null;

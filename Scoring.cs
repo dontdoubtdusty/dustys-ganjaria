@@ -20,8 +20,10 @@ readonly record struct PackResult(
 
 // The outcome of one served customer: a score (0-100) for each of the four things every order is judged on,
 // the order score, grade, tip in cents, and seconds waited.
+// FineCents is taken off the tip when a bad ID was accepted (Flaw says what was wrong with it).
 readonly record struct OrderResult(
-    WeighResult Weigh, PackResult Pack, LabelResult Label, int Waiting, int Total, string Grade, int TipCents, float Waited)
+    WeighResult Weigh, PackResult Pack, LabelResult Label, int Waiting, int Total, string Grade, int TipCents, float Waited,
+    int FineCents = 0, IdFlaw Flaw = IdFlaw.None)
 {
     // The four scores in station order, matching Scoring.MetricNames (nullable so a future unbuilt station can show
     // as not built).
@@ -130,13 +132,25 @@ static class Scoring
         return new LabelResult(wanted, used, seconds, off, angle, peels, at, match, place, s, total);
     }
 
+    // ---------- ID check ----------
+
+    // Bad IDs start on this day (day 1 teaches the flow with good ones only).
+    public const int BadIdsFromDay = 2;
+    // Chance a customer's ID is bad, never two in a row; with that rule about 1 in 6 come out bad.
+    public const float BadIdChance = 0.2f;
+    // Accepting a bad ID: this fine comes out of the order's tip (the day's tips can go below zero, the jar cannot).
+    public const int IdFineCents = 500;
+    // Refusing a bad ID: rank points for the catch. Refusing a good one counts as a walkout.
+    public const int IdCatchPoints = 15;
+
     // ---------- Customers ----------
 
     // Seconds a customer waits in line before walking out, if nobody takes their order.
-    public const float LinePatience = 70f;
+    // Went from 70 to 73.5 (+5%) in 0.13.1.
+    public const float LinePatience = 73.5f;
     // Seconds a customer waits for their order once it is taken; bigger orders get a little longer. The base went
-    // from 60 to 72 when Label was added.
-    public static float WaitPatience(float grams) => 72f + 6f * grams;
+    // from 60 to 72 when Label was added; base and per-gram went up 5% in 0.13.1.
+    public static float WaitPatience(float grams) => 75.6f + 6.3f * grams;
 
     // The Waiting score covers the whole visit: seconds in line plus seconds from order to hand-over.
     // Full marks up to par, then it drops to zero over WaitZeroAfter more seconds. Par grows with the order
@@ -144,13 +158,16 @@ static class Scoring
     const float LinePar = 12f, OrderParBase = 62f, OrderParPerGram = 4f, WaitZeroAfter = 60f;
     public static float WaitPar(float grams) => LinePar + OrderParBase + OrderParPerGram * grams;
 
-    // Scores a served order: the four metrics averaged, and the tip it earns.
-    public static OrderResult ScoreOrder(WeighResult weigh, PackResult pack, LabelResult label, float grams, float waited)
+    // Scores a served order: the four metrics averaged, and the tip it earns. An accepted bad ID (flaw) adds the
+    // fine; it does not change the scores.
+    public static OrderResult ScoreOrder(WeighResult weigh, PackResult pack, LabelResult label, float grams, float waited,
+                                         IdFlaw flaw = IdFlaw.None)
     {
         float par = WaitPar(grams);
         int wait = Clamp(waited <= par ? 100f : 100f * (1f - (waited - par) / WaitZeroAfter));
         int total = (int)MathF.Round((wait + weigh.Total + pack.Total + label.Total) / 4f);
-        return new OrderResult(weigh, pack, label, wait, total, GradeFor(total), TipFor(total), waited);
+        int fine = flaw == IdFlaw.None ? 0 : IdFineCents;
+        return new OrderResult(weigh, pack, label, wait, total, GradeFor(total), TipFor(total), waited, fine, flaw);
     }
 
     // Tip in cents: nothing below 40, then rising faster toward the top, to $5.00 at 100; rounded to 5 cents.
@@ -182,8 +199,9 @@ static class Scoring
         _ => "Poor",
     };
 
-    // Money as the game shows it, like $3.45.
-    public static string Money(int cents) => $"${cents / 100}.{cents % 100:00}";
+    // Money as the game shows it, like $3.45 or -$5.00.
+    public static string Money(int cents) =>
+        $"{(cents < 0 ? "-" : "")}${Math.Abs(cents) / 100}.{Math.Abs(cents) % 100:00}";
 
     static int Clamp(float v) => (int)MathF.Round(Math.Clamp(v, 0f, 100f));
 }

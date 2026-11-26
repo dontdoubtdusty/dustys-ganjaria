@@ -404,6 +404,7 @@ static partial class Art
         Raylib.DrawRectangleRounded(new Rectangle(feet.X - 40 * s, feet.Y - 205 * s, 80 * s, 120 * s), 0.35f, 8, c.Shirt);
 
         Raylib.DrawCircleV(head, HeadRadius * s, Skin);
+        DrawHair(head, s, c.Hair);
         var eye = new Color(40, 34, 30, 255);
         // Inspecting: eyes turned down toward the bag in their hand, one brow raised, a small sideways "hmm" mouth.
         var look = c.Inspecting ? new Vector2(3, 3) : Vector2.Zero;
@@ -442,8 +443,9 @@ static partial class Art
 
     // Draws the over-the-shoulder order shot: the customer across the counter facing the camera, what they are
     // saying in a bubble, and in the foreground the budtender from behind, writing the ticket in a notepad.
-    // written is what is on the ticket so far, out of itemCount lines.
-    public static void DrawOrderShot(Customer c, Ticket t, string? said, string[] written, int itemCount)
+    // written is what is on the ticket so far, out of itemCount lines. skipHint shows "click to hurry them along"
+    // (off while the ID check waits for a decision).
+    public static void DrawOrderShot(Customer c, Ticket t, string? said, string[] written, int itemCount, bool skipHint = true)
     {
         const float counterY = 540;
         Raylib.DrawRectangle(0, 0, Program.Width, Program.Height, new Color(66, 58, 76, 255));
@@ -492,7 +494,7 @@ static partial class Art
         }
         Raylib.DrawCircleV(new(pad.X + 20, pad.Y + pad.Height - 30), 30, Skin);
 
-        LabelCentered("Click to hurry them along", Program.Width / 2f, 640, 20, Faint);
+        if (skipHint) LabelCentered("Click to hurry them along", Program.Width / 2f, 640, 20, Faint);
     }
 
     // Draws one screen tab along the bottom; warn lights it orange when something there needs the player.

@@ -8,13 +8,16 @@ sealed class Day
     // Customers on day 1, how many more each day after, and the most in one day.
     const int FirstDayCustomers = 2, MoreEachDay = 1, MostCustomers = 16;
     // Seconds before the first customer, the usual gap between customers, and how much a rush shortens it.
-    const float FirstArrival = 3f, GapMin = 20f, GapMax = 32f, RushGap = 0.6f;
+    // The gaps went up 5% (from 20-32 s) in 0.13.1.
+    const float FirstArrival = 3f, GapMin = 21f, GapMax = 33.6f, RushGap = 0.6f;
     // Seconds the doors stay open after the last customer has come in.
     const float OpenAfterLast = 15f;
     // Clock hours shown at opening and closing.
     const int OpenHour = 10, CloseHour = 20;
 
     public int Number { get; }
+    // Today's date on the shop calendar (the ID check reads birth and expiry dates against it).
+    public DateOnly Date => Ids.DateOf(Number);
     // The strains on sale today: a jar of each on the weigh bench and a pad of each one's labels at Label.
     public Strain[] Menu { get; }
     public int Expected => arrivals.Count;
@@ -24,9 +27,10 @@ sealed class Day
     readonly List<float> arrivals = new();
     int nextArrival;
 
-    // The tally: every served order's result, and the walkouts.
+    // The tally: every served order's result, and the walkouts (including good IDs refused). IdsCaught counts
+    // bad IDs refused; bad IDs accepted are the orders with a fine.
     public readonly List<OrderResult> Orders = new();
-    public int Walkouts;
+    public int Walkouts, IdsCaught;
 
     public Day(int number, Strain[] menu, Random rng)
     {
@@ -77,9 +81,12 @@ sealed class Day
     // ---------- Tally ----------
 
     public int Served => Orders.Count;
-    public int TipsCents => Orders.Sum(o => o.TipCents);
-    // Rank points earned: each served order's score; walkouts earn nothing.
-    public int Points => Orders.Sum(o => o.Total);
+    // Tips less ID fines; can be below zero on a bad day.
+    public int TipsCents => Orders.Sum(o => o.TipCents - o.FineCents);
+    public int FinesCents => Orders.Sum(o => o.FineCents);
+    public int IdsMissed => Orders.Count(o => o.FineCents > 0);
+    // Rank points earned: each served order's score plus a bonus per bad ID caught; walkouts earn nothing.
+    public int Points => Orders.Sum(o => o.Total) + IdsCaught * Scoring.IdCatchPoints;
 
     // The day's average for one of the four metrics, or null if that station is not built yet or nobody was
     // scored on it. Walkouts count as 0 for Waiting (it is the one they failed); the others only count served orders.

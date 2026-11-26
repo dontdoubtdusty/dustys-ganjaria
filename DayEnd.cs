@@ -27,7 +27,7 @@ sealed class DayEnd
     public static readonly Rectangle Jar = new(540, 300, 200, 222);
 
     readonly Day day;
-    readonly int pointsBefore, pointsAfter, bankAfter;
+    readonly int pointsBefore, pointsAfter, bankBefore, bankAfter;
     readonly int coins;
     readonly float coinGap;
     Stage stage = Stage.Results;
@@ -35,9 +35,10 @@ sealed class DayEnd
     int rowsTicked, coinsClinked;
     bool rankedUp;
 
-    public DayEnd(Day day, int pointsBefore, int pointsAfter, int bankAfter)
+    public DayEnd(Day day, int pointsBefore, int pointsAfter, int bankBefore, int bankAfter)
     {
         this.day = day;
+        this.bankBefore = bankBefore;
         this.pointsBefore = pointsBefore;
         this.pointsAfter = pointsAfter;
         this.bankAfter = bankAfter;
@@ -120,7 +121,11 @@ sealed class DayEnd
         for (int i = 0; i < metrics.Length; i++)
             metrics[i] = (Scoring.MetricNames[i], day.Average(i), Day.Built(i), Shown(2 + i));
 
-        Art.DrawDayResults(ResultsPanel, day.Number, day.Served, day.Walkouts, Shown(0), day.Quality, Shown(1), metrics);
+        // The ID line, only on days with a bad ID.
+        string? ids = day.IdsCaught + day.IdsMissed == 0 ? null
+            : $"Bad IDs: {day.IdsCaught} caught, {day.IdsMissed} missed" + (day.FinesCents > 0 ? $" ({Scoring.Money(day.FinesCents)} in fines)" : "");
+        Art.DrawDayResults(ResultsPanel, day.Number, day.Served, day.Walkouts, Shown(0), day.Quality, Shown(1), metrics,
+                           t >= ResultsEnd ? ids : null, day.IdsMissed > 0);
         if (t >= ResultsEnd)
             Art.DrawButton(OkButton, "Count the tips", Raylib.CheckCollisionPointRec(mouse, OkButton), true);
     }
@@ -150,7 +155,7 @@ sealed class DayEnd
         int points = pointsBefore + (int)MathF.Round((pointsAfter - pointsBefore) * fill);
 
         bool done = t >= JarEnd;
-        Art.DrawTipJarScreen(Jar, day.Number, coinSpots, counted, bankAfter - day.TipsCents + counted,
+        Art.DrawTipJarScreen(Jar, day.Number, coinSpots, counted, t >= JarEnd ? bankAfter : Math.Max(0, bankBefore + counted),
                              points, pointsAfter - pointsBefore, rankedUp);
         Art.DrawButton(QuitButton, "Save and quit", done && Raylib.CheckCollisionPointRec(mouse, QuitButton), done);
         Art.DrawButton(NextDayButton, "Next day", done && Raylib.CheckCollisionPointRec(mouse, NextDayButton), done);

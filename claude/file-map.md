@@ -2,7 +2,7 @@
 
 One entry per file: what it does today. Read this first each session, then open only the files the task needs. Update it when a file is added, split, renamed or deleted, and when a file's job changes. Describe the current state only; history lives in git and the session log.
 
-Line counts are rough (2026-11-25, version 0.12.0). Files over ~400 lines are marked *. Length only flags a file to look at; a long file with one job is fine.
+Line counts are rough (2026-11-25, version 0.15.0). Files over ~400 lines are marked *. Length only flags a file to look at; a long file with one job is fine.
 
 ---
 
@@ -12,9 +12,9 @@ Line counts are rough (2026-11-25, version 0.12.0). Files over ~400 lines are ma
 |---|---|---|
 | `Program.cs` | 104 | Window, game loop, `Version`, window icon, settings and volume at start, Esc opens the pause menu (the shop does not update while it is open), and the `--shot...` screenshot flags (listed in `CLAUDE.md`). |
 | `Shop.cs` * | 771 | The shop, one day at a time: day intro card, arrivals on the day's schedule, the line, the side-on shop view (layout constants at the top), taking orders, the waiting bench, patience and walkouts, tabs (Counter, Weigh, Pack, Label), ticket drops onto the station a ticket needs next (`Ticket.Next`; each station has `Start` and `TakeShipped`), finished tickets back up to the rail, the hand-over queue, closing time and the end of the day. Both shots pause the clock, arrivals and patience. Also the first-time pointers (`DrawPointer`, `Learn`), the Counter's F1 lines (`DrawTuning`), and `Pause` / `RestartDay` / `DayInProgress` for the pause menu. |
-| `Day.cs` | 106 | One shop day: the strain menu, customers per day, the arrival schedule with rushes, the wall clock, and the tally (orders, walkouts, metric averages, service quality). |
+| `Day.cs` | 112 | One shop day: its date (`Date`), the strain menu, customers per day, the arrival schedule with rushes, the wall clock, and the tally (orders, walkouts, IDs caught and missed, tips less fines, metric averages, service quality). |
 | `Progress.cs` | 62 | What carries between days (day, tip jar, rank points, `Learned` steps whose pointers no longer show), rank names and steps, the save at `%APPDATA%\DustysGanjaria\save.json`. |
-| `Customer.cs` | 95 | One customer: name, looks, order, strain and container kind wanted (`ContainerText` "Large jar" and `ContainerShort` "Jar L" add the size the grams need), patience, walking (`Pos` is the feet). |
+| `Customer.cs` | 122 | One customer: name, looks (shirt, trousers, placeholder hair; `FarShirt` and `OtherHair` for photos that do not match), their `Id`, order, strain and container kind wanted (`ContainerText` "Large jar" and `ContainerShort` "Jar L" add the size the grams need), patience, walking (`Pos` is the feet). |
 | `Ticket.cs` | 33 | An order ticket: the station it needs next, the weigh result once weighed. |
 | `TicketRail.cs` | 106 | The rail across the top of every screen: slots and dragging (`CardRect`, `FirstFor`); the shop decides what a drop does. |
 | `Scoring.cs` | 190 | All scoring tuning: the four metric names, green band width, par times (`WeighPar`, `PackPar`, `LabelPar`, `WaitPar`), slip, spill and wrong-strain costs, shares, Packing and Labeling scores (`PlacementFor`), Start over cost, grades, line and wait patience, tips, reactions. |
@@ -26,7 +26,8 @@ Line counts are rough (2026-11-25, version 0.12.0). Files over ~400 lines are ma
 
 | File | Lines | What it does |
 |---|---|---|
-| `OrderShot.cs` | 60 | Over-the-shoulder order shot: speech lines, items written onto the notepad, click to skip. |
+| `OrderShot.cs` | 124 | Over-the-shoulder order shot: greeting, the ID check (card, date sign, Accept and Refuse; no timer; `Refused`), then speech lines and items written onto the notepad, click to skip (never past the ID). Layout rects at the top. |
+| `IdCard.cs` | 66 | `IdFlaw`, `IdCard` and `Ids`: the shop calendar (`DateOf`, day 1 is Apr 20, 2026), the 21 cutoff, date text, and making a card with one flaw or none (close calls included). |
 | `HandOver.cs` | 115 | Hand-over shot: the packed container slides over, the customer checks it ("hmm" face, bag crinkle), soft chime, scores land row by row, reaction, tip into the jar. |
 | `DayEnd.cs` | 159 | Day results panel, then the tip jar and rank screen. |
 
@@ -34,7 +35,7 @@ Line counts are rough (2026-11-25, version 0.12.0). Files over ~400 lines are ma
 
 | File | Lines | What it does |
 |---|---|---|
-| `WeighStation.cs` * | 654 | Weigh flow: a jar per menu strain, bag onto the scale, toss buds from the ordered strain's jar, zip, throw into the OUT bin. Layout, zip, bin and seal tuning at the top; feedback tuning (needle spring, tick and puff speeds, ding timing, zip teeth and shake, result delay) in its own block below the fields. |
+| `WeighStation.cs` * | 687 | Weigh flow: a jar per menu strain (each topped up with small buds so any order can be made), bag onto the scale, toss buds from the ordered strain's jar, zip, throw into the OUT bin. Layout, zip, bin and seal tuning at the top; feedback tuning (needle spring, tick and puff speeds, ding timing, zip teeth and shake, result delay) in its own block below the fields. |
 | `PackStation.cs` * | 578 | Pack flow: container from the shelf onto the mat, bag from the IN tray into it, jar lid in sideways strokes or pouch strip; Start over. Also `ContainerKind`, `Container` and `Containers` (sizes, which one an order needs). Layout and lid, strip and bag tuning at the top. |
 | `LabelStation.cs` | 342 | Label flow: closed container on the mat, a label pad per menu strain, carry a label (swings with the mouse), let go to stick loosely, hold still to press, drag to peel. Layout, swing and press tuning at the top; `LabelOn` places a label on any container front (the hand-over uses it). |
 | `Strain.cs` | 54 | The strains (name, bud colours, bud size mix, label colour, unlock rank) and the day menu (`Strains.MenuFor`: up to 3, the newest always on). |
@@ -46,10 +47,11 @@ Line counts are rough (2026-11-25, version 0.12.0). Files over ~400 lines are ma
 
 | File | Lines | What it does |
 |---|---|---|
-| `Art.cs` * | 528 | `partial class Art`, part 1: font and text (`Label` / `LabelCentered` / `LabelTurned` / `Measure`), weigh station pieces (buds, jars, scale, bags, bin), tickets and rail, shop view (room, door, bench, budtender, customers, patience bars), the order shot, tabs, buttons and panels, the first-time pointer arrow (`DrawPointer`) and the F1 tuning panel (`DrawTuning`, `TuningLine`). Each station's `TuningLines()` and `Shop.DrawTuning` supply its lines. |
+| `Art.cs` * | 567 | `partial class Art`, part 1: font and text (`Label` / `LabelCentered` / `LabelTurned` / `Measure`), weigh station pieces (buds, jars, scale, bags, bin), tickets and rail, shop view (room, door, bench, budtender, customers, patience bars), the order shot, tabs, buttons and panels, the first-time pointer arrow (`DrawPointer`) and the F1 tuning panel (`DrawTuning`, `TuningLine`). Each station's `TuningLines()` and `Shop.DrawTuning` supply its lines. |
 | `ArtScreens.cs` | 351 | `Art` part 2: day card, pause panel and volume slider, hand-over, results and tip jar drawing. |
 | `ArtPack.cs` | 167 | `Art` part 3: the pack station's pieces. |
 | `ArtLabel.cs` | 80 | `Art` part 4: the label station's rack, pads and labels. |
+| `ArtId.cs` | 76 | `Art` part 5: placeholder hair, the ID card and its photo, the date sign, the red Refuse button. |
 | `Audio.cs` | 268 | Every sound by name (`Audio.Play(name, volume, pitch)`), a few copies each, random pitch per play. Placeholders made in code; `resources/sounds/<name>.wav` replaces one (names at the top). |
 | `Effects.cs` | 108 | Particles (leaf bits) and floating pop-up words. Visual only, never scoring. |
 
@@ -68,13 +70,14 @@ Line counts are rough (2026-11-25, version 0.12.0). Files over ~400 lines are ma
 | `resources/icon.ico`, `resources/icon.png` | App and window icon, made by `art/icon/make_ico.ps1`. |
 | `resources/art-reference/` | Customer art base (`base.jpg`), hair edit test, the owner's icon picture. |
 | `art/icon/` | Icon scripts: `make_ico.ps1` (used), `draw_icon.py` and the Blender files (kept for reference). |
-| `claude/` | Notes for Claude: `vision.md`, `session-log.md`, this map, `mechanics-page.html`, copies of `versioning.md` and `readme-format.md`, `reference/` (two genre screenshots for camera framing only). |
+| `claude/` | Notes for Claude: `vision.md`, `session-log.md`, this map, `mechanics-page.html`, `research-colorado-budtending.md` (sources behind the weigh redesign), copies of `versioning.md` and `readme-format.md`, `reference/` (two genre screenshots for camera framing only). |
 
 ## Where to look for X
 
 | Looking for | Go to |
 |---|---|
 | A score, par time, tip or patience number | `Scoring.cs` |
+| How often IDs are bad, the fine, the catch bonus | `Scoring.cs` (ID check block); card dates in `IdCard.cs` |
 | Customers per day, arrival gaps, rushes | `Day.cs` |
 | How a station feels (springs, speeds, tolerances) | The tuning block at the top of that station's file |
 | What a strain looks like or when it unlocks | `Strain.cs` |

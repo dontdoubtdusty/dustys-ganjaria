@@ -72,6 +72,8 @@ sealed class Shop
     Ticket? onWeigh, onPack, onLabel;
     int nextTicket = 1;
     bool closingSaid, fast;
+    // True if the last customer in had a bad ID (two in a row never happens).
+    bool lastIdBad;
     // True while the F1 tuning panel is showing (screenshot runs set it with --tuning).
     public bool Tuning;
     float endTimer;
@@ -113,7 +115,7 @@ sealed class Shop
         dayEnd = null;
         onWeigh = onPack = onLabel = null;
         nextTicket = 1;
-        closingSaid = fast = false;
+        closingSaid = fast = lastIdBad = false;
         endTimer = 0;
         bannerTime = 0;
     }
@@ -155,7 +157,8 @@ sealed class Shop
     static bool AnyUrgent(IEnumerable<Customer> people) => people.Any(c => c.PatienceFraction < 0.3f);
 
     // Sets up a scene for the --shot flags. All but the day-end ones have one order already taken.
-    // --shot-counter: two in line and one waiting, shop view. --shot-order: the order shot mid-way.
+    // --shot-counter: two in line and one waiting, shop view. --shot-order: the order shot mid-way. --shot-id: the
+    // order shot on its ID check, with an under-21 card. --shot-handover and --shot-results include an ID fine.
     // --shot and --shot-throw: one ticket on the weigh station and another on the rail. --shot-pack (a pouch) and
     // --shot-pack-jar: one weighed order half closed on the pack station and another ticket on the rail.
     // --shot-handover: the end of a hand-over; --shot-check: its bag check. --shot-results and --shot-tipjar: the two
@@ -180,7 +183,9 @@ sealed class Shop
         if (mode == "--shot-results" || mode == "--shot-tipjar")
         {
             var w = Scoring.Score(3.5f, Scoring.BandFor(3.5f), 3.55f, 13f, 0, 1);
-            day.Orders.Add(Scoring.ScoreOrder(w, Packed(new(ContainerKind.Jar, false), true), Labeled(day.Menu[0], true), 3.5f, 40f));
+            day.Orders.Add(Scoring.ScoreOrder(w, Packed(new(ContainerKind.Jar, false), true), Labeled(day.Menu[0], true), 3.5f, 40f,
+                                              IdFlaw.Expired));
+            day.IdsCaught = 1;
             day.Orders.Add(Scoring.ScoreOrder(Scoring.Score(1f, Scoring.BandFor(1f), 1.02f, 9f, 0, 0),
                                               Packed(new(ContainerKind.Pouch, false), false), Labeled(day.Menu[1], false), 1f, 70f));
             day.Walkouts = 1;
@@ -206,13 +211,13 @@ sealed class Shop
             rail.Remove(t);
             waiting.Remove(first);
             handOver = new HandOver(t, Scoring.ScoreOrder(w, Packed(Containers.For(first), false), Labeled(first.Strain, true),
-                                                          first.Grams, first.Waited));
+                                                          first.Grams, first.Waited, IdFlaw.Underage));
             if (mode == "--shot-check") handOver.HoldAtCheck();
             else handOver.HoldAt(true);
             return;
         }
 
-        if (mode == "--shot-counter" || mode == "--shot-order")
+        if (mode == "--shot-counter" || mode == "--shot-order" || mode == "--shot-id")
         {
             for (int i = 0; i < 2; i++)
             {
@@ -226,6 +231,12 @@ sealed class Shop
             {
                 TakeOrder();
                 shot!.HoldAt(2);
+            }
+            if (mode == "--shot-id")
+            {
+                line[0].Id = Ids.Make(line[0], day.Date, IdFlaw.Underage, rng);
+                TakeOrder();
+                shot!.HoldAtId();
             }
             return;
         }
@@ -334,7 +345,7 @@ sealed class Shop
 
         if (shot != null)
         {
-            shot.Update(dt, (press && !tabClicked) || confirm);
+            shot.Update(dt, (press && !tabClicked) || confirm, press && !tabClicked, mouse);
             if (shot.Done) FinishOrder();
         }
         else if (screen == Screen.Counter && !tabClicked && !railTook)
@@ -380,12 +391,13 @@ sealed class Shop
     // Adds the day to the progress, saves it, and opens the day-end screens.
     void EndDay()
     {
-        int before = progress.RankPoints;
+        int before = progress.RankPoints, bankBefore = progress.TipsCents;
         progress.RankPoints += day.Points;
-        progress.TipsCents += day.TipsCents;
+        // Fines can take a day's tips below zero, but never the jar.
+        progress.TipsCents = Math.Max(0, progress.TipsCents + day.TipsCents);
         progress.Day = day.Number + 1;
         if (persistent) progress.Save();
-        dayEnd = new DayEnd(day, before, progress.RankPoints, progress.TipsCents);
+        dayEnd = new DayEnd(day, before, progress.RankPoints, bankBefore, progress.TipsCents);
         phase = Phase.Ended;
         rail.LetGo();
     }
@@ -466,10 +478,15 @@ sealed class Shop
         day.Arrived();
     }
 
-    // Rings the door chime and adds a customer at the back of the line, walking in from the door.
+    // Rings the door chime and adds a customer at the back of the line, walking in from the door, with their ID:
+    // from day BadIdsFromDay some are bad (never two in a row), with one flaw picked at random.
     Customer Arrive()
     {
         var c = new Customer(rng, DoorSpot, day.Menu);
+        bool bad = day.Number >= Scoring.BadIdsFromDay && !lastIdBad && rng.NextDouble() < Scoring.BadIdChance;
+        var flaw = bad ? (IdFlaw)rng.Next(1, 4) : IdFlaw.None;
+        c.Id = Ids.Make(c, day.Date, flaw, rng);
+        lastIdBad = bad;
         line.Add(c);
         c.Goal = LineSpot(line.Count - 1);
         Audio.Play(Audio.Doorbell);
@@ -550,7 +567,7 @@ sealed class Shop
         if (c == null) return;
         if (TakenOrders >= MaxWaiting) { Say("The waiting area is full: finish an order first"); return; }
         c.Now = Customer.State.Ordering;
-        shot = new OrderShot(new Ticket(nextTicket++, c));
+        shot = new OrderShot(new Ticket(nextTicket++, c), day.Date);
         Learn("take");
     }
 
@@ -560,12 +577,34 @@ sealed class Shop
     {
         if (shot == null) return;
         var c = shot.Customer;
+        if (shot.Refused) { RefuseCustomer(c); return; }
         line.Remove(c);
         c.Now = Customer.State.Waiting;
         c.PatienceMax = c.Patience = Scoring.WaitPatience(c.Grams);
         waiting.Add(c);
         rail.Add(shot.Ticket, NotepadSpot);
         shot = null;
+    }
+
+    // The ID was refused: the customer leaves without an order. A bad ID caught earns rank points; a good one
+    // refused counts as a walkout.
+    void RefuseCustomer(Customer c)
+    {
+        shot = null;
+        line.Remove(c);
+        Leave(c, served: false);
+        bool caught = c.Id.Flaw != IdFlaw.None;
+        if (caught)
+        {
+            day.IdsCaught++;
+            Say($"Good catch: {Ids.Why(c.Id.Flaw)} (+{Scoring.IdCatchPoints} rank points)");
+        }
+        else
+        {
+            day.Walkouts++;
+            Say($"{c.Name}'s ID was fine: they walked out");
+        }
+        PlayLog.Refused(day, Progress.RankOf(progress.RankPoints), c);
     }
 
     // The bag is in the OUT bin: the weigh station clears, and the ticket flies back up to the rail marked
@@ -595,7 +634,7 @@ sealed class Shop
     void Finish(Ticket t, LabelResult labelResult)
     {
         var c = t.Customer;
-        var result = Scoring.ScoreOrder(t.Weighed!.Value, t.Packed!.Value, labelResult, c.Grams, c.Waited);
+        var result = Scoring.ScoreOrder(t.Weighed!.Value, t.Packed!.Value, labelResult, c.Grams, c.Waited, c.Id.Flaw);
         day.Orders.Add(result);
         PlayLog.Served(day, Progress.RankOf(progress.RankPoints), t, result);
         waiting.Remove(c);
@@ -678,8 +717,9 @@ sealed class Shop
             int rank = Progress.RankOf(progress.RankPoints);
             var next = Strains.NextLocked(rank);
             string? nextText = next == null ? null : $"Next strain: {next.Name}, at rank {next.Rank} ({Progress.RankName(next.Rank)})";
+            string? notice = day.Number == Scoring.BadIdsFromDay ? "From today, some IDs are bad: check every one." : null;
             Art.DrawDayIntro(IntroPanel, day.Number, day.Expected, $"Rank {rank} {Progress.RankName(rank)}",
-                             Scoring.Money(progress.TipsCents), day.Menu, nextText);
+                             Scoring.Money(progress.TipsCents), day.Menu, nextText, Ids.LongText(day.Date), notice);
             Art.DrawButton(OpenButton, "Open the shop", Raylib.CheckCollisionPointRec(mouse, OpenButton), true);
         }
         if (phase == Phase.Ended) dayEnd!.Draw(mouse);

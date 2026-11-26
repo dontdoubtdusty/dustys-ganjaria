@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace DustysGanjaria;
 
-// The play log: one CSV row per served order and per walkout, appended to %APPDATA%\DustysGanjaria\playlog.csv,
+// The play log: one CSV row per served order, per walkout and per refused ID, appended to %APPDATA%\DustysGanjaria\playlog.csv,
 // for tuning from real play. It records what the game already scored and never changes play. If the columns change
 // between versions, the old file is renamed (playlog-<date>.csv) and a fresh one started, so every file has one
 // header. A failure to write is ignored: the game goes on, the row is just lost.
@@ -21,23 +21,23 @@ static class PlayLog
     static readonly string[] Columns =
     {
         "version", "session", "time", "day", "rank", "ticket", "customer", "outcome", "stage",
-        "grams", "strain", "wanted",
+        "grams", "strain", "wanted", "id", "id_call",
         "waited_s", "wait_par_s", "waiting",
         "w_target", "w_band", "w_weight", "w_wrong_buds", "w_s", "w_par_s", "w_slips", "w_spilled",
         "w_accuracy", "w_speed", "w_handling", "weighing",
         "p_used", "p_s", "p_par_s", "p_cross_threads", "p_drops", "p_restarts", "p_fit", "p_speed", "p_handling", "packing",
         "l_used", "l_s", "l_par_s", "l_off_px", "l_angle", "l_peels", "l_match", "l_placement", "l_speed", "labeling",
-        "total", "tip_cents",
+        "total", "tip_cents", "fine_cents",
     };
 
     // Logs a served order with every part score.
     public static void Served(Day day, int rank, Ticket t, OrderResult r)
     {
         var c = t.Customer;
-        Write(Base(day, rank, t.Number, c, "served", "done", r.Waited)
+        Write(Base(day, rank, t.Number, c, "served", "done", r.Waited, "accepted")
             .Concat(new[] { F(Scoring.WaitPar(c.Grams)), I(r.Waiting) })
             .Concat(WeighCells(r.Weigh)).Concat(PackCells(r.Pack)).Concat(LabelCells(r.Label))
-            .Concat(new[] { I(r.Total), I(r.TipCents) }));
+            .Concat(new[] { I(r.Total), I(r.TipCents), I(r.FineCents) }));
     }
 
     // Logs a walkout: where they were (stage: line, or where their order had got to) and any station work already
@@ -45,20 +45,34 @@ static class PlayLog
     public static void Walkout(Day day, int rank, Customer c, Ticket? t, string stage)
     {
         var empty = (int n) => Enumerable.Repeat("", n);
-        Write(Base(day, rank, t?.Number ?? 0, c, "walkout", stage, c.Waited)
+        Write(Base(day, rank, t?.Number ?? 0, c, "walkout", stage, c.Waited, stage == "line" ? "" : "accepted")
             .Concat(new[] { F(Scoring.WaitPar(c.Grams)), "0" })
             .Concat(t?.Weighed is { } w ? WeighCells(w) : empty(12))
             .Concat(t?.Packed is { } p ? PackCells(p) : empty(10))
             .Concat(empty(10))
-            .Concat(new[] { "", "0" }));
+            .Concat(new[] { "", "0", "0" }));
+    }
+
+    // Logs a customer whose ID was refused: outcome "caught" for a bad ID, "refused good id" for a good one (that
+    // counts as a walkout in the day's tally). No station work exists for them.
+    public static void Refused(Day day, int rank, Customer c)
+    {
+        bool caught = c.Id.Flaw != IdFlaw.None;
+        Write(Base(day, rank, 0, c, caught ? "caught" : "refused good id", "counter", c.Waited, "refused")
+            .Concat(new[] { F(Scoring.WaitPar(c.Grams)), caught ? "" : "0" })
+            .Concat(Enumerable.Repeat("", 32))
+            .Concat(new[] { "", "0", "0" }));
     }
 
     // The columns every row starts with, up to and including seconds waited.
-    static IEnumerable<string> Base(Day day, int rank, int ticket, Customer c, string outcome, string stage, float waited) => new[]
+    // idCall is "accepted", "refused", or empty if they never showed it (walked out of the line).
+    static IEnumerable<string> Base(Day day, int rank, int ticket, Customer c, string outcome, string stage, float waited,
+                                    string idCall) => new[]
     {
         Program.Version, Session, DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
         I(day.Number), I(rank), ticket > 0 ? I(ticket) : "", c.Name, outcome, stage,
-        F(c.Grams), c.Strain.Name, Containers.For(c).Name, F(waited),
+        F(c.Grams), c.Strain.Name, Containers.For(c).Name,
+        c.Id.Flaw == IdFlaw.None ? "ok" : Ids.Why(c.Id.Flaw), idCall, F(waited),
     };
 
     static IEnumerable<string> WeighCells(WeighResult w) => new[]

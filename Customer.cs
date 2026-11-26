@@ -24,6 +24,12 @@ sealed class Customer
     {
         new(70, 80, 110, 255), new(95, 85, 75, 255), new(60, 60, 66, 255), new(120, 110, 90, 255),
     };
+    // Hair colours; one in HairOptions is bald (null).
+    static readonly Color?[] HairOptions =
+    {
+        new Color(40, 32, 28, 255), new Color(110, 72, 40, 255), new Color(220, 180, 100, 255),
+        new Color(170, 70, 40, 255), new Color(190, 190, 195, 255), null,
+    };
     static readonly float[] Orders = { 1f, 3.5f, 7f };
 
     const float WalkSpeed = 260f;
@@ -31,6 +37,10 @@ sealed class Customer
     public string Name { get; }
     public Color Shirt { get; }
     public Color Trousers { get; }
+    // Placeholder hair colour (null = bald), so ID photos can differ by hair as well as by shirt.
+    public Color? Hair { get; }
+    // The ID they hold out when ordering; the shop makes it when they arrive (it needs the day's date).
+    public IdCard Id { get; set; } = null!;
     public float Grams { get; }
     // The strain they asked for, from the day's menu.
     public Strain Strain { get; }
@@ -58,11 +68,28 @@ sealed class Customer
         Name = Names[rng.Next(Names.Length)];
         Shirt = Shirts[rng.Next(Shirts.Length)];
         Trousers = Pants[rng.Next(Pants.Length)];
+        Hair = HairOptions[rng.Next(HairOptions.Length)];
         Grams = Orders[rng.Next(Orders.Length)];
         Strain = menu[rng.Next(menu.Length)];
         Wants = rng.Next(2) == 0 ? ContainerKind.Pouch : ContainerKind.Jar;
         PatienceMax = Patience = Scoring.LinePatience;
         Pos = Goal = start;
+    }
+
+    // A shirt colour clearly different from the given one (for a photo that does not match): one of the shirts
+    // whose colour is far from it.
+    public static Color FarShirt(Color shirt, Random rng)
+    {
+        static int Distance(Color a, Color b) => Math.Abs(a.R - b.R) + Math.Abs(a.G - b.G) + Math.Abs(a.B - b.B);
+        var far = Shirts.Where(s => Distance(s, shirt) > 150).ToArray();
+        return far.Length > 0 ? far[rng.Next(far.Length)] : Shirts[0];
+    }
+
+    // A hair colour other than the given one (bald counts as one of the choices).
+    public static Color? OtherHair(Color? hair, Random rng)
+    {
+        var others = HairOptions.Where(h => !Equals(h, hair)).ToArray();
+        return others[rng.Next(others.Length)];
     }
 
     // Share of patience left, 0 to 1.

@@ -22,6 +22,10 @@ sealed class WeighStation
     const float JarsLeft = 40, JarWidth = 170, JarGap = 20, JarTop = 330, JarBottom = 640;
     // Grams in each jar: enough for the order with plenty to spare, the same in every jar.
     const float FillPerGram = 1.3f, FillExtra = 2f;
+    // Small buds and shake in every jar always add up to the order (or the strain's largest bud, if that is less)
+    // plus the green band plus this many grams, so the order can be made from small pieces alone, or from large
+    // buds topped up with small ones. Without it a 1 g order from a chunky strain could leave only big nugs.
+    const float SmallSpare = 0.5f;
     static readonly Rectangle StackRect = new(612, 590, 108, 70);
     static readonly Rectangle PlateRect = new(730, 470, 300, 12);
     static readonly Rectangle ScaleBody = new(730, 470, 300, FloorY - 470);
@@ -244,23 +248,30 @@ sealed class WeighStation
         buds.Clear();
         foreach (var (strain, jar) in jars)
         {
-            float total = 0;
+            float total = 0, small = 0;
             int shake = 0;
-            while (total < target * FillPerGram + FillExtra || shake < MinShake)
+            void Add(float grams, bool isSmall)
             {
-                double roll = rng.NextDouble();
-                float grams;
-                if (shake < MinShake || roll < strain.ShakeShare) { grams = Range(0.05f, 0.15f); shake++; }
-                else if (roll < strain.ShakeShare + strain.SmallShare) grams = Range(strain.SmallMin, strain.SmallMax);
-                else grams = Range(strain.LargeMin, strain.LargeMax);
-
                 var bud = new Bud(MathF.Round(grams, 2), strain, rng);
                 bud.Pos = new Vector2(
                     Range(jar.X + bud.Radius + 4, jar.X + jar.Width - bud.Radius - 4),
                     Range(jar.Y + bud.Radius, jar.Y + jar.Height - bud.Radius - 4));
                 buds.Add(bud);
                 total += bud.Grams;
+                if (isSmall) small += bud.Grams;
             }
+
+            while (total < target * FillPerGram + FillExtra || shake < MinShake)
+            {
+                double roll = rng.NextDouble();
+                if (shake < MinShake || roll < strain.ShakeShare) { Add(Range(0.05f, 0.15f), true); shake++; }
+                else if (roll < strain.ShakeShare + strain.SmallShare) Add(Range(strain.SmallMin, strain.SmallMax), true);
+                else Add(Range(strain.LargeMin, strain.LargeMax), false);
+            }
+
+            // Top up with small buds until the order can be made without any large ones (see SmallSpare).
+            float smallNeeded = MathF.Min(target, strain.LargeMax) + Scoring.BandFor(target) + SmallSpare;
+            while (small < smallNeeded) Add(Range(strain.SmallMin, strain.SmallMax), true);
         }
 
         // Run the physics for a couple of seconds so the pile has settled before the player sees it.

@@ -15,8 +15,13 @@ in the Start menu. Start the game from that shortcut.
   door flips to Closed: no one else comes in, and you finish whoever is still inside.
 - Four screens, switched with the tabs at the bottom or the 1 to 4 keys: Counter, Weigh, Pack and Label. Each tab
   counts the tickets waiting for it and lights up orange when someone there needs you.
-- Counter: customers walk in and queue. Click Take order (or press Enter) and the view cuts to the counter, where
-  they say their order (1 g, 3.5 g or 7 g of one strain, in a pouch or a jar) and you write it down, with the
+- Counter: customers walk in and queue. Click Take order (or press Enter) and the view cuts to the counter.
+- First they hold out their ID. Check it against the sign by the counter (today's date, and the last birth date
+  that is 21) and against the person: born late enough to be under 21, expired, or a photo that does not look like
+  them (hair or shirt) means refuse. There is no timer. Day 1's IDs are all fine; from day 2 about one in six is
+  bad. Refusing a bad ID earns rank points; refusing a good one, they walk out; accepting a bad one costs a $5 fine
+  at the hand-over.
+- Accepted, they say their order (1 g, 3.5 g or 7 g of one strain, in a pouch or a jar) and you write it down, with the
   container size it needs (Jar L, Pouch S); then their ticket goes up on the rail and they sit down to wait.
 - New to a step? A yellow arrow points at what to do next (take the order, open a tab, drag a ticket down) until
   you have done that step once.
@@ -67,7 +72,7 @@ in the Start menu. Start the game from that shortcut.
 ## Known limits
 - Windows only.
 - Placeholder art, on purpose, until real sprites are drawn.
-- No ID check yet. Ranks unlock new strains (Frost Mule at rank 3, Dust Devil at rank 5); tips buy nothing yet.
+- Ranks unlock new strains (Frost Mule at rank 3, Dust Devil at rank 5); tips buy nothing yet.
 
 ## Credits
 Font: Lilita One by Juan Montoreano, SIL Open Font License (`resources/fonts/OFL.txt`).

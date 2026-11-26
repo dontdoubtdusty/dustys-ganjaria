@@ -18,14 +18,17 @@ static partial class Art
 
     // Draws the card before a day starts: day number, how many customers to expect, rank and tip jar, the strains
     // on today's menu, and the next strain still to unlock (null when all are open).
-    public static void DrawDayIntro(Rectangle panel, int day, int expected, string rank, string jar, Strain[] menu, string? next)
+    // date is today's date as text; notice (null for none) is a news line in orange at the bottom.
+    public static void DrawDayIntro(Rectangle panel, int day, int expected, string rank, string jar, Strain[] menu, string? next,
+                                    string date, string? notice)
     {
         Raylib.DrawRectangle(0, 0, Program.Width, Program.Height, new Color(0, 0, 0, 130));
         DrawPanel(panel);
         float cx = panel.X + panel.Width / 2;
         LabelCentered($"Day {day}", cx, panel.Y + 26, 64, Accent);
         LabelCentered($"{expected} customers expected", cx, panel.Y + 104, 30, Text);
-        LabelCentered("Doors open 10:00 AM and close at 8:00 PM.", cx, panel.Y + 146, 22, Faint);
+        LabelCentered($"{date}. Doors open 10 AM, close 8 PM.", cx, panel.Y + 146, 22, Faint);
+        if (notice != null) LabelCentered(notice, cx, panel.Y + 356, 20, Warn);
         LabelCentered("At closing, finish everyone still inside.", cx, panel.Y + 174, 22, Faint);
         LabelCentered($"{rank}   Tip jar {jar}", cx, panel.Y + 214, 22, Faint);
 
@@ -225,6 +228,16 @@ static partial class Art
             Label($"{r.Grade}  {r.Total}%", card.X + 20, y, 38, ScoreColor(r.Total));
             string tip = r.TipCents > 0 ? $"Tip {Scoring.Money(r.TipCents)}" : "No tip";
             Label(tip, card.X + card.Width - 20 - Measure(tip, 26), y + 8, 26, Ink);
+
+            // An accepted bad ID: the fine, under the card.
+            if (r.FineCents > 0)
+            {
+                string fine = $"Bad ID ({Ids.Why(r.Flaw)}): fined {Scoring.Money(r.FineCents)}";
+                float fw = Measure(fine, 24) + 32;
+                var pill = new Rectangle(card.X + card.Width / 2 - fw / 2, card.Y + card.Height + 16, fw, 36);
+                Raylib.DrawRectangleRounded(pill, 0.5f, 8, new Color(30, 26, 34, 235));
+                LabelCentered(fine, pill.X + fw / 2, pill.Y + 6, 24, Bad);
+            }
         }
 
         if (said != null)
@@ -257,10 +270,12 @@ static partial class Art
     // ---------- Day results ----------
 
     // Draws the day results panel: customers (with walkouts), service quality, and the four metric averages.
-    // Each row's shown (0-1) counts its number up from zero; a row at 0 is not drawn yet.
+    // Each row's shown (0-1) counts its number up from zero; a row at 0 is not drawn yet. ids is a line about the
+    // day's bad IDs under the rows (null for none), orange when one got through.
     public static void DrawDayResults(Rectangle panel, int day, int served, int walkouts, float shownServed,
                                       int quality, float shownQuality,
-                                      (string Name, int? Value, bool Built, float Shown)[] metrics)
+                                      (string Name, int? Value, bool Built, float Shown)[] metrics,
+                                      string? ids = null, bool idsWarn = false)
     {
         Raylib.DrawRectangle(0, 0, Program.Width, Program.Height, new Color(0, 0, 0, 150));
         DrawPanel(panel);
@@ -304,6 +319,7 @@ static partial class Art
             DrawScoreBar(new Rectangle(x + 260, y + 19, 200, 16), v, m.Shown);
             Label($"{(int)MathF.Round(v * m.Shown)}%", x + 480, y + 10, 32, Text);
         }
+        if (ids != null) LabelCentered(ids, cx, panel.Y + 466, 22, idsWarn ? Warn : Accent);
     }
 
     // ---------- Tip jar ----------
