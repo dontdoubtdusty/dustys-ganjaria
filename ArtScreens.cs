@@ -180,9 +180,9 @@ static partial class Art
         bag.X += lifted.X * lift + sway;
         bag.Y += lifted.Y * lift;
         DrawPackedContainer(bag, r.Pack.Used, c.Strain, true, t.Fill);
-        // The label where it actually went: off the guide and as crooked as it was pressed on.
+        // The label where it actually went: as far off the guide as it was slapped on.
         var (labelAt, labelSize) = LabelStation.LabelOn(bag, r.Label.At);
-        DrawStrainLabel(labelAt, labelSize, r.Label.Angle, r.Label.Used, false, false, 0, false, $"{r.Weigh.Weight:0.00} g");
+        DrawStrainLabel(labelAt, labelSize, 0, r.Label.Used, false, false, 0, false, $"{r.Weigh.Weight:0.00} g");
 
         // The budtender from behind, arm out across the counter; it draws back once the customer has the bag.
         float reach = 300 + 200 * eased * (1f - MathF.Min(1f, check * 3f));

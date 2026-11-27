@@ -128,8 +128,7 @@ sealed class Shop
     {
         rail.LetGo();
         weigh.LetGo(pausing: true);
-        pack.LetGo();
-        label.LetGo(pausing: true);
+        pack.LetGo(pausing: true);
     }
 
     // Starts today over from its intro card. Nothing was saved yet today, so the save is untouched.
@@ -174,7 +173,8 @@ sealed class Shop
     // asks for big nugs, so tickets, the order shot and the hand-over show a looks request. --shot-pack (a pouch) and
     // --shot-pack-jar: one weighed order half closed on the pack station and another ticket on the rail.
     // --shot-handover: the end of a hand-over (a jar, so its nugs show); --shot-check: its bag check. --shot-results and --shot-tipjar: the two
-    // day-end screens. --shot-label: a packed jar on the label station with its label stuck on loosely. --shot-intro:
+    // day-end screens. --shot-label: a packed jar on the label station with its peeled label sliding; --shot-peel, --shot-slap and
+    // --shot-smooth: the backing half peeled, the slap landing, the bubbles being rubbed out. --shot-intro:
     // the day card, at a rank with all five strains open (a menu of three, and no next strain).
     public void StageForScreenshot(string mode)
     {
@@ -187,11 +187,11 @@ sealed class Shop
         phase = Phase.Open;
         // A packed order for the staged scores: the right container, a few seconds, no mistakes (or one, with slip).
         static PackResult Packed(Container c, bool slip) =>
-            Scoring.ScorePack(c, c, slip ? 12f : 6f, slip ? 1 : 0, 0, 0);
-        // A labeled order for the staged scores: the right strain, a little off and crooked (more so with slip).
+            Scoring.ScorePack(c, c, slip ? 12f : 6f, slip ? 1 : 0, 0, 0, c.Kind == ContainerKind.Pouch && slip ? 70 : 100);
+        // A labeled order for the staged scores: the right strain, a little off (more so with slip).
         static LabelResult Labeled(Strain s, bool slip) =>
-            Scoring.ScoreLabel(s, s, slip ? 8f : 4f, slip ? 18f : 5f, slip ? 6f : 1.5f, 0,
-                               slip ? new Vector2(0.06f, -0.04f) : new Vector2(0.02f, 0f));
+            Scoring.ScoreLabel(s, s, slip ? 5f : 3f, slip ? 18f : 4f, 260f,
+                               slip ? new Vector2(0.1f, 0f) : new Vector2(0.02f, 0f));
         if (mode == "--shot-results" || mode == "--shot-tipjar")
         {
             var w = Scoring.Score(3.5f, Scoring.RoomFor(3.5f), 3.55f, 13f, 0, 1);
@@ -264,7 +264,7 @@ sealed class Shop
         FinishOrder();
         second.Pos = second.Goal = WaitingSpot(1);
 
-        if (mode == "--shot-pack" || mode == "--shot-pack-jar")
+        if (mode == "--shot-pack" || mode == "--shot-pack-jar" || mode == "--shot-drop")
         {
             first.Wants = mode == "--shot-pack-jar" ? ContainerKind.Jar : ContainerKind.Pouch;
             var t = rail.For(first)!;
@@ -273,11 +273,11 @@ sealed class Shop
             t.Fill = StagedFill(first);
             screen = Screen.Pack;
             PutOnPack(t);
-            pack.StageForScreenshot();
+            pack.StageForScreenshot(drop: mode == "--shot-drop");
             return;
         }
 
-        if (mode == "--shot-label")
+        if (mode is "--shot-label" or "--shot-peel" or "--shot-slap" or "--shot-smooth")
         {
             first.Wants = ContainerKind.Jar;
             var t = rail.For(first)!;
@@ -288,7 +288,7 @@ sealed class Shop
             rail.For(second)!.Next = Stage.Label;
             screen = Screen.Label;
             PutOnLabel(t);
-            label.StageForScreenshot();
+            label.StageForScreenshot(mode["--shot-".Length..]);
             return;
         }
 
@@ -427,7 +427,6 @@ sealed class Shop
         if (to == screen) return;
         if (screen == Screen.Weigh) weigh.LetGo();
         if (screen == Screen.Pack) pack.LetGo();
-        if (screen == Screen.Label) label.LetGo();
         screen = to;
     }
 
@@ -461,7 +460,7 @@ sealed class Shop
     {
         rail.Remove(t);
         onLabel = t;
-        label.Start(t.Customer, t.Packed!.Value.Used, day.Menu, t.Weighed!.Value.Weight, t.Fill);
+        label.Start(t.Customer, t.Packed!.Value.Used, day.Menu, t.Weighed!.Value.Weight, t.Fill, Progress.RankOf(progress.RankPoints));
         Learn("label");
     }
 
@@ -677,7 +676,6 @@ sealed class Shop
         var (t, result) = toHandOver.Dequeue();
         weigh.LetGo();
         pack.LetGo();
-        label.LetGo();
         handOver = new HandOver(t, result);
     }
 

@@ -25,11 +25,12 @@ static class View
     // The camera that draws game units onto the window.
     public static Camera2D Camera => new() { Offset = Offset, Target = Vector2.Zero, Rotation = 0, Zoom = Scale };
 
-    // Switches between windowed and full screen, and remembers the choice in the settings.
+    // Switches between windowed and full screen, and remembers the choice in the settings. Raykit's borderless
+    // window covers the monitor without raylib's true fullscreen, which stays on top and makes alt-tab slow.
     public static void ToggleFullscreen(Settings settings)
     {
-        Raylib.ToggleBorderlessWindowed();
-        settings.Fullscreen = Raylib.IsWindowState(ConfigFlags.BorderlessWindowMode);
+        Raykit.AppWindow.ToggleFullscreen();
+        settings.Fullscreen = Raykit.AppWindow.IsFullscreen;
         settings.Save();
     }
 

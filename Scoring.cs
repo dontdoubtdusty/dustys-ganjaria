@@ -14,16 +14,19 @@ readonly record struct WeighResult(
     public float GivenAway => Over + CrumbGrams;
 }
 
-// The outcome of one labeled order: the strain asked for and the label used, how far off and how crooked it went
-// on, peels, and the part scores (0-100 each). At (offset over the container's size) and Angle let the hand-over
-// draw the label where it actually went.
+// The outcome of one labeled order: the strain asked for and the label used, how far off the guide it was slapped
+// on, how fast the label was sliding (px/s), and the part scores (0-100 each). At (offset over the container's
+// size) lets the hand-over draw the label where it actually went. Peel is seconds from pick to peeled, Curl the
+// label's curl when slapped (0-1), Bubbles how many air bubbles (and lifted corner) it landed with, and Rub the
+// seconds spent rubbing them out (logged only; they cost time, which the speed score counts).
 readonly record struct LabelResult(
-    Strain Wanted, Strain Used, float Seconds, float Off, float Angle, int Peels, System.Numerics.Vector2 At,
-    int Match, int Placement, int Speed, int Total);
+    Strain Wanted, Strain Used, float Seconds, float Off, float Slide, System.Numerics.Vector2 At,
+    int Match, int Placement, int Speed, int Total, float Peel = 0, float Curl = 0, int Bubbles = 0, float Rub = 0);
 
-// The outcome of one packed order: the container asked for and the one used, and the part scores (0-100 each).
+// The outcome of one packed order: the container asked for and the one used, the pouch's heat seal (0-100, 100 for
+// a jar), missed lid notches (CrossThreads), bags missed onto the table (Drops), and the part scores (0-100 each).
 readonly record struct PackResult(
-    Container Wanted, Container Used, float Seconds, int CrossThreads, int Drops, int Restarts,
+    Container Wanted, Container Used, float Seconds, int CrossThreads, int Drops, int Restarts, int Seal,
     int Fit, int Speed, int Handling, int Total);
 
 // The outcome of one served customer: a score (0-100) for each of the four things every order is judged on,
@@ -124,29 +127,43 @@ static class Scoring
     const int FitRight = 100, FitWrongSize = 40, FitWrongKind = 20, FitBothWrong = 0;
     // Seconds allowed before packing speed starts dropping (a jar has more turning to do than a pouch strip).
     const float PackParPouch = 7f, PackParJar = 9f;
-    // Points lost per cross-threaded lid and per bag dropped on the table.
+    // Handling points lost per missed lid notch (a cross-thread) and per bag dropped on the table.
     const int CrossThreadCost = 25, DropCost = 10;
-    // Share of the Packing score for the container and for speed; handling gets the rest.
-    const float FitShare = 0.5f, PackSpeedShare = 0.3f;
+    // Share of the Packing score for the container and for speed; handling (seal, notches, drops) gets the rest.
+    // (0.20.0: was container 50, speed 30, handling 20, when closing held little skill.)
+    const float FitShare = 0.4f, PackSpeedShare = 0.25f;
+    // Pouch heat seal: the heat (0-1 of the gauge) where the green band starts and ends. Letting go in the middle of
+    // the band seals perfectly (100), at its edges 80, falling to 0 at SealZero away from the middle.
+    public const float SealGreenLow = 0.6f, SealGreenHigh = 0.78f, SealZero = 0.36f;
     // Seconds Start over adds to the packing clock.
     public const float RestartSeconds = 5f;
 
     // Seconds packing this kind of container may take before speed starts dropping.
     public static float PackPar(ContainerKind kind) => kind == ContainerKind.Jar ? PackParJar : PackParPouch;
 
-    // Scores a closed container: the right one, how long it took, cross-threaded lids and dropped bags.
-    public static PackResult ScorePack(Container wanted, Container used, float seconds, int crossThreads, int drops, int restarts)
+    // Seal points (0-100) for letting go of the heat sealer at this heat: best in the middle of the green band.
+    public static int SealFor(float heat)
+    {
+        float mid = (SealGreenLow + SealGreenHigh) / 2, half = (SealGreenHigh - SealGreenLow) / 2;
+        float d = MathF.Abs(heat - mid);
+        return Clamp(d <= half ? 100f - 20f * d / half : 80f * (1f - (d - half) / (SealZero - half)));
+    }
+
+    // Scores a closed container: the right one, how long it took, and handling: the pouch's seal (100 for a jar)
+    // less missed lid notches and dropped bags.
+    public static PackResult ScorePack(Container wanted, Container used, float seconds, int crossThreads, int drops,
+                                       int restarts, int seal = 100)
     {
         bool kind = wanted.Kind == used.Kind, size = wanted.Large == used.Large;
         int fit = kind && size ? FitRight : kind ? FitWrongSize : size ? FitWrongKind : FitBothWrong;
 
         float par = PackPar(used.Kind);
         float speed = seconds <= par ? 100f : 100f * (1f - (seconds - par) / (2f * par));
-        float handling = 100f - CrossThreadCost * crossThreads - DropCost * drops;
+        float handling = seal - CrossThreadCost * crossThreads - DropCost * drops;
 
         int s = Clamp(speed), h = Clamp(handling);
         int total = (int)MathF.Round(FitShare * fit + PackSpeedShare * s + (1f - FitShare - PackSpeedShare) * h);
-        return new PackResult(wanted, used, seconds, crossThreads, drops, restarts, fit, s, h, total);
+        return new PackResult(wanted, used, seconds, crossThreads, drops, restarts, seal, fit, s, h, total);
     }
 
     // ---------- Labeling ----------
@@ -155,30 +172,30 @@ static class Scoring
     // a wrong one costs WrongStrainCost points off the total. (0.18.1: was strain 50, placement 30, speed 20, which
     // gave 70 points away for free; the play log showed nearly every label at 100.)
     const float PlaceShare = 0.65f, WrongStrainCost = 50f;
-    // Placement: full marks within this many pixels of the guide and degrees of straight, zero at the far value.
-    // (0.18.1: was 8 px / 2 deg full, 60 px / 15 deg zero; logged labels averaged 5.9 px and 1.8 deg.)
-    public const float OffFull = 2f, OffZero = 30f, AngleFull = 0.5f, AngleZero = 8f;
+    // Placement: full marks within this many pixels of the guide, zero at the far value. The label is slapped on from
+    // a slide, so this is a timing window: at 260 px/s, 6 px is about 25 ms either side.
+    // (0.20.0: was 2 px full and 30 px zero plus a straightness half, for the old carry-and-press.)
+    public const float OffFull = 6f, OffZero = 50f;
     // Seconds allowed before labeling speed starts dropping, and how many more until it is zero.
-    // (0.18.1: was 6 s par, zero at 18 s; logged labels averaged 1.8 s.)
-    public const float LabelPar = 1.5f, LabelSpeedSpan = 3f;
+    // (0.20.0: par was 1.5 s; the slap waits for the slide to come round. 0.21.0: was 2 s; peeling and rubbing out
+    // bubbles were added.)
+    public const float LabelPar = 3.5f, LabelSpeedSpan = 3f;
 
-    // Placement points (0-100) for a label this many pixels off the guide and this many degrees crooked.
-    public static int PlacementFor(float off, float angle)
-    {
-        static float Ramp(float v, float full, float zero) => v <= full ? 100f : 100f * (1f - (v - full) / (zero - full));
-        return Clamp((Ramp(off, OffFull, OffZero) + Ramp(MathF.Abs(angle), AngleFull, AngleZero)) / 2f);
-    }
+    // Placement points (0-100) for a label slapped on this many pixels off the guide.
+    public static int PlacementFor(float off) =>
+        Clamp(off <= OffFull ? 100f : 100f * (1f - (off - OffFull) / (OffZero - OffFull)));
 
-    // Scores a pressed-on label: the right strain, how close to the guide and how straight, and how long it took.
-    // Peels cost only the time they take.
-    public static LabelResult ScoreLabel(Strain wanted, Strain used, float seconds, float off, float angle, int peels,
-                                         System.Numerics.Vector2 at)
+    // Scores a slapped-on label: the right strain, how close to the guide, and how long it took (peel, slap and
+    // smoothing). slide, peel, curl, bubbles and rub are logged only.
+    public static LabelResult ScoreLabel(Strain wanted, Strain used, float seconds, float off, float slide,
+                                         System.Numerics.Vector2 at, float peel = 0, float curl = 0, int bubbles = 0,
+                                         float rub = 0)
     {
         int match = wanted == used ? 100 : 0;
-        int place = PlacementFor(off, angle);
+        int place = PlacementFor(off);
         int s = Clamp(seconds <= LabelPar ? 100f : 100f * (1f - (seconds - LabelPar) / LabelSpeedSpan));
         int total = Clamp(PlaceShare * place + (1f - PlaceShare) * s - (match == 100 ? 0f : WrongStrainCost));
-        return new LabelResult(wanted, used, seconds, off, angle, peels, at, match, place, s, total);
+        return new LabelResult(wanted, used, seconds, off, slide, at, match, place, s, total, peel, curl, bubbles, rub);
     }
 
     // ---------- ID check ----------

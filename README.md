@@ -52,19 +52,26 @@ in the Start menu. Start the game from that shortcut.
   goes back up on the rail, stamped WEIGHED.
 - Pack: drag the weighed ticket down onto the pack station. The bag is waiting in the IN tray.
 - Drag the container the ticket names off the shelf onto the mat (small holds 1 g or 3.5 g, large holds 7 g).
-  Changed your mind? Drag it back off, as long as the bag is not in yet.
-- Drag or throw the bag into the container. Once it settles inside, it stays there.
-- Jar: grab the lid and drag it to the right, let go, grab it again: about three strokes screw it on, each one
-  clicking as the ridges slide. A jerky, too-fast stroke cross-threads it and it pops loose.
-- Pouch: hold the mouse on the seal strip and sweep slowly from end to end. Too fast leaves gaps to go back over.
+  Changed your mind? Drag another one onto the mat, as long as the bag is not in yet.
+- The bag is hoisted onto a rail and slides back and forth over the container. Click (or press Space) to drop it
+  as it passes over the opening. Miss and it lands on the table (a drop) and goes back up for another try.
+  A 7 g bag over a small container lands on the rim: wrong size.
+- Pouch: hold the mouse to heat the sealer and let go when the heat gauge is in the green. Let go early and the
+  seal has gaps; hold too long and it scorches. The middle of the green is a perfect seal.
+- Jar: a notch circles the dial above the lid. Click when it reaches the mark at the top: three good clicks screw
+  the lid on, and it speeds up each time. A click off the mark cross-threads the lid and costs points.
 - Wrong container? Start over puts everything back, for a 5 second penalty.
 - Once it is closed, its ticket goes back up on the rail, stamped PACKED.
 - Label: drag the packed ticket down onto the label station. The closed container is waiting on the mat.
-- Take the label for the order's strain off the rack and carry it onto the container. It hangs from the mouse and
-  swings as you move, so slow down and let it settle before you let go. Corner marks show where it goes.
-- Let go over the container and it sticks on loosely, just as it was hanging. Hold the mouse still on it to press
-  it down. Crooked or wrong? Drag it instead to peel it off and place it again (it only costs time).
-- Once the label is pressed down, the view cuts to the hand-over: the customer picks up the order and looks it
+- Click the order's strain in the label rack. A hand holds its label up, still on its backing: grab the tab at the
+  corner and drag it away to peel the backing off.
+- The peeled label slides back and forth over the container; click (or press Space) and the hand slaps it on.
+  Line it up with the corner marks: where it lands is final. The label slides faster as your rank goes up.
+- Do not wait too long: a peeled label starts to curl, and a curled one lands with air bubbles (and a lifted
+  corner). Hold the mouse button and rub over them until the label is flat.
+- Picked the wrong strain? Click the right pad. After peeling, the old label is thrown away and the new one needs
+  peeling too.
+- Once the label is flat, the view cuts to the hand-over: the customer picks up the order and looks it
   over, then the order's scores for Waiting (how long they waited in all), Weighing, Packing and Labeling, the customer's reaction, and their
   tip into the jar. Click to skip; Next carries on.
 - At the end of the day: the day's results (customers, service quality, each score's average), then the tip jar
@@ -76,8 +83,8 @@ in the Start menu. Start the game from that shortcut.
   mid-day loses that day, so both ask first. Closing the window also quits.
 - F11 switches between full screen and a window (also in the pause menu); the game remembers which.
 - F1 shows or hides a tuning panel with the live numbers behind the current screen: patience and waiting times
-  on the Counter, the exact weight and green band at Weigh, lid strokes or strip at Pack, tilt and distance to the
-  guide at Label, and time against par everywhere. It is for tuning; play without it, or the game is easier than
+  on the Counter, the exact weight and green band at Weigh, the drop window, heat or notch at Pack, the slide
+  and distance to the guide at Label, and time against par everywhere. It is for tuning; play without it, or the game is easier than
   it should be.
 - Every served order and every walkout adds a row to `%APPDATA%\DustysGanjaria\playlog.csv` with all its part
   scores, for tuning. Delete the file to start a fresh log.

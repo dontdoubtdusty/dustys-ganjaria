@@ -9,7 +9,7 @@ static class Audio
 {
     public const string Doorbell = "doorbell", Tick = "tick", Pluck = "pluck", Ding = "ding", ZipTooth = "zip",
         Seal = "seal", Slip = "slip", Thump = "thump", Pop = "pop", Till = "till",
-        Crinkle = "crinkle", Chime = "chime", Coin = "coin", Fanfare = "fanfare";
+        Crinkle = "crinkle", Chime = "chime", Coin = "coin", Fanfare = "fanfare", Slap = "slap", Peel = "peel", Rub = "rub";
 
     const string SoundFolder = "resources/sounds";
     const int Copies = 6;
@@ -49,6 +49,9 @@ static class Audio
         Add(Chime, MakeChime);
         Add(Coin, MakeCoin);
         Add(Fanfare, MakeFanfare);
+        Add(Slap, MakeSlap);
+        Add(Peel, MakePeel);
+        Add(Rub, MakeRub);
         ready = true;
     }
 
@@ -242,6 +245,51 @@ static class Audio
         return Note(0f, 0.14f, 523.25f) + Note(0.15f, 0.14f, 659.25f) + Note(0.3f, 0.14f, 783.99f)
                + Note(0.45f, 0.8f, 1046.5f) * Decay(MathF.Max(0, t - 0.45f), 2.5f);
     });
+
+    // A palm slapping a label onto the container: a sharp crack of bright noise over a short low thud.
+    static float[] MakeSlap()
+    {
+        float low = 0, thud = 0;
+        return Synth(0.28f, (t, noise) =>
+        {
+            float n = noise();
+            low += (n - low) * 0.35f;
+            thud += (n - thud) * 0.04f;
+            float crack = (n - low) * Decay(t, 70);                 // the high part of the noise: the smack
+            float body = 2.5f * thud * Decay(t, 22) + 0.7f * Sine(150 - 120 * t, t) * Decay(t, 26);
+            return Attack(t, 0.0005f) * (1.1f * crack + body);
+        });
+    }
+
+    // The backing tearing off a label: a quick run of paper crackles that thickens, then cuts off.
+    static float[] MakePeel()
+    {
+        const float seconds = 0.36f;
+        var crackles = new Random(23);
+        float low = 0, age = 1f, amp = 0f;
+        return Synth(seconds, (t, noise) =>
+        {
+            float rise = t / seconds;
+            if (crackles.NextDouble() < (120.0 + 900.0 * rise) / Rate) { age = 0f; amp = 0.5f + 0.5f * (float)crackles.NextDouble(); }
+            age += 1f / Rate;
+            float n = noise();
+            low += (n - low) * 0.3f;
+            float tail = MathF.Min(1f, (seconds - t) / 0.03f);
+            return (n - low) * (amp * Decay(age, 260) + 0.2f * rise) * tail * Attack(t, 0.01f);
+        });
+    }
+
+    // A soft rub of a fingertip over paper: a short, dull hush.
+    static float[] MakeRub()
+    {
+        float low = 0;
+        return Synth(0.1f, (t, noise) =>
+        {
+            low += (noise() - low) * 0.15f;                       // smoothed noise: dull, not hissy
+            float env = MathF.Sin(MathF.PI * t / 0.1f);
+            return low * env * env;
+        });
+    }
 
     // Wraps samples in a 16-bit mono WAV file in memory, scaled so the loudest point is at 80 percent.
     static byte[] ToWav(float[] samples)

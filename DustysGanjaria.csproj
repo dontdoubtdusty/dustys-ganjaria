@@ -28,8 +28,10 @@
     <Compile Remove="tools/**" />
   </ItemGroup>
 
+  <!-- Raykit (sibling folder GitHub\raykit): window, fullscreen, screenshots, crash net, settings files.
+       It brings Raylib-cs with it, so the Raylib version lives there. -->
   <ItemGroup>
-    <PackageReference Include="Raylib-cs" Version="8.0.0" />
+    <ProjectReference Include="..\raykit\Raykit.csproj" />
   </ItemGroup>
 
 </Project>

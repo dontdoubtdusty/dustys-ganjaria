@@ -26,8 +26,9 @@ static class PlayLog
         "w_target", "w_room", "w_weight", "w_wrong_buds", "w_s", "w_par_s", "w_slips", "w_spilled",
         "w_crumbs", "w_crumb_g", "w_over_g", "w_shake_pieces", "w_big_share",
         "w_accuracy", "w_speed", "w_handling", "weighing",
-        "p_used", "p_s", "p_par_s", "p_cross_threads", "p_drops", "p_restarts", "p_fit", "p_speed", "p_handling", "packing",
-        "l_used", "l_s", "l_par_s", "l_off_px", "l_angle", "l_peels", "l_match", "l_placement", "l_speed", "labeling",
+        "p_used", "p_s", "p_par_s", "p_cross_threads", "p_drops", "p_restarts", "p_seal", "p_fit", "p_speed", "p_handling", "packing",
+        "l_used", "l_s", "l_par_s", "l_off_px", "l_slide_px_s", "l_peel_s", "l_curl", "l_bubbles", "l_rub_s",
+        "l_match", "l_placement", "l_speed", "labeling",
         "total", "tip_cents", "fine_cents", "giveaway_cents", "request", "request_met",
     };
 
@@ -50,8 +51,8 @@ static class PlayLog
         Write(Base(day, rank, t?.Number ?? 0, c, "walkout", stage, c.Waited, stage == "line" ? "" : "accepted")
             .Concat(new[] { F(Scoring.WaitPar(c.Grams)), "0" })
             .Concat(t?.Weighed is { } w ? WeighCells(w) : empty(17))
-            .Concat(t?.Packed is { } p ? PackCells(p) : empty(10))
-            .Concat(empty(10))
+            .Concat(t?.Packed is { } p ? PackCells(p) : empty(11))
+            .Concat(empty(13))
             .Concat(new[] { "", "0", "0", "0", Request(c), "" }));
     }
 
@@ -62,7 +63,7 @@ static class PlayLog
         bool caught = c.Id.Flaw != IdFlaw.None;
         Write(Base(day, rank, 0, c, caught ? "caught" : "refused good id", "counter", c.Waited, "refused")
             .Concat(new[] { F(Scoring.WaitPar(c.Grams)), caught ? "" : "0" })
-            .Concat(Enumerable.Repeat("", 37))
+            .Concat(Enumerable.Repeat("", 41))
             .Concat(new[] { "", "0", "0", "0", Request(c), "" }));
     }
 
@@ -87,12 +88,13 @@ static class PlayLog
     static IEnumerable<string> PackCells(PackResult p) => new[]
     {
         p.Used.Name, F(p.Seconds), F(Scoring.PackPar(p.Used.Kind)), I(p.CrossThreads), I(p.Drops), I(p.Restarts),
+        p.Used.Kind == ContainerKind.Pouch ? I(p.Seal) : "",
         I(p.Fit), I(p.Speed), I(p.Handling), I(p.Total),
     };
 
     static IEnumerable<string> LabelCells(LabelResult l) => new[]
     {
-        l.Used.Name, F(l.Seconds), F(Scoring.LabelPar), F(l.Off), F(l.Angle), I(l.Peels),
+        l.Used.Name, F(l.Seconds), F(Scoring.LabelPar), F(l.Off), F(l.Slide), F(l.Peel), F(l.Curl), I(l.Bubbles), F(l.Rub),
         I(l.Match), I(l.Placement), I(l.Speed), I(l.Total),
     };
 
